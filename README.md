@@ -26,6 +26,13 @@ It's recommended to use the Plugin Reloader plugin within QGIS to easily reload 
 
 First you have to connect to the server with your user credentials in the upper part of the Window. Then all existing jobs are displayed at the "Jobs" tab. There the jobs can be executed again or displayed in QGIS. In the "New Job" tab it is possible to create a new process graph and to send it to the backend to create a new job. The process graph editor is in an early stage, so it is recommended to just copy the complete process graph into the process graph text field. 
 
+The following Screenshots show how it looks like:
+
+<img src="https://github.com/Open-EO/openeo-qgis-plugin/raw/master/examples/create_processgraph.png" alt="create-processgraph" width="700"/>
+
+<img src="https://github.com/Open-EO/openeo-qgis-plugin/raw/master/examples/job_list.png" alt="job-list" width="700"/>
+
+
 ## Troubleshooting 
 
 #### QGIS cannot find plugin 

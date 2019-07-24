@@ -28,9 +28,9 @@ First you have to connect to the server with your user credentials in the upper 
 
 The following Screenshots show how it looks like:
 
-<img src="https://github.com/Open-EO/openeo-qgis-plugin/raw/master/examples/create_processgraph.png" alt="create-processgraph" width="700"/>
+<img src="https://github.com/Open-EO/openeo-qgis-plugin/raw/master/examples/create_processgraph.png" alt="create-processgraph" width="500"/>
 
-<img src="https://github.com/Open-EO/openeo-qgis-plugin/raw/master/examples/job_list.png" alt="job-list" width="700"/>
+<img src="https://github.com/Open-EO/openeo-qgis-plugin/raw/master/examples/job_list.png" alt="job-list" width="900"/>
 
 
 ## Troubleshooting 

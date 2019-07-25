@@ -1,6 +1,8 @@
 # openeo-qgis-plugin
 QGIS Plugin to connect and use openEO compliant backends.
 
+Compatible with openeo API version 0.4.0 and above
+Tested with QGIS 3.4.8-Madeira
 
 ## About
 

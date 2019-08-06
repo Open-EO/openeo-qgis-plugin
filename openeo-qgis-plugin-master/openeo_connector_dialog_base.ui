@@ -29,7 +29,7 @@
    <property name="geometry">
     <rect>
      <x>650</x>
-     <y>100</y>
+     <y>90</y>
      <width>81</width>
      <height>23</height>
     </rect>
@@ -144,7 +144,7 @@
     <property name="geometry">
      <rect>
       <x>630</x>
-      <y>30</y>
+      <y>20</y>
       <width>101</width>
       <height>61</height>
      </rect>
@@ -635,6 +635,8 @@
   <zorder>statusLabel</zorder>
   <zorder>label_5</zorder>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

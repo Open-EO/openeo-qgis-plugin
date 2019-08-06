@@ -22,7 +22,7 @@
  ***************************************************************************/
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtGui import QIcon, QPixmap
 from qgis.PyQt.QtWidgets import QAction
 
 
@@ -170,6 +170,7 @@ class OpenEO:
             callback=self.run,
             parent=self.iface.mainWindow())
 
+
         # will be set False in run()
         self.first_start = True
 
@@ -189,6 +190,7 @@ class OpenEO:
         if self.first_start == True:
             self.first_start = False
             self.dlg = OpenEODialog(iface=self.iface)
+            self.dlg.label_20.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'icon_new.png')))
 
         # show the dialog
         self.dlg.show()

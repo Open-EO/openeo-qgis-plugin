@@ -65,15 +65,17 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.clearButton.clicked.connect(self.collection_selected)
         self.sendButton.clicked.connect(self.send_job)
         self.loadButton.clicked.connect(self.load_collection)
+        ### Change to incorporate the WebEditor:
+        #self.moveButton.clicked.connect(self......)
 
         self.processgraphEdit.textChanged.connect(self.update_processgraph)
 
         # Init filter boxes validators
-        self.westEdit.setValidator(QtGui.QDoubleValidator())
-        self.eastEdit.setValidator(QtGui.QDoubleValidator())
-        self.southEdit.setValidator(QtGui.QDoubleValidator())
-        self.northEdit.setValidator(QtGui.QDoubleValidator())
-        self.crsEdit.setValidator(QtGui.QIntValidator())
+        ### self.westEdit.setValidator(QtGui.QDoubleValidator())
+        ### self.eastEdit.setValidator(QtGui.QDoubleValidator())
+        ### self.southEdit.setValidator(QtGui.QDoubleValidator())
+        ### self.northEdit.setValidator(QtGui.QDoubleValidator())
+        ### self.crsEdit.setValidator(QtGui.QIntValidator())
 
         # Jobs Tab
         self.init_jobs()
@@ -243,42 +245,43 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         col = str(self.collectionBox.currentText())
 
-        west=None
-        east=None
-        south=None
-        north=None
-        crs=None
+        ### west=None
+        ### east=None
+        ### south=None
+        ### north=None
+        ### crs=None
 
-        if self.westEdit.text() != "":
-            west = float(self.westEdit.text())
-        if self.eastEdit.text() != "":
-            east = float(self.eastEdit.text())
-        if self.southEdit.text() != "":
-            south = float(self.southEdit.text())
-        if self.northEdit.text() != "":
-            north = float(self.northEdit.text())
-        if self.crsEdit.text() != "":
-            crs = int(self.crsEdit.text())
+        ### if self.westEdit.text() != "":
+        ###    west = float(self.westEdit.text())
+        ###if self.eastEdit.text() != "":
+        ###    east = float(self.eastEdit.text())
+        ###if self.southEdit.text() != "":
+        ###    south = float(self.southEdit.text())
+        ###if self.northEdit.text() != "":
+        ###    north = float(self.northEdit.text())
+        ###if self.crsEdit.text() != "":
+        ###    crs = int(self.crsEdit.text())
 
-        start = self.startDateEdit.date().toPyDate()
-        end = self.endDateEdit.date().toPyDate()
+        ### start = self.startDateEdit.date().toPyDate()
+        ### end = self.endDateEdit.date().toPyDate()
 
         arguments = {
-            "id": col,
-            "temporal_extent": [str(start), str(end)],
-            "spatial_extent": {}
+            "id": col
         }
 
-        if west:
-            arguments["spatial_extent"]["west"] = west
-        if east:
-            arguments["spatial_extent"]["east"] = east
-        if south:
-            arguments["spatial_extent"]["south"] = south
-        if north:
-            arguments["spatial_extent"]["north"] = north
-        if crs:
-            arguments["spatial_extent"]["crs"] = crs
+            ### "temporal_extent": [str(start), str(end)],
+            ### "spatial_extent": {}
+
+        ### if west:
+        ###    arguments["spatial_extent"]["west"] = west
+        ### if east:
+        ###    arguments["spatial_extent"]["east"] = east
+        ### if south:
+        ###    arguments["spatial_extent"]["south"] = south
+        ### if north:
+        ###    arguments["spatial_extent"]["north"] = north
+        ### if crs:
+        ###    arguments["spatial_extent"]["crs"] = crs
 
         # info(self.iface, "Load Collection {}".format(str(arguments)))
 

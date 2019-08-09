@@ -27,7 +27,14 @@ import os
 from qgis.PyQt import uic, QtGui, QtWidgets
 from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton
 import qgis.PyQt.QtCore as QtCore
+
+
 import json
+from PyQt5 import QtCore
+from PyQt5.QtGui import QDesktopServices
+from PyQt5.QtCore import *
+from PyQt5.QtWebKit import *
+from PyQt5.QtWebKitWidgets import *
 
 from .models.result import Result
 from .models.connect import Connection
@@ -65,8 +72,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.clearButton.clicked.connect(self.collection_selected)
         self.sendButton.clicked.connect(self.send_job)
         self.loadButton.clicked.connect(self.load_collection)
+        ### Draw desired extent
+        #self.circleButton.clicked.connect(self.extent)
+        #self.rectangleButton.clicked.connect(self.extent)
+        #self.polygonButton.clicked.connect(self.extent)
         ### Change to incorporate the WebEditor:
-        #self.moveButton.clicked.connect(self......)
+        self.moveButton.clicked.connect(self.web_view)
 
         self.processgraphEdit.textChanged.connect(self.update_processgraph)
 
@@ -79,6 +90,28 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Jobs Tab
         self.init_jobs()
+
+    def extent(self):  # https://github.com/jeremyk6/qdraw/blob/master/qdraw.py
+        extent = 1
+
+
+     #  web = QWebView(self)
+     #  web.load(QUrl("https://www.osm-wms.de/"))
+     #  web.show()
+
+    def web_view(self):
+        web = QWebView(self)
+        #web.load(QUrl("https://open-eo.github.io/")) # works
+        web.load(QDesktopServices.openUrl(QUrl("https://open-eo.github.io/openeo-web-editor/demo/", QUrl.TolerantMode)))
+        #web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # works
+        #web.load(QUrl("whatismybrowser.com/w/KS6H3A4")) # Error: Sorry, the openEO Web Editor requires a modern browsers.
+        # Please update your browser or use Google Chrome or Mozilla Firefox as alternative.
+        web.show()
+
+        # add:
+        ## send login data (backend, user, pwd, collection & process) - does the demo version work then?
+        ## another def request_ProcessGraph: get back generated process graph in web editor
+        ## Create Job at Backend then via QGIS Plugin
 
     def connect(self):
         """
@@ -220,7 +253,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         job_id = self.jobsTableWidget.item(row, 0).text()
         download_dir = self.connection.job_result_download(job_id)
         if download_dir:
-            info(self.iface, "Downloaded to {}".format(download_dir))
+            info(self.iface, "Downloaded to {}".format(download_dir))   # def web_view(self):
             result = Result(path=download_dir)
             result.display()
 
@@ -347,7 +380,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         #widget = self.processgraphWidget
         #self.load_dict_into_widget(widget, self.processgraph.graph)
         #widget.show()
-
 
     def process_selected(self):
         """

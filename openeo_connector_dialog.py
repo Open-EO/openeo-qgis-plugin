@@ -21,31 +21,41 @@
  *                                                                         *
  ***************************************************************************/
 """
+########################################################################################################################
+########################################################################################################################
 
 import os
+from collections import OrderedDict
 
 from qgis.PyQt import uic, QtGui, QtWidgets
-from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton
+from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, QApplication, QAction, QMainWindow
 import qgis.PyQt.QtCore as QtCore
-
-
-import json
-from PyQt5 import QtCore
-from PyQt5.QtGui import QDesktopServices
+from qgis.gui import *
+from qgis.core import QgsFeature, QgsGeometry, QgsVectorLayer, QgsPointXY, QgsGeometryCollection
+from qgis.utils import * # import iface
 from PyQt5.QtCore import *
+
+#from PyQt5.QtWebEngineWidgets import QWebEngineView
+import json
+from PyQt5 import QtCore, Qt
+from PyQt5.QtGui import QDesktopServices # QgsMapTool, QgsMapCanvas
+from PyQt5.QtCore import QObject
 from PyQt5.QtWebKit import *
 from PyQt5.QtWebKitWidgets import *
+
+from PyQt5.QtCore import QUrl
 
 from .models.result import Result
 from .models.connect import Connection
 from .models.processgraph import Processgraph
 from .utils.logging import info, warning
 
+########################################################################################################################
+########################################################################################################################
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'openeo_connector_dialog_base.ui'))
-
 
 class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, parent=None, iface=None):
@@ -72,39 +82,92 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.clearButton.clicked.connect(self.collection_selected)
         self.sendButton.clicked.connect(self.send_job)
         self.loadButton.clicked.connect(self.load_collection)
+
         ### Draw desired extent
-        #self.circleButton.clicked.connect(self.extent)
-        #self.rectangleButton.clicked.connect(self.extent)
-        #self.polygonButton.clicked.connect(self.extent)
+        extentBoxItems = OrderedDict({"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.drawRect,
+                                      "Draw Polygon": self.drawPoly, "Insert Shapefile": self.insertShape}) # Set Label to improve
+        self.extentBox.addItems(list(extentBoxItems.keys()))
+
         ### Change to incorporate the WebEditor:
         self.moveButton.clicked.connect(self.web_view)
+        self.moveButton_QGIS.clicked.connect(self.web_view_QGIS)
 
         self.processgraphEdit.textChanged.connect(self.update_processgraph)
-
-        # Init filter boxes validators
-        ### self.westEdit.setValidator(QtGui.QDoubleValidator())
-        ### self.eastEdit.setValidator(QtGui.QDoubleValidator())
-        ### self.southEdit.setValidator(QtGui.QDoubleValidator())
-        ### self.northEdit.setValidator(QtGui.QDoubleValidator())
-        ### self.crsEdit.setValidator(QtGui.QIntValidator())
 
         # Jobs Tab
         self.init_jobs()
 
-    def extent(self):  # https://github.com/jeremyk6/qdraw/blob/master/qdraw.py
-        extent = 1
+    def set_canvas(self):
+        extent = iface.mapCanvas().extent()  # Problem is: Object of type 'MapCanvas' is not JSON serializable
+        extentString = extent.toString() # Problem solved by converting it to string
+        return extentString
 
+    def drawRect(self):
+        return 2
 
-     #  web = QWebView(self)
-     #  web.load(QUrl("https://www.osm-wms.de/"))
-     #  web.show()
+        # set CRS - due to message CRS was undefined : defaulting to CRS EPSG:4326 - WGS 84
+        # crs = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
+
+        #point1 = QgsPointXY(startPoint.x(), startPoint.y())
+        #point2 = QgsPointXY(startPoint.x(), endPoint.y())
+        #point3 = QgsPointXY(endPoint.x(), endPoint.y())
+        #point4 = QgsPointXY(endPoint.x(), startPoint.y())
+
+        # How to draw on canvas?
+
+        #self.rubberBand.addPoint(point1, False)
+        #self.rubberBand.addPoint(point2, False)
+        #self.rubberBand.addPoint(point3, False)
+        #self.rubberBand.addPoint(point4, True)  # true to update canvas
+        #self.rubberBand.show()
+
+        #extent = iface.rubberBand.extent()
+        #extentString = extent.toString()
+        #return extentString
+
+    def drawPoly(self):
+        return 3
+
+    def insertShape(self):
+        return 4
+        #path_to_shape = os.path.join("/home/ngnann/", "TestShape_forImport.gpkg")
+        #vlayer = QgsVectorLayer(path_to_shape, "TestShape_forImport", "ogr")
+        #if not vlayer.isValid():
+        #    print("Layer failed to load!")
+
+    def add_extent(self):
+        if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
+            return self.set_canvas()
+        elif str(self.extentBox.currentText()) == "Draw Rectangle":
+            return self.drawRect()
+        elif str(self.extentBox.currentText()) == "Draw Polygon":
+            return self.drawPoly()
+        elif str(self.extentBox.currentText()) == "Insert Shapefile":
+            return self.insertShape()
+        else:
+            return 999
 
     def web_view(self):
+        #web = QWebView(self) # QWebView is an old version
+        #web.load(QDesktopServices.openUrl(QUrl("https://open-eo.github.io/openeo-web-editor/demo/", QUrl.StrictMode))) #TolerantMode)))
+        #web.show()
+
+        view = QWebEngineView(self) # QWebEngineView is the new version, but can not be loaded into QGIS
+        view.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/"))
+        view.show()
+
+        #print(help('PyQt5'))
+
+        # add:
+        ## send login data (backend, user, pwd, collection & process) - does the demo version work then?
+        ## another def request_ProcessGraph: get back generated process graph in web editor
+        ## Create Job at Backend then via QGIS Plugin
+
+    def web_view_QGIS(self):
         web = QWebView(self)
-        #web.load(QUrl("https://open-eo.github.io/")) # works
-        web.load(QDesktopServices.openUrl(QUrl("https://open-eo.github.io/openeo-web-editor/demo/", QUrl.TolerantMode)))
-        #web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # works
-        #web.load(QUrl("whatismybrowser.com/w/KS6H3A4")) # Error: Sorry, the openEO Web Editor requires a modern browsers.
+        web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # works
+        #web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) # works
+        #web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # Error: Sorry, the openEO Web Editor requires a modern browsers.
         # Please update your browser or use Google Chrome or Mozilla Firefox as alternative.
         web.show()
 
@@ -140,6 +203,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.collectionBox.clear()
         self.processBox.clear()
+        self.extentBox.clear()
 
         # Load Collections from Backend
         for col in collection_result:
@@ -150,6 +214,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         for pr in process_result:
             if "id" in pr:
                 self.processBox.addItem(pr['id'])
+
+        # Give Extent to Backend
+        #for ex in add_extent:
+        #    if "id" in ex:
+        #        self.extentBox.addItem(ex['id'])
 
         self.refresh_jobs()
 
@@ -277,6 +346,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Loads the collection form the GUI and starts a new process graph in doing so.
         """
         col = str(self.collectionBox.currentText())
+        ex = self.add_extent() # shall not display current text but values!
 
         ### west=None
         ### east=None
@@ -299,7 +369,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         ### end = self.endDateEdit.date().toPyDate()
 
         arguments = {
-            "id": col
+            "id": col,
+            "extent": ex
         }
 
             ### "temporal_extent": [str(start), str(end)],
@@ -377,6 +448,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         graph = self.processgraphEdit.toPlainText()
         self.processgraph.graph = json.loads(graph)
         self.processgraph.builder.processes = json.loads(graph)
+
         #widget = self.processgraphWidget
         #self.load_dict_into_widget(widget, self.processgraph.graph)
         #widget.show()

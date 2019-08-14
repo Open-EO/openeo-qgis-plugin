@@ -1,9 +1,11 @@
-from qgis.gui import QgsMapToolEmitPoint
+from qgis.gui import QgsMapToolEmitPoint, QgsRubberBand, QgsMapTool
+from PyQt5.QtCore import *
+from qgis.core import QgsRectangle
 
 class RectangleMapTool(QgsMapToolEmitPoint):
     def __init__(self, canvas):
         self.canvas = canvas
-  #      QgsMapToolEmitPoint.__init__(self, self.canvas)
+        QgsMapToolEmitPoint.__init__(self, self.canvas)
         self.rubberBand = QgsRubberBand(self.canvas, True)
         self.rubberBand.setColor(Qt.red)
         self.rubberBand.setWidth(1)

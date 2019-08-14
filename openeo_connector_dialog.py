@@ -31,24 +31,28 @@ from qgis.PyQt import uic, QtGui, QtWidgets
 from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, QApplication, QAction, QMainWindow
 import qgis.PyQt.QtCore as QtCore
 from qgis.gui import *
-from qgis.core import QgsFeature, QgsGeometry, QgsVectorLayer, QgsPointXY, QgsGeometryCollection
-from qgis.utils import * # import iface
+from qgis.core import *
+from qgis.utils import * # imports iface
 from PyQt5.QtCore import *
 
 #from PyQt5.QtWebEngineWidgets import QWebEngineView
 import json
 from PyQt5 import QtCore, Qt
-from PyQt5.QtGui import QDesktopServices # QgsMapTool, QgsMapCanvas
-from PyQt5.QtCore import QObject
+from PyQt5.QtGui import *
+from PyQt5 import QtGui
+from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtCore import QObject, Qt
 from PyQt5.QtWebKit import *
 from PyQt5.QtWebKitWidgets import *
+from qgis.gui import QgisInterface
 
 from PyQt5.QtCore import QUrl
-
 from .models.result import Result
 from .models.connect import Connection
 from .models.processgraph import Processgraph
 from .utils.logging import info, warning
+
+from .DrawRect import *
 
 ########################################################################################################################
 ########################################################################################################################
@@ -98,32 +102,38 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.init_jobs()
 
     def set_canvas(self):
+        crs = "EPSG:3857 - WGS 84 / Pseudo-Mercator - Projected"
+        #"+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs" # this is just a string - but shall be the aim
         extent = iface.mapCanvas().extent()  # Problem is: Object of type 'MapCanvas' is not JSON serializable
         extentString = extent.toString() # Problem solved by converting it to string
-        return extentString
+        return crs + " " + extentString
 
-    def drawRect(self):
-        return 2
+    def drawRect(self, event):
+        ## When clicking on "Draw Rectangle" (within the QGis Plugin), one gets transferred here_
+        # Step 1:
+        self.iface = iface
+        self.canvas = iface.mapCanvas() # Addressing Canvas in the backround
 
-        # set CRS - due to message CRS was undefined : defaulting to CRS EPSG:4326 - WGS 84
-        # crs = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
+        #Step 2: How to draw on that canvas?
+            ## Idea 1: Create Map tools to enable interaction -> extra Py-Script DrawRect.py
 
-        #point1 = QgsPointXY(startPoint.x(), startPoint.y())
-        #point2 = QgsPointXY(startPoint.x(), endPoint.y())
-        #point3 = QgsPointXY(endPoint.x(), endPoint.y())
-        #point4 = QgsPointXY(endPoint.x(), startPoint.y())
+            ## Idea 2: Jump over to canvas and draw a rectangle - set 2 points!
 
-        # How to draw on canvas?
+            ## Idea 3: When Load Button is clicked, the QAction begins
 
-        #self.rubberBand.addPoint(point1, False)
-        #self.rubberBand.addPoint(point2, False)
-        #self.rubberBand.addPoint(point3, False)
-        #self.rubberBand.addPoint(point4, True)  # true to update canvas
-        #self.rubberBand.show()
+            ## Idea 4: https://gis.stackexchange.com/questions/109994/retrieve-point-coordinates-from-map-canvas-using-qgis-api !!! works
 
-        #extent = iface.rubberBand.extent()
-        #extentString = extent.toString()
-        #return extentString
+        x = event.pos().x()
+        y = event.pos().y()
+
+        #canvas.mapSettings().setProjectionsEnabled(True)
+        #canvas.mapSettings().setDestinationCrs(QgsCoordinateReferenceSystem(3426))
+       # espg = canvas.mapSettings().destinationCrs().authid()
+
+        point = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
+        #Step 3: Save and return
+        ##return crs + " " + point_x + point_y # point_x (links oben); point_y (rechts unten)
+        return str(point) #str(canvas) # that gives back the canvas object
 
     def drawPoly(self):
         return 3
@@ -139,7 +149,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
             return self.set_canvas()
         elif str(self.extentBox.currentText()) == "Draw Rectangle":
-            return self.drawRect()
+            return self.drawRect(self)
         elif str(self.extentBox.currentText()) == "Draw Polygon":
             return self.drawPoly()
         elif str(self.extentBox.currentText()) == "Insert Shapefile":

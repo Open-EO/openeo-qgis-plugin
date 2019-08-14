@@ -25,6 +25,8 @@
 ########################################################################################################################
 
 import os
+from osgeo import ogr
+from os.path import expanduser
 from collections import OrderedDict
 
 from qgis.PyQt import uic, QtGui, QtWidgets
@@ -44,7 +46,6 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QObject, Qt
 from PyQt5.QtWebKit import *
 from PyQt5.QtWebKitWidgets import *
-from qgis.gui import QgisInterface
 
 from PyQt5.QtCore import QUrl
 from .models.result import Result
@@ -53,6 +54,8 @@ from .models.processgraph import Processgraph
 from .utils.logging import info, warning
 
 from .DrawRect import *
+from tkinter import filedialog
+
 
 ########################################################################################################################
 ########################################################################################################################
@@ -102,48 +105,84 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.init_jobs()
 
     def set_canvas(self):
-        crs = "EPSG:3857 - WGS 84 / Pseudo-Mercator - Projected"
-        #"+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs" # this is just a string - but shall be the aim
+        crs = iface.activeLayer().crs().authid()
         extent = iface.mapCanvas().extent()  # Problem is: Object of type 'MapCanvas' is not JSON serializable
         extentString = extent.toString() # Problem solved by converting it to string
         return crs + " " + extentString
 
-    def drawRect(self, event):
+    def drawRect(self, event): # event in case of idea 3
+        crs = iface.activeLayer().crs().authid()
         ## When clicking on "Draw Rectangle" (within the QGis Plugin), one gets transferred here_
-        # Step 1:
+        # Step 1: check
         self.iface = iface
         self.canvas = iface.mapCanvas() # Addressing Canvas in the backround
 
         #Step 2: How to draw on that canvas?
             ## Idea 1: Create Map tools to enable interaction -> extra Py-Script DrawRect.py
 
+        # Set the "RectangleMapTool" active:
+        #tool = RectangleMapTool(iface.mapCanvas())
+        #iface.mapCanvas().setMapTool(tool)
+
+        #rec = tool.rectangleCreated()
+
             ## Idea 2: Jump over to canvas and draw a rectangle - set 2 points!
+            # https://gis.stackexchange.com/questions/109994/retrieve-point-coordinates-from-map-canvas-using-qgis-api !!! works for a point
 
-            ## Idea 3: When Load Button is clicked, the QAction begins
-
-            ## Idea 4: https://gis.stackexchange.com/questions/109994/retrieve-point-coordinates-from-map-canvas-using-qgis-api !!! works
-
+## Point
         x = event.pos().x()
         y = event.pos().y()
+        point = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
 
+## Polygon
+        #startPoint = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
+#        endPoint = self.canvas.getCoordinateTransform().toMapCoordinates(a, b)
+
+
+        #How to draw??
+
+## CRS
         #canvas.mapSettings().setProjectionsEnabled(True)
         #canvas.mapSettings().setDestinationCrs(QgsCoordinateReferenceSystem(3426))
        # espg = canvas.mapSettings().destinationCrs().authid()
 
-        point = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
+
         #Step 3: Save and return
         ##return crs + " " + point_x + point_y # point_x (links oben); point_y (rechts unten)
-        return str(point) #str(canvas) # that gives back the canvas object
 
-    def drawPoly(self):
-        return 3
+        return crs + " " + str(point) # in case of the point
+
+        ## Idea 4: https://gis.stackexchange.com/questions/45094/programatically-check-for-mouse-click-in-pyqgis
+
+    def drawPoly(self, point):
+        crs = iface.activeLayer().crs().authid()
+        self.iface = iface
+        self.canvas = iface.mapCanvas()
+
+        self.rb = QgsRubberBand(self.canvas, True)
+        vertex = QgsPointXY(point.pos().x(), point.pos().y())
+        self.rb.addPoint(vertex, False)
+        self.rb.addPoint(vertex, False)
+        self.rb.addPoint(vertex, False)
+        self.rb.addPoint(vertex, True)
+        self.rb.show()
+        ## somehow: addAction - that point on canvas can be set by clicking on it --> Bernhard!
+
+        return crs + " " + str(self.rb)
 
     def insertShape(self):
-        return 4
-        #path_to_shape = os.path.join("/home/ngnann/", "TestShape_forImport.gpkg")
-        #vlayer = QgsVectorLayer(path_to_shape, "TestShape_forImport", "ogr")
-        #if not vlayer.isValid():
-        #    print("Layer failed to load!")
+        # get generic home directory
+        home = expanduser("~")
+        # get location of file
+        root = filedialog.askopenfilename(initialdir = home, title="Select A File" , filetypes = (("Shapefiles", "*.shp"), ("All Files", "*.*")))
+        vlayer = QgsVectorLayer(root, "*.shp", "ogr")
+        crs = vlayer.crs().authid()
+        if vlayer.isValid():
+            extent = vlayer.extent()
+            return str(crs) + " " + str(extent)
+        else:
+            return "Layer failed to load!"
+
 
     def add_extent(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
@@ -151,7 +190,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         elif str(self.extentBox.currentText()) == "Draw Rectangle":
             return self.drawRect(self)
         elif str(self.extentBox.currentText()) == "Draw Polygon":
-            return self.drawPoly()
+            return self.drawPoly(self)
         elif str(self.extentBox.currentText()) == "Insert Shapefile":
             return self.insertShape()
         else:
@@ -201,7 +240,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if pwd == "":
             pwd = None
 
-        auth = self.connection.connect(url, username=user, password=pwd)
+        auth = self.connection.connect(url   , username=user, password=pwd)
 
         if not auth:
             warning(self.iface, "Authentication failed!")

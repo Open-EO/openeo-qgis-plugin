@@ -34,27 +34,27 @@ from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, 
 import qgis.PyQt.QtCore as QtCore
 from qgis.gui import *
 from qgis.core import *
+#from qgis.core import QgsVectorLayer, QgsProject
 from qgis.utils import * # imports iface
 from PyQt5.QtCore import *
 
-#from PyQt5.QtWebEngineWidgets import QWebEngineView
-import json
+## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
+
 from PyQt5 import QtCore, Qt
 from PyQt5.QtGui import *
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtCore import QObject, Qt
 from PyQt5.QtWebKit import *
 from PyQt5.QtWebKitWidgets import *
+from tkinter import filedialog
 
 from PyQt5.QtCore import QUrl
 from .models.result import Result
 from .models.connect import Connection
 from .models.processgraph import Processgraph
 from .utils.logging import info, warning
-
 from .DrawRect import *
-from tkinter import filedialog
+from .MapToolPoint import PointTool
 
 
 ########################################################################################################################
@@ -107,68 +107,67 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def set_canvas(self):
         crs = iface.activeLayer().crs().authid()
         extent = iface.mapCanvas().extent()  # Problem is: Object of type 'MapCanvas' is not JSON serializable
-        extentString = extent.toString() # Problem solved by converting it to string
-        return crs + " " + extentString
+        e = extent.xMaximum()
+        er = round(e, 1)
+        n = extent.yMaximum()
+        nr = round(n, 1)
+        w = extent.xMinimum()
+        wr = round(w, 1)
+        s = extent.yMinimum()
+        sr = round(s, 1)
+        spatial_extent = {}
+        spatial_extent["west"] = wr
+        spatial_extent["east"] = er
+        spatial_extent["north"] = nr
+        spatial_extent["south"] = sr
+        spatial_extent["crs"] = crs
+        return str(spatial_extent)    # Improvement: Change ' in json to "
 
-    def drawRect(self, event): # event in case of idea 3
+    def drawRect(self):
         crs = iface.activeLayer().crs().authid()
-        ## When clicking on "Draw Rectangle" (within the QGis Plugin), one gets transferred here_
-        # Step 1: check
-        self.iface = iface
-        self.canvas = iface.mapCanvas() # Addressing Canvas in the backround
+        self.canvas = QgsMapCanvas()
 
-        #Step 2: How to draw on that canvas?
-            ## Idea 1: Create Map tools to enable interaction -> extra Py-Script DrawRect.py
+        ## MapToolPoint
+        #x = PointTool(iface.mapCanvas())
+        #iface.mapCanvas().setMapTool(x)
 
-        # Set the "RectangleMapTool" active:
-        #tool = RectangleMapTool(iface.mapCanvas())
-        #iface.mapCanvas().setMapTool(tool)
+        ## DrawRect
+        #self.x1 = 0.0
+        #self.y1 = 0.0
+        #self.x2 = 0.0
+        #self.y2 = 0.0
+        #self.x3 = 0.0
+        #self.y3 = 0.0
+        #self.x4 = 0.0
+        #self.y4 = 0.0
 
-        #rec = tool.rectangleCreated()
+        y = RectangleAreaTool(iface.mapCanvas())
+        iface.mapCanvas().setMapTool(y)
 
-            ## Idea 2: Jump over to canvas and draw a rectangle - set 2 points!
-            # https://gis.stackexchange.com/questions/109994/retrieve-point-coordinates-from-map-canvas-using-qgis-api !!! works for a point
+        y.canvasPressEvent()
 
-## Point
-        x = event.pos().x()
-        y = event.pos().y()
-        point = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
+        #w = canvas_clicked.xMinimum()
+        #wr = round(w, 1)
+        #e = canvas_clicked.xMaximum()
+        #er = round(e, 1)
+        #n = canvas_clicked.yMaximum()
+        #nr = round(n, 1)
+        #s = canvas_clicked.yMinimum()
+        #sr = round(s, 1)
 
-## Polygon
-        #startPoint = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
-#        endPoint = self.canvas.getCoordinateTransform().toMapCoordinates(a, b)
+        spatial_extent = {}
+        #spatial_extent["west"] = self.x1
+        #spatial_extent["east"] = self.x2
+        #spatial_extent["north"] = self.y2
+        #spatial_extent["south"] = self.y1
+        spatial_extent["crs"] = crs
+        return str(spatial_extent)  # Improvement: Change ' in json to "
 
 
-        #How to draw??
-
-## CRS
-        #canvas.mapSettings().setProjectionsEnabled(True)
-        #canvas.mapSettings().setDestinationCrs(QgsCoordinateReferenceSystem(3426))
-       # espg = canvas.mapSettings().destinationCrs().authid()
-
-
-        #Step 3: Save and return
-        ##return crs + " " + point_x + point_y # point_x (links oben); point_y (rechts unten)
-
-        return crs + " " + str(point) # in case of the point
-
-        ## Idea 4: https://gis.stackexchange.com/questions/45094/programatically-check-for-mouse-click-in-pyqgis
-
-    def drawPoly(self, point):
+    def drawPoly(self):
         crs = iface.activeLayer().crs().authid()
-        self.iface = iface
-        self.canvas = iface.mapCanvas()
 
-        self.rb = QgsRubberBand(self.canvas, True)
-        vertex = QgsPointXY(point.pos().x(), point.pos().y())
-        self.rb.addPoint(vertex, False)
-        self.rb.addPoint(vertex, False)
-        self.rb.addPoint(vertex, False)
-        self.rb.addPoint(vertex, True)
-        self.rb.show()
-        ## somehow: addAction - that point on canvas can be set by clicking on it --> Bernhard!
-
-        return crs + " " + str(self.rb)
+        return str(crs)
 
     def insertShape(self):
         # get generic home directory
@@ -178,8 +177,23 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         vlayer = QgsVectorLayer(root, "*.shp", "ogr")
         crs = vlayer.crs().authid()
         if vlayer.isValid():
-            extent = vlayer.extent()
-            return str(crs) + " " + str(extent)
+            elayer = vlayer.extent()
+            w = elayer.xMinimum()
+            wr = round(w, 1)
+            e = elayer.xMaximum()
+            er = round(e, 1)
+            n = elayer.yMaximum()
+            nr = round(n, 1)
+            s = elayer.yMinimum()
+            sr = round(s, 1)
+
+            spatial_extent = {}
+            spatial_extent["west"] = wr
+            spatial_extent["east"] = er
+            spatial_extent["north"] = nr
+            spatial_extent["south"] = sr
+            spatial_extent["crs"] = crs
+            return str(spatial_extent)  # Improvement: Change ' in json to "
         else:
             return "Layer failed to load!"
 
@@ -188,22 +202,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
             return self.set_canvas()
         elif str(self.extentBox.currentText()) == "Draw Rectangle":
-            return self.drawRect(self)
+            return self.drawRect()
         elif str(self.extentBox.currentText()) == "Draw Polygon":
-            return self.drawPoly(self)
+            return self.drawPoly()
         elif str(self.extentBox.currentText()) == "Insert Shapefile":
             return self.insertShape()
         else:
             return 999
 
     def web_view(self):
-        #web = QWebView(self) # QWebView is an old version
-        #web.load(QDesktopServices.openUrl(QUrl("https://open-eo.github.io/openeo-web-editor/demo/", QUrl.StrictMode))) #TolerantMode)))
-        #web.show()
-
-        view = QWebEngineView(self) # QWebEngineView is the new version, but can not be loaded into QGIS
-        view.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/"))
-        view.show()
+        return 1
+        #view = QWebEngineHttpRequest(self) # QWebEngineView is the new version, but can not be loaded into QGIS
+        #view.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/"))
+        #view.show()
 
         #print(help('PyQt5'))
 
@@ -214,7 +225,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def web_view_QGIS(self):
         web = QWebView(self)
-        web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # works
+        web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) # works
         #web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) # works
         #web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # Error: Sorry, the openEO Web Editor requires a modern browsers.
         # Please update your browser or use Google Chrome or Mozilla Firefox as alternative.
@@ -419,7 +430,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         arguments = {
             "id": col,
-            "extent": ex
+            "spatial_extent": ex
         }
 
             ### "temporal_extent": [str(start), str(end)],

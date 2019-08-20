@@ -1,15 +1,15 @@
-from qgis.gui import QgsMapToolEmitPoint, QgsRubberBand, QgsMapTool
-from qgis.core import QgsRectangle, QgsWkbTypes, QgsPointXY, QgsCoordinateReferenceSystem, QgsCoordinateTransform
-from PyQt5.QtCore import *
-from PyQt5.QtGui import QColor
+from qgis.gui import QgsMapTool, QgsRubberBand
+from qgis.core import QgsWkbTypes, QgsPointXY, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject
+from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtCore import pyqtSignal
 
-
-class RectangleMapTool(QgsMapTool):
+class RectangleAreaTool(QgsMapTool):
 
     rectangleCreated = pyqtSignal(float, float, float, float)
 
-    def __init__(self, canvas):
+    def __init__(self, canvas): #, action):
         QgsMapTool.__init__(self, canvas)
+
         self.canvas = canvas
         self.active = False
         #self.setAction(action)
@@ -39,7 +39,7 @@ class RectangleMapTool(QgsMapTool):
     def canvasMoveEvent(self, e):
         if not self.isEmittingPoint:
             return
-        self.endPoint = self.toMapCoordinates(e.pos())
+        self.endPoint = self.toMapCoordinates( e.pos() )
         self.showRect(self.startPoint, self.endPoint)
 
     def showRect(self, startPoint, endPoint):
@@ -54,7 +54,7 @@ class RectangleMapTool(QgsMapTool):
         self.rubberBand.addPoint(point1, False)
         self.rubberBand.addPoint(point2, False)
         self.rubberBand.addPoint(point3, False)
-        self.rubberBand.addPoint(point4, True)  # true to update canvas
+        self.rubberBand.addPoint(point4, True)    # true to update canvas
         self.rubberBand.show()
 
     def transformCoordinates(self):

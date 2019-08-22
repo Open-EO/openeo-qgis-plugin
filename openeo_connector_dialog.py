@@ -26,6 +26,7 @@
 
 import os
 from osgeo import ogr
+import json
 from os.path import expanduser
 from collections import OrderedDict
 
@@ -54,8 +55,6 @@ from .models.connect import Connection
 from .models.processgraph import Processgraph
 from .utils.logging import info, warning
 from .DrawRect import *
-from .MapToolPoint import PointTool
-
 
 ########################################################################################################################
 ########################################################################################################################
@@ -65,6 +64,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'openeo_connector_dialog_base.ui'))
 
 class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
+
     def __init__(self, parent=None, iface=None):
         """Constructor."""
 
@@ -89,11 +89,24 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.clearButton.clicked.connect(self.collection_selected)
         self.sendButton.clicked.connect(self.send_job)
         self.loadButton.clicked.connect(self.load_collection)
+        self.map_canvas = QgsMapCanvas()
 
         ### Draw desired extent
         extentBoxItems = OrderedDict({"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.drawRect,
                                       "Draw Polygon": self.drawPoly, "Insert Shapefile": self.insertShape}) # Set Label to improve
         self.extentBox.addItems(list(extentBoxItems.keys()))
+
+        self.actions = []
+        self.clickPoint_action = QAction(self, text=self.tr(u'Rectangle Selection'), callback=self.runRectangle,
+                                         parent=self.iface.mainWindow())
+
+        # connect the tool (click point action connected to drawRect- which requires an action)
+        self.clickPoint_action.triggered.connect(self.drawRect)
+        # create the map tool(s)
+        self.action_clickpoint = QgsMapToolEmitPoint(self.map_canvas)
+        self.action_clickpoint.canvasClicked.connect(self)
+
+        ################################################################################################ Draw desired extent
 
         ### Change to incorporate the WebEditor:
         self.moveButton.clicked.connect(self.web_view)
@@ -103,6 +116,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Jobs Tab
         self.init_jobs()
+
+    def add_action(self, text, callback, parent=None):
+        action = QAction(self, text, callback, parent)
+        action.triggered.connect(callback)
+        self.actions.append(action)
+        return action
 
     def set_canvas(self):
         crs = iface.activeLayer().crs().authid()
@@ -125,44 +144,38 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def drawRect(self):
         crs = iface.activeLayer().crs().authid()
-        self.canvas = QgsMapCanvas()
 
-        ## MapToolPoint
-        #x = PointTool(iface.mapCanvas())
-        #iface.mapCanvas().setMapTool(x)
+        ## AIM: Make Canvas clicks and get x and y coordinates
 
-        ## DrawRect
-        #self.x1 = 0.0
-        #self.y1 = 0.0
-        #self.x2 = 0.0
-        #self.y2 = 0.0
-        #self.x3 = 0.0
-        #self.y3 = 0.0
-        #self.x4 = 0.0
-        #self.y4 = 0.0
+        self.rectangleMapTool = RectangleAreaTool(iface.mapCanvas(), self.clickPoint_action)
+        iface.mapCanvas().setMapTool(self.rectangleMapTool)
 
-        y = RectangleAreaTool(iface.mapCanvas())
-        iface.mapCanvas().setMapTool(y)
+        self.map_canvas.setMapTool(self.action_clickpoint)
 
-        y.canvasPressEvent()
-
-        #w = canvas_clicked.xMinimum()
-        #wr = round(w, 1)
-        #e = canvas_clicked.xMaximum()
-        #er = round(e, 1)
-        #n = canvas_clicked.yMaximum()
-        #nr = round(n, 1)
-        #s = canvas_clicked.yMinimum()
-        #sr = round(s, 1)
+        #w = self.action_clickpoint.xMinimum(point.x()) #Where does xMinimum come from
+        ##wr = round(w, 1)
+        #e = self.action_clickpoint.xMaximum(point.x())
+        ##er = round(e, 1)
+        #n = self.action_clickpoint.yMaximum(point.y())
+        ##nr = round(n, 1)
+        #s = self.action_clickpoint.yMinimum(point.y())
+        ##sr = round(s, 1)
 
         spatial_extent = {}
         #spatial_extent["west"] = self.x1
         #spatial_extent["east"] = self.x2
         #spatial_extent["north"] = self.y2
         #spatial_extent["south"] = self.y1
-        spatial_extent["crs"] = crs
+        #spatial_extent["crs"] = crs
         return str(spatial_extent)  # Improvement: Change ' in json to "
 
+    def runRectangle(self): #, b):
+        #if b:
+        return str("TEST")
+            #self.iface.mapCanvas().setMapTool(self.rectangleAreaTool)
+        #else:
+        #    return str("TEST")
+#            self.iface.mapCanvas().unsetMapTool(self.rectangleAreaTool)
 
     def drawPoly(self):
         crs = iface.activeLayer().crs().authid()
@@ -197,18 +210,23 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             return "Layer failed to load!"
 
-
     def add_extent(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
             return self.set_canvas()
         elif str(self.extentBox.currentText()) == "Draw Rectangle":
-            return self.drawRect()
+            return self.drawRect
         elif str(self.extentBox.currentText()) == "Draw Polygon":
             return self.drawPoly()
         elif str(self.extentBox.currentText()) == "Insert Shapefile":
             return self.insertShape()
         else:
             return 999
+
+    def add_temporal(self):
+        return 5
+
+    def add_band(self):
+        return 5
 
     def web_view(self):
         return 1
@@ -407,6 +425,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         col = str(self.collectionBox.currentText())
         ex = self.add_extent() # shall not display current text but values!
+        tex = self.add_temporal()
+        bx = self.add_band()
 
         ### west=None
         ### east=None
@@ -430,7 +450,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         arguments = {
             "id": col,
-            "spatial_extent": ex
+            "spatial_extent": ex,
+            "temporal extent": tex,
+            "bands": bx
         }
 
             ### "temporal_extent": [str(start), str(end)],

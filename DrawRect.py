@@ -7,12 +7,12 @@ class RectangleAreaTool(QgsMapTool):
 
     rectangleCreated = pyqtSignal(float, float, float, float)
 
-    def __init__(self, canvas): #, action):
+    def __init__(self, canvas, action):
         QgsMapTool.__init__(self, canvas)
 
         self.canvas = canvas
         self.active = False
-        #self.setAction(action)
+        self.setAction(action)
         self.rubberBand = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
         mFillColor = QColor(254, 178, 76, 63)
         self.rubberBand.setColor(mFillColor)

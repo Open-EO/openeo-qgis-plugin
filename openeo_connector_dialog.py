@@ -36,13 +36,16 @@ from qgis.core import *
 #from qgis.core import QgsVectorLayer, QgsProject
 from qgis.utils import * # imports iface
 from PyQt5.QtCore import *
+import tkinter as Tk
 
 ## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
 
 from PyQt5 import QtCore, Qt
+from PyQt5.QtCore import QObject # equals QgisInterface
 from PyQt5.QtGui import *
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QVBoxLayout, QCalendarWidget, QDialog
 from PyQt5.QtWebKit import *
 from PyQt5.QtWebKitWidgets import *
 from tkinter import filedialog
@@ -89,6 +92,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.clearButton.clicked.connect(self.collection_selected)
         self.sendButton.clicked.connect(self.send_job)
         self.loadButton.clicked.connect(self.load_collection)
+        self.calendarWidget.clicked.connect(self.add_temporal)
 
         ### Draw desired extent
         extentBoxItems = OrderedDict({"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.getRect,
@@ -98,6 +102,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         ### Change to incorporate the WebEditor:
         self.moveButton.clicked.connect(self.web_view)
         self.moveButton_QGIS.clicked.connect(self.web_view_QGIS)
+        #self.returnButton.clicked.connect(self.web_view_QGIS)
 
         #self.processgraphEdit.textChanged.connect(self.update_processgraph)
 
@@ -226,6 +231,14 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             return 999
 
+    def add_temporal(self):
+        self.calendar = QCalendarWidget(self)
+        self.startDate = QDate
+        self.endDate = QDate
+        self.calendar.clicked[QtCore.QDate].connect(self.startDate)
+        self.calendar.clicked[QtCore.QDate].connect(self.endDate)
+        return str(self.startDate) + str(self.endDate)
+
     def web_view(self):
         return 1
         #view = QWebEngineHttpRequest(self) # QWebEngineView is the new version, but can not be loaded into QGIS
@@ -241,11 +254,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def web_view_QGIS(self):
         web = QWebView(self)
-        web.load(QUrl("http://localhost:81/")) # works
-        #web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) # works
+        web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) # works
         #web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # Error: Sorry, the openEO Web Editor requires a modern browsers.
         # Please update your browser or use Google Chrome or Mozilla Firefox as alternative.
-        web.show()
+
+        if self.moveButton_QGIS.clicked:
+            web.show()
+
+        elif self.returnButton.clicked:
+            1
+
+        else:
+            return "Error"
 
         # add:
         ## send login data (backend, user, pwd, collection & process) - does the demo version work then?
@@ -423,7 +443,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         col = str(self.collectionBox.currentText())
         ex = self.add_extent() # shall not display current text but values!
-        tex = 999
+        tex = self.add_temporal()
         B = 999
 
         ### west=None

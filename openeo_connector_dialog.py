@@ -24,6 +24,7 @@
 ########################################################################################################################
 
 import os
+import sys
 from osgeo import ogr
 from os.path import expanduser
 from collections import OrderedDict
@@ -186,9 +187,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             crs = iface.activeLayer().crs().authid()
 
-
-
-        return str(crs)
+        spatial_extent = {}
+        spatial_extent["crs"] = crs
+        return json.dumps(spatial_extent, indent=2, sort_keys=False)
 
     def insertShape(self):
         # get generic home directory
@@ -214,7 +215,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             spatial_extent["north"] = nr
             spatial_extent["south"] = sr
             spatial_extent["crs"] = crs
-            return str(spatial_extent)  # Improvement: Change ' in json to "
+            return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "
         else:
             return "Layer failed to load!"
 
@@ -232,12 +233,25 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             return 999
 
     def add_temporal(self):
-        self.calendar = QCalendarWidget(self)
-        self.startDate = QDate
-        self.endDate = QDate
-        self.calendar.clicked[QtCore.QDate].connect(self.startDate)
-        self.calendar.clicked[QtCore.QDate].connect(self.endDate)
-        return str(self.startDate) + str(self.endDate)
+        # Define Calendar
+        calendar = QCalendarWidget(self)
+        calendar.setGridVisible(True)
+        calendar.clicked[QtCore.QDate].connect(self.showDate)
+        ## Attribute 1: Date 1
+        startDate = calendar.maximumDate()
+        # startDate = QCalendarWidget.minimumDate(self.calendar) # first date which can possibly be chosen is: 25.11.-4714 :D
+        #startDate = QDate.currentDate() # works
+        ## Attribute 2: Date 2
+        #endDate = QCalendarWidget.maximumDate(self.calendar) # last date which can possibly be chosen is: 31.12.7999
+
+        ## Method
+
+        # self.calendar.clicked[QtCore.QDate].connect(self.showDate)
+
+        return str(startDate) #+ str(endDate)
+
+    def showDate(self, date):
+        self.setText(date.toString())
 
     def web_view(self):
         return 1

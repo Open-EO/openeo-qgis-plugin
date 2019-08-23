@@ -12,7 +12,7 @@ class RectangleAreaTool(QgsMapTool):
 
         self.canvas = canvas
         self.active = False
-        self.setAction(action)
+        self.action = action
         self.rubberBand = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
         mFillColor = QColor(254, 178, 76, 63)
         self.rubberBand.setColor(mFillColor)
@@ -34,7 +34,9 @@ class RectangleAreaTool(QgsMapTool):
         self.isEmittingPoint = False
         self.rubberBand.hide()
         self.transformCoordinates()
-        self.rectangleCreated.emit(self.startPoint.x(), self.startPoint.y(), self.endPoint.x(), self.endPoint.y())
+        #self.rectangleCreated.emit(self.startPoint.x(), self.startPoint.y(), self.endPoint.x(), self.endPoint.y())
+        self.action.getRect(self.startPoint.x(), self.startPoint.y(), self.endPoint.x(), self.endPoint.y())
+
 
     def canvasMoveEvent(self, e):
         if not self.isEmittingPoint:

@@ -11,7 +11,6 @@
         copyright            : (C) 2019 by Bernhard Goesswein
         email                : bernhard.goesswein@geo.tuwien.ac.at
  ***************************************************************************/
-
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -26,7 +25,6 @@
 
 import os
 from osgeo import ogr
-import json
 from os.path import expanduser
 from collections import OrderedDict
 
@@ -55,6 +53,8 @@ from .models.connect import Connection
 from .models.processgraph import Processgraph
 from .utils.logging import info, warning
 from .DrawRect import *
+#from .MapToolPoint import PointTool
+import json
 
 ########################################################################################################################
 ########################################################################################################################
@@ -64,7 +64,6 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'openeo_connector_dialog_base.ui'))
 
 class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
-
     def __init__(self, parent=None, iface=None):
         """Constructor."""
 
@@ -78,6 +77,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.iface = iface
         self.connection = Connection()
         self.processgraph = Processgraph()
+
         self.processes = None
 
         self.setupUi(self)
@@ -89,42 +89,26 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.clearButton.clicked.connect(self.collection_selected)
         self.sendButton.clicked.connect(self.send_job)
         self.loadButton.clicked.connect(self.load_collection)
-        self.map_canvas = QgsMapCanvas()
 
         ### Draw desired extent
-        extentBoxItems = OrderedDict({"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.drawRect,
+        extentBoxItems = OrderedDict({"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.getRect,
                                       "Draw Polygon": self.drawPoly, "Insert Shapefile": self.insertShape}) # Set Label to improve
         self.extentBox.addItems(list(extentBoxItems.keys()))
-
-        self.actions = []
-        self.clickPoint_action = QAction(self, text=self.tr(u'Rectangle Selection'), callback=self.runRectangle,
-                                         parent=self.iface.mainWindow())
-
-        # connect the tool (click point action connected to drawRect- which requires an action)
-        self.clickPoint_action.triggered.connect(self.drawRect)
-        # create the map tool(s)
-        self.action_clickpoint = QgsMapToolEmitPoint(self.map_canvas)
-        self.action_clickpoint.canvasClicked.connect(self)
-
-        ################################################################################################ Draw desired extent
 
         ### Change to incorporate the WebEditor:
         self.moveButton.clicked.connect(self.web_view)
         self.moveButton_QGIS.clicked.connect(self.web_view_QGIS)
 
-        self.processgraphEdit.textChanged.connect(self.update_processgraph)
+        #self.processgraphEdit.textChanged.connect(self.update_processgraph)
 
         # Jobs Tab
         self.init_jobs()
 
-    def add_action(self, text, callback, parent=None):
-        action = QAction(self, text, callback, parent)
-        action.triggered.connect(callback)
-        self.actions.append(action)
-        return action
-
     def set_canvas(self):
-        crs = iface.activeLayer().crs().authid()
+        if not iface.activeLayer():
+            return "Please open a new layer to get extent from"
+        else:
+            crs = iface.activeLayer().crs().authid()
         extent = iface.mapCanvas().extent()  # Problem is: Object of type 'MapCanvas' is not JSON serializable
         e = extent.xMaximum()
         er = round(e, 1)
@@ -140,45 +124,64 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         spatial_extent["north"] = nr
         spatial_extent["south"] = sr
         spatial_extent["crs"] = crs
-        return str(spatial_extent)    # Improvement: Change ' in json to "
+        return json.dumps(spatial_extent, indent=2, sort_keys=False)    # Improvement: Change ' in json to "
 
-    def drawRect(self):
-        crs = iface.activeLayer().crs().authid()
-
-        ## AIM: Make Canvas clicks and get x and y coordinates
-
-        self.rectangleMapTool = RectangleAreaTool(iface.mapCanvas(), self.clickPoint_action)
-        iface.mapCanvas().setMapTool(self.rectangleMapTool)
-
-        self.map_canvas.setMapTool(self.action_clickpoint)
-
-        #w = self.action_clickpoint.xMinimum(point.x()) #Where does xMinimum come from
-        ##wr = round(w, 1)
-        #e = self.action_clickpoint.xMaximum(point.x())
-        ##er = round(e, 1)
-        #n = self.action_clickpoint.yMaximum(point.y())
-        ##nr = round(n, 1)
-        #s = self.action_clickpoint.yMinimum(point.y())
-        ##sr = round(s, 1)
+    def getRect(self, x1, y1, x2, y2):
+        if not iface.activeLayer():
+            return "Please open a new layer to get extent from"
+        else:
+            crs = iface.activeLayer().crs().authid()
 
         spatial_extent = {}
+        if x1 <= x2:
+            spatial_extent["west"] = x1
+            spatial_extent["east"] = x2
+        elif x2 <= x1:
+            spatial_extent["west"] = x2
+            spatial_extent["east"] = x1
+        else:
+            return "Error: Draw a new rectangle"
+
+        if y1 <= y2:
+            spatial_extent["north"] = y2
+            spatial_extent["south"] = y1
+        elif y2 <= y1:
+            spatial_extent["north"] = y1
+            spatial_extent["south"] = y2
+        else:
+            return "Error: Draw a new rectangle"
+
+        spatial_extent["crs"] = crs
+
+        #self.processgraphEdit.setText(str(spatial_extent))
+        #self.processgraphEdit.toPlainText(str(spatial_extent))
+        self.processgraphEdit.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+        #self.processgraph.graph["load_collection"]["arguments"]["spatial_extent"] = 555
+
+    def drawRect(self):
+        self.rectangleMapTool = RectangleAreaTool(iface.mapCanvas(), self)
+        iface.mapCanvas().setMapTool(self.rectangleMapTool)
+
+        #if not iface.activeLayer():
+        #    return "Please open a new layer to get extent from"
+        #else:
+            #crs = iface.activeLayer().crs().authid()
+
+        #spatial_extent = {}
         #spatial_extent["west"] = self.x1
         #spatial_extent["east"] = self.x2
         #spatial_extent["north"] = self.y2
         #spatial_extent["south"] = self.y1
         #spatial_extent["crs"] = crs
-        return str(spatial_extent)  # Improvement: Change ' in json to "
-
-    def runRectangle(self): #, b):
-        #if b:
-        return str("TEST")
-            #self.iface.mapCanvas().setMapTool(self.rectangleAreaTool)
-        #else:
-        #    return str("TEST")
-#            self.iface.mapCanvas().unsetMapTool(self.rectangleAreaTool)
+        #return str(spatial_extent)
 
     def drawPoly(self):
-        crs = iface.activeLayer().crs().authid()
+        if not iface.activeLayer():
+            return "Please open a new layer to get extent from"
+        else:
+            crs = iface.activeLayer().crs().authid()
+
+
 
         return str(crs)
 
@@ -210,23 +213,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             return "Layer failed to load!"
 
+
     def add_extent(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
             return self.set_canvas()
         elif str(self.extentBox.currentText()) == "Draw Rectangle":
-            return self.drawRect
+            return self.drawRect()
         elif str(self.extentBox.currentText()) == "Draw Polygon":
             return self.drawPoly()
         elif str(self.extentBox.currentText()) == "Insert Shapefile":
             return self.insertShape()
         else:
             return 999
-
-    def add_temporal(self):
-        return 5
-
-    def add_band(self):
-        return 5
 
     def web_view(self):
         return 1
@@ -243,7 +241,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def web_view_QGIS(self):
         web = QWebView(self)
-        web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) # works
+        web.load(QUrl("http://localhost:81/")) # works
         #web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) # works
         #web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # Error: Sorry, the openEO Web Editor requires a modern browsers.
         # Please update your browser or use Google Chrome or Mozilla Firefox as alternative.
@@ -425,8 +423,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         col = str(self.collectionBox.currentText())
         ex = self.add_extent() # shall not display current text but values!
-        tex = self.add_temporal()
-        bx = self.add_band()
+        tex = 999
+        B = 999
 
         ### west=None
         ### east=None
@@ -451,8 +449,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         arguments = {
             "id": col,
             "spatial_extent": ex,
-            "temporal extent": tex,
-            "bands": bx
+            "temporal_extent":tex,
+            "bands": B,
         }
 
             ### "temporal_extent": [str(start), str(end)],
@@ -523,13 +521,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processgraphEdit.setText(json.dumps(self.processgraph.graph, indent=2, sort_keys=True))
         #widget.show()
 
-    def update_processgraph(self):
-        """
-            Reloads the process graph from the raw process graph text field
-        """
-        graph = self.processgraphEdit.toPlainText()
-        self.processgraph.graph = json.loads(graph)
-        self.processgraph.builder.processes = json.loads(graph)
+    #def update_processgraph(self):
+    #    """
+    #        Reloads the process graph from the raw process graph text field
+    #    """
+    #    graph = self.processgraphEdit.toPlainText()
+    #    self.processgraph.graph = json.loads(graph)
+    #    self.processgraph.builder.processes = json.loads(graph)
 
         #widget = self.processgraphWidget
         #self.load_dict_into_widget(widget, self.processgraph.graph)

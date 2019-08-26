@@ -42,12 +42,10 @@ import tkinter as Tk
 
 ## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
 
-from PyQt5 import QtCore, Qt
-from PyQt5.QtCore import QObject  # equals QgisInterface
-from PyQt5.QtGui import *
+from PyQt5 import QtCore
+from PyQt5.QtCore import QDate
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtWidgets import QVBoxLayout, QCalendarWidget, QDialog, QDateEdit
+from PyQt5.QtWidgets import QCalendarWidget, QLabel
 from PyQt5.QtWebKit import *
 from PyQt5.QtWebKitWidgets import *
 from tkinter import filedialog
@@ -94,20 +92,42 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Backends = []
         for element in BackendsALL.values():
             e = str(element)
-            Backends.append(e)
-        Backends.append("None of the listed ones match")
-        self.backendEdit.addItems(Backends)
+            Backends.append(e) # would work as input
+
+        Versions = []
+        i = Backends[1]
+        a = Backends[4]
+        Versions.append(i)
+        Versions.append(a)
+        # Backends with more then one version
+        GEE = "https://earthengine.openeo.org/v0.3"
+        GEEv = "https://earthengine.openeo.org/v0.4"
+        EURAC = "https://openeo.eurac.edu/"
+        EURACv = "http://saocompute.eurac.edu/openEO_0_3_0/openeo/"
+        Vito = "http://openeo.vgt.vito.be/openeo/0.4.0"
+        Vitov = "http://openeo.vgt.vito.be/openeo"
+        Mundialis = "http://openeo.mundialis.de/api/v0.3/"
+        Mundialisv = "http://openeo.mundialis.de/api/v0.4/"
+        Versions.append(GEE)
+        Versions.append(GEEv)
+        Versions.append(EURAC)
+        Versions.append(EURACv)
+        Versions.append(Vito)
+        Versions.append(Vitov)
+        Versions.append(Mundialis)
+        Versions.append(Mundialisv)
+
+        self.backendEdit.addItems(Versions) # or Backends
         ### Backend Issue end
         self.connectButton.clicked.connect(self.connect)
         self.addButton.clicked.connect(self.add_process)
         self.processBox.currentTextChanged.connect(self.process_selected)
         # self.collectionBox.currentTextChanged.connect(self.collection_selected)
         self.refreshButton.clicked.connect(self.refresh_jobs)
-        self.clearButton.clicked.connect(self.collection_selected)
+        self.clearButton.clicked.connect(self.clear)
         self.sendButton.clicked.connect(self.send_job)
         self.loadButton.clicked.connect(self.load_collection)
         self.calendarWidget.clicked.connect(self.add_temporal)
-
         ### Draw desired extent
         extentBoxItems = OrderedDict(
             {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.getRect,
@@ -247,26 +267,22 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             return 999
 
     def add_temporal(self):
-        # Define Calendar: QDateTimeEdit can be configured to allow a QCalendarWidget to be used to select dates.
+        # minDate = calendar.setMinimumDate() #shall be the min and max of each data set - read respective jsons..
+        # maxDate = calendar.setMaximumDate() # use calendar.setDateRange(min, max) for this restriction
+
         calendar = QCalendarWidget(self)
+        calendar.selectionMode()
+        #startDate = calendar.selectedDate()
+        endDate = calendar.selectedDate()
 
-        # minDate = calendar.setMinimumDate()
-        # maxDate = calendar.setMaximumDate()
-
-        editor = QDateEdit()
-        editor.setDisplayFormat('yyyy-MM-dd')
-
-        ## Attribute 1: Date 1
-        startDate = editor.date().toString('yyyy-MM-dd')
-        endDate = editor.date().toString('yyyy-MM-dd')
-        #  eD = endDate.toString()
-        # startDate = QCalendarWidget.minimumDate(self.calendar) # first date which can possibly be chosen is: 25.11.-4714 :D
+        startDate = QCalendarWidget.minimumDate(calendar) # first date which can possibly be chosen is: 25.11.-4714 :D
         # startDate = QDate.currentDate() # works
         ## Attribute 2: Date 2
         # endDate = QCalendarWidget.maximumDate(self.calendar) # last date which can possibly be chosen is: 31.12.7999
 
-        temporal_extent = "[{}, {}]".format(startDate, endDate)
-        return temporal_extent
+        # temporal_extent = "[{}, {}]".format(str(startDate), str(endDate))
+        return str(startDate) + ", " + str(endDate)
+
 
     def bands(self):
         bands = "[\"{}\", \"{}\", \"{}\"]".format("B04", "B03", "B02")
@@ -342,7 +358,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.collectionBox.clear()
         self.processBox.clear()
-        self.extentBox.clear()
 
         # Load Collections from Backend
         for col in collection_result:
@@ -541,8 +556,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Gets called if a new collection is selected, resets the process graph with an initial one and the collection id.
         --Deprecated--
         """
-        self.processgraph.set_collection(str(self.collectionBox.currentText()))
-        self.reload_processgraph_view()
+        #self.processgraph.set_collection(str(self.collectionBox.currentText()))
+        #self.reload_processgraph_view()
+
+    def clear(self):
+        self.processgraphEdit.clear()
 
     def add_process(self):
         """

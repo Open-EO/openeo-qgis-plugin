@@ -252,7 +252,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>30</y>
+       <y>40</y>
        <width>381</width>
        <height>21</height>
       </rect>
@@ -262,7 +262,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>100</y>
+       <y>120</y>
        <width>291</width>
        <height>21</height>
       </rect>
@@ -272,23 +272,13 @@
      <property name="geometry">
       <rect>
        <x>310</x>
-       <y>100</y>
+       <y>120</y>
        <width>80</width>
        <height>21</height>
       </rect>
      </property>
      <property name="text">
       <string>Add</string>
-     </property>
-    </widget>
-    <widget class="QTableWidget" name="processTableWidget">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>130</y>
-       <width>381</width>
-       <height>171</height>
-      </rect>
      </property>
     </widget>
     <widget class="QLabel" name="label_6">
@@ -308,7 +298,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>80</y>
+       <y>90</y>
        <width>101</width>
        <height>20</height>
       </rect>
@@ -360,7 +350,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>60</y>
+       <y>70</y>
        <width>401</width>
        <height>20</height>
       </rect>
@@ -373,7 +363,7 @@
      <property name="geometry">
       <rect>
        <x>110</x>
-       <y>640</y>
+       <y>600</y>
        <width>161</width>
        <height>31</height>
       </rect>
@@ -399,7 +389,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>300</y>
+       <y>150</y>
        <width>401</width>
        <height>20</height>
       </rect>
@@ -412,7 +402,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>320</y>
+       <y>170</y>
        <width>101</width>
        <height>20</height>
       </rect>
@@ -428,23 +418,70 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>350</y>
+       <y>200</y>
        <width>381</width>
        <height>31</height>
       </rect>
      </property>
     </widget>
     <widget class="QCalendarWidget" name="calendarWidget">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>390</y>
+       <y>310</y>
        <width>361</width>
        <height>241</height>
       </rect>
      </property>
+     <property name="accessibleDescription">
+      <string/>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="autoFillBackground">
+      <bool>true</bool>
+     </property>
      <property name="locale">
       <locale language="English" country="UnitedKingdom"/>
+     </property>
+     <property name="selectedDate">
+      <date>
+       <year>2019</year>
+       <month>8</month>
+       <day>1</day>
+      </date>
+     </property>
+     <property name="firstDayOfWeek">
+      <enum>Qt::Monday</enum>
+     </property>
+     <property name="selectionMode">
+      <enum>QCalendarWidget::SingleSelection</enum>
+     </property>
+     <property name="navigationBarVisible">
+      <bool>true</bool>
+     </property>
+     <property name="dateEditEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="DisplaySpatialEx">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>240</y>
+       <width>381</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>16777215</height>
+      </size>
      </property>
     </widget>
    </widget>

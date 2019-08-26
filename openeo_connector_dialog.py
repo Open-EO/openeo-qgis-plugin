@@ -46,7 +46,7 @@ from PyQt5.QtCore import QObject # equals QgisInterface
 from PyQt5.QtGui import *
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtWidgets import QVBoxLayout, QCalendarWidget, QDialog
+from PyQt5.QtWidgets import QVBoxLayout, QCalendarWidget, QDialog, QDateEdit
 from PyQt5.QtWebKit import *
 from PyQt5.QtWebKitWidgets import *
 from tkinter import filedialog
@@ -233,25 +233,30 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             return 999
 
     def add_temporal(self):
-        # Define Calendar
+        # Define Calendar: QDateTimeEdit can be configured to allow a QCalendarWidget to be used to select dates.
         calendar = QCalendarWidget(self)
-        calendar.setGridVisible(True)
-        calendar.clicked[QtCore.QDate].connect(self.showDate)
+
+        #minDate = calendar.setMinimumDate()
+        #maxDate = calendar.setMaximumDate()
+
+        editor = QDateEdit()
+        editor.setDisplayFormat('yyyy-MM-dd')
+
         ## Attribute 1: Date 1
-        startDate = calendar.maximumDate()
+        startDate = editor.date().toString('yyyy-MM-dd')
+        endDate = editor.date().toString('yyyy-MM-dd')
+      #  eD = endDate.toString()
         # startDate = QCalendarWidget.minimumDate(self.calendar) # first date which can possibly be chosen is: 25.11.-4714 :D
         #startDate = QDate.currentDate() # works
         ## Attribute 2: Date 2
         #endDate = QCalendarWidget.maximumDate(self.calendar) # last date which can possibly be chosen is: 31.12.7999
 
-        ## Method
+        temporal_extent = "[{}, {}]".format(startDate, endDate)
+        return temporal_extent
 
-        # self.calendar.clicked[QtCore.QDate].connect(self.showDate)
-
-        return str(startDate) #+ str(endDate)
-
-    def showDate(self, date):
-        self.setText(date.toString())
+    def bands(self):
+        bands = "[\"{}\", \"{}\", \"{}\"]".format("B04", "B03", "B02")
+        return bands
 
     def web_view(self):
         return 1
@@ -295,6 +300,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         pwd = self.passwordEdit.text()
         user = self.usernameEdit.text()
         url = self.backendEdit.text()
+        # http://hub.openeo.org/backends
 
         if user == "":
             user = None
@@ -458,7 +464,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         col = str(self.collectionBox.currentText())
         ex = self.add_extent() # shall not display current text but values!
         tex = self.add_temporal()
-        B = 999
+        B = self.bands()
 
         ### west=None
         ### east=None
@@ -480,12 +486,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         ### start = self.startDateEdit.date().toPyDate()
         ### end = self.endDateEdit.date().toPyDate()
 
-        arguments = {
+        arguments =  OrderedDict({
             "id": col,
             "spatial_extent": ex,
             "temporal_extent":tex,
             "bands": B,
-        }
+        })
 
             ### "temporal_extent": [str(start), str(end)],
             ### "spatial_extent": {}

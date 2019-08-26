@@ -50,16 +50,6 @@
      <string>Backend URL</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="backendEdit">
-    <property name="geometry">
-     <rect>
-      <x>150</x>
-      <y>30</y>
-      <width>481</width>
-      <height>23</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
@@ -81,6 +71,12 @@
       <width>481</width>
       <height>23</height>
      </rect>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>16777215</width>
+      <height>16777215</height>
+     </size>
     </property>
    </widget>
    <widget class="QLabel" name="label_3">
@@ -159,6 +155,16 @@
      <string>Connect</string>
     </property>
    </widget>
+   <widget class="QComboBox" name="backendEdit">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>30</y>
+      <width>481</width>
+      <height>25</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QTabWidget" name="tabWidget">
    <property name="geometry">
@@ -170,7 +176,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab_4">
     <attribute name="title">

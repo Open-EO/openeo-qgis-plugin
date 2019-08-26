@@ -24,7 +24,8 @@
 ########################################################################################################################
 
 import os
-import sys
+import json
+import requests
 from osgeo import ogr
 from os.path import expanduser
 from collections import OrderedDict
@@ -34,15 +35,15 @@ from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, 
 import qgis.PyQt.QtCore as QtCore
 from qgis.gui import *
 from qgis.core import *
-#from qgis.core import QgsVectorLayer, QgsProject
-from qgis.utils import * # imports iface
+# from qgis.core import QgsVectorLayer, QgsProject
+from qgis.utils import *  # imports iface
 from PyQt5.QtCore import *
 import tkinter as Tk
 
 ## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
 
 from PyQt5 import QtCore, Qt
-from PyQt5.QtCore import QObject # equals QgisInterface
+from PyQt5.QtCore import QObject  # equals QgisInterface
 from PyQt5.QtGui import *
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QApplication, QMainWindow
@@ -57,8 +58,8 @@ from .models.connect import Connection
 from .models.processgraph import Processgraph
 from .utils.logging import info, warning
 from .DrawRect import *
-#from .MapToolPoint import PointTool
-import json
+# from .MapToolPoint import PointTool
+
 
 ########################################################################################################################
 ########################################################################################################################
@@ -66,6 +67,7 @@ import json
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'openeo_connector_dialog_base.ui'))
+
 
 class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, parent=None, iface=None):
@@ -85,6 +87,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processes = None
 
         self.setupUi(self)
+        backendURL = requests.get('http://hub.openeo.org/backends')
+        BackendsALL = backendURL.json()
+        # BackendsALL.items() # returns everything
+        # BackendsALL.keys() # returns the names
+        # BackendsALL.values() # returns the URLs
+        Backends = []
+        for element in BackendsALL.values():
+            e = str(element)
+            Backends.append(e)
+        self.backendEdit.addItems(Backends)
         self.connectButton.clicked.connect(self.connect)
         self.addButton.clicked.connect(self.add_process)
         self.processBox.currentTextChanged.connect(self.process_selected)
@@ -96,16 +108,17 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.calendarWidget.clicked.connect(self.add_temporal)
 
         ### Draw desired extent
-        extentBoxItems = OrderedDict({"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.getRect,
-                                      "Draw Polygon": self.drawPoly, "Insert Shapefile": self.insertShape}) # Set Label to improve
+        extentBoxItems = OrderedDict(
+            {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.getRect,
+             "Draw Polygon": self.drawPoly, "Insert Shapefile": self.insertShape})  # Set Label to improve
         self.extentBox.addItems(list(extentBoxItems.keys()))
 
         ### Change to incorporate the WebEditor:
         self.moveButton.clicked.connect(self.web_view)
         self.moveButton_QGIS.clicked.connect(self.web_view_QGIS)
-        #self.returnButton.clicked.connect(self.web_view_QGIS)
+        # self.returnButton.clicked.connect(self.web_view_QGIS)
 
-        #self.processgraphEdit.textChanged.connect(self.update_processgraph)
+        # self.processgraphEdit.textChanged.connect(self.update_processgraph)
 
         # Jobs Tab
         self.init_jobs()
@@ -130,7 +143,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         spatial_extent["north"] = nr
         spatial_extent["south"] = sr
         spatial_extent["crs"] = crs
-        return json.dumps(spatial_extent, indent=2, sort_keys=False)    # Improvement: Change ' in json to "
+        return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "
 
     def getRect(self, x1, y1, x2, y2):
         if not iface.activeLayer():
@@ -159,27 +172,27 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         spatial_extent["crs"] = crs
 
-        #self.processgraphEdit.setText(str(spatial_extent))
-        #self.processgraphEdit.toPlainText(str(spatial_extent))
+        # self.processgraphEdit.setText(str(spatial_extent))
+        # self.processgraphEdit.toPlainText(str(spatial_extent))
         self.processgraphEdit.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
-        #self.processgraph.graph["load_collection"]["arguments"]["spatial_extent"] = 555
+        # self.processgraph.graph["load_collection"]["arguments"]["spatial_extent"] = 555
 
     def drawRect(self):
         self.rectangleMapTool = RectangleAreaTool(iface.mapCanvas(), self)
         iface.mapCanvas().setMapTool(self.rectangleMapTool)
 
-        #if not iface.activeLayer():
+        # if not iface.activeLayer():
         #    return "Please open a new layer to get extent from"
-        #else:
-            #crs = iface.activeLayer().crs().authid()
+        # else:
+        # crs = iface.activeLayer().crs().authid()
 
-        #spatial_extent = {}
-        #spatial_extent["west"] = self.x1
-        #spatial_extent["east"] = self.x2
-        #spatial_extent["north"] = self.y2
-        #spatial_extent["south"] = self.y1
-        #spatial_extent["crs"] = crs
-        #return str(spatial_extent)
+        # spatial_extent = {}
+        # spatial_extent["west"] = self.x1
+        # spatial_extent["east"] = self.x2
+        # spatial_extent["north"] = self.y2
+        # spatial_extent["south"] = self.y1
+        # spatial_extent["crs"] = crs
+        # return str(spatial_extent)
 
     def drawPoly(self):
         if not iface.activeLayer():
@@ -195,7 +208,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         # get generic home directory
         home = expanduser("~")
         # get location of file
-        root = filedialog.askopenfilename(initialdir = home, title="Select A File" , filetypes = (("Shapefiles", "*.shp"), ("All Files", "*.*")))
+        root = filedialog.askopenfilename(initialdir=home, title="Select A File",
+                                          filetypes=(("Shapefiles", "*.shp"), ("All Files", "*.*")))
         vlayer = QgsVectorLayer(root, "*.shp", "ogr")
         crs = vlayer.crs().authid()
         if vlayer.isValid():
@@ -219,7 +233,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             return "Layer failed to load!"
 
-
     def add_extent(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
             return self.set_canvas()
@@ -236,8 +249,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         # Define Calendar: QDateTimeEdit can be configured to allow a QCalendarWidget to be used to select dates.
         calendar = QCalendarWidget(self)
 
-        #minDate = calendar.setMinimumDate()
-        #maxDate = calendar.setMaximumDate()
+        # minDate = calendar.setMinimumDate()
+        # maxDate = calendar.setMaximumDate()
 
         editor = QDateEdit()
         editor.setDisplayFormat('yyyy-MM-dd')
@@ -245,11 +258,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         ## Attribute 1: Date 1
         startDate = editor.date().toString('yyyy-MM-dd')
         endDate = editor.date().toString('yyyy-MM-dd')
-      #  eD = endDate.toString()
+        #  eD = endDate.toString()
         # startDate = QCalendarWidget.minimumDate(self.calendar) # first date which can possibly be chosen is: 25.11.-4714 :D
-        #startDate = QDate.currentDate() # works
+        # startDate = QDate.currentDate() # works
         ## Attribute 2: Date 2
-        #endDate = QCalendarWidget.maximumDate(self.calendar) # last date which can possibly be chosen is: 31.12.7999
+        # endDate = QCalendarWidget.maximumDate(self.calendar) # last date which can possibly be chosen is: 31.12.7999
 
         temporal_extent = "[{}, {}]".format(startDate, endDate)
         return temporal_extent
@@ -260,21 +273,21 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def web_view(self):
         return 1
-        #view = QWebEngineHttpRequest(self) # QWebEngineView is the new version, but can not be loaded into QGIS
-        #view.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/"))
-        #view.show()
+        # view = QWebEngineHttpRequest(self) # QWebEngineView is the new version, but can not be loaded into QGIS
+        # view.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/"))
+        # view.show()
 
-        #print(help('PyQt5'))
+        # print(help('PyQt5'))
 
-        # add:
+        # add:https://earthengine.openeo.org/.well-known/openeo
         ## send login data (backend, user, pwd, collection & process) - does the demo version work then?
         ## another def request_ProcessGraph: get back generated process graph in web editor
         ## Create Job at Backend then via QGIS Plugin
 
     def web_view_QGIS(self):
         web = QWebView(self)
-        web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) # works
-        #web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # Error: Sorry, the openEO Web Editor requires a modern browsers.
+        web.load(QUrl("https://mliang8.github.io/SoilWaterCube/"))  # works
+        # web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # Error: Sorry, the openEO Web Editor requires a modern browsers.
         # Please update your browser or use Google Chrome or Mozilla Firefox as alternative.
 
         if self.moveButton_QGIS.clicked:
@@ -297,17 +310,22 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         If there are no credentials, it connects to the backend without authentication.
         This method also loads all collections and processes from the backend.
         """
+
+        # Load Backend options
+        backends = {}
+        backends["Google Earth Engine"] = "https://earthengine.openeo.org/.well-known/openeo"
+        backends["R Deo Server"] = "https://r-server.openeo.org/"
+        backends["Eurac WCPS"] = "https://openeo.eurac.edu/.well-known/openeo"
+
+        url = self.backendEdit.currentText()
         pwd = self.passwordEdit.text()
         user = self.usernameEdit.text()
-        url = self.backendEdit.text()
-        # http://hub.openeo.org/backends
-
         if user == "":
             user = None
         if pwd == "":
             pwd = None
 
-        auth = self.connection.connect(url   , username=user, password=pwd)
+        auth = self.connection.connect(url, username=user, password=pwd)
 
         if not auth:
             warning(self.iface, "Authentication failed!")
@@ -332,7 +350,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 self.processBox.addItem(pr['id'])
 
         # Give Extent to Backend
-        #for ex in add_extent:
+        # for ex in add_extent:
         #    if "id" in ex:
         #        self.extentBox.addItem(ex['id'])
 
@@ -438,7 +456,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         job_id = self.jobsTableWidget.item(row, 0).text()
         download_dir = self.connection.job_result_download(job_id)
         if download_dir:
-            info(self.iface, "Downloaded to {}".format(download_dir))   # def web_view(self):
+            info(self.iface, "Downloaded to {}".format(download_dir))  # def web_view(self):
             result = Result(path=download_dir)
             result.display()
 
@@ -462,7 +480,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Loads the collection form the GUI and starts a new process graph in doing so.
         """
         col = str(self.collectionBox.currentText())
-        ex = self.add_extent() # shall not display current text but values!
+        ex = self.add_extent()  # shall not display current text but values!
         tex = self.add_temporal()
         B = self.bands()
 
@@ -486,15 +504,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         ### start = self.startDateEdit.date().toPyDate()
         ### end = self.endDateEdit.date().toPyDate()
 
-        arguments =  OrderedDict({
+        arguments = OrderedDict({
             "id": col,
             "spatial_extent": ex,
-            "temporal_extent":tex,
+            "temporal_extent": tex,
             "bands": B,
         })
 
-            ### "temporal_extent": [str(start), str(end)],
-            ### "spatial_extent": {}
+        ### "temporal_extent": [str(start), str(end)],
+        ### "spatial_extent": {}
 
         ### if west:
         ###    arguments["spatial_extent"]["west"] = west
@@ -556,12 +574,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         Reloads the process graph tree widget by loading the current processgraph into it.
         """
-        #widget = self.processgraphWidget
-        #self.load_dict_into_widget(widget, self.processgraph.graph)
+        # widget = self.processgraphWidget
+        # self.load_dict_into_widget(widget, self.processgraph.graph)
         self.processgraphEdit.setText(json.dumps(self.processgraph.graph, indent=2, sort_keys=True))
-        #widget.show()
+        # widget.show()
 
-    #def update_processgraph(self):
+    # def update_processgraph(self):
     #    """
     #        Reloads the process graph from the raw process graph text field
     #    """
@@ -569,9 +587,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     #    self.processgraph.graph = json.loads(graph)
     #    self.processgraph.builder.processes = json.loads(graph)
 
-        #widget = self.processgraphWidget
-        #self.load_dict_into_widget(widget, self.processgraph.graph)
-        #widget.show()
+    # widget = self.processgraphWidget
+    # self.load_dict_into_widget(widget, self.processgraph.graph)
+    # widget.show()
 
     def process_selected(self):
         """
@@ -584,7 +602,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 if p['id'] == str(self.processBox.currentText()):
                     process = p
                     if "parameters" in process:
-                        #info(self.iface, "New Process {}".format(process['parameters']))
+                        # info(self.iface, "New Process {}".format(process['parameters']))
                         self.processTableWidget.setRowCount(len(process['parameters']))
                         self.processTableWidget.setColumnCount(3)
                         self.processTableWidget.setHorizontalHeaderLabels(['Parameter', 'Type', 'Value'])

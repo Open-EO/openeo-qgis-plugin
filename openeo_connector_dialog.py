@@ -87,16 +87,17 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processes = None
 
         self.setupUi(self)
+        ### Backend Issue start
         backendURL = requests.get('http://hub.openeo.org/backends')
         BackendsALL = backendURL.json()
-        # BackendsALL.items() # returns everything
-        # BackendsALL.keys() # returns the names
-        # BackendsALL.values() # returns the URLs
+        # BackendsALL.items() # returns everything, # BackendsALL.keys() # returns the names, # BackendsALL.values() # returns the URLs
         Backends = []
         for element in BackendsALL.values():
             e = str(element)
             Backends.append(e)
+        Backends.append("None of the listed ones match")
         self.backendEdit.addItems(Backends)
+        ### Backend Issue end
         self.connectButton.clicked.connect(self.connect)
         self.addButton.clicked.connect(self.add_process)
         self.processBox.currentTextChanged.connect(self.process_selected)
@@ -317,7 +318,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         backends["R Deo Server"] = "https://r-server.openeo.org/"
         backends["Eurac WCPS"] = "https://openeo.eurac.edu/.well-known/openeo"
 
-        url = self.backendEdit.currentText()
+        if self.backendEdit.currentText() == "None of the listed ones match":
+            url = self.backendEdit2.text()
+        else:
+            url = self.backendEdit.currentText()
+
         pwd = self.passwordEdit.text()
         user = self.usernameEdit.text()
         if user == "":

@@ -105,7 +105,7 @@ class OSMDownloader(object):
 
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
-        action.triggered.connect(callback)
+        action.triggered.connect
         action.setEnabled(enabled_flag)
 
         if status_tip is not None:
@@ -142,7 +142,7 @@ class OSMDownloader(object):
 
         self.rectangleAreaTool = RectangleAreaTool(self.iface.mapCanvas(), self.rectangleAction)
 
-        self.rectangleAreaTool.rectangleCreated.connect(self.run)
+        self.rectangleAreaTool.rectangleCreated.connect
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""

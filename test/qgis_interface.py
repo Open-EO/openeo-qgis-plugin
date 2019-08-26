@@ -49,11 +49,11 @@ class QgisInterface(QObject):
         # are added.
         LOGGER.debug('Initialising canvas...')
         # noinspection PyArgumentList
-        QgsMapLayerRegistry.instance().layersAdded.connect(self.addLayers)
+        QgsMapLayerRegistry.instance().layersAdded.connect
         # noinspection PyArgumentList
-        QgsMapLayerRegistry.instance().layerWasAdded.connect(self.addLayer)
+        QgsMapLayerRegistry.instance().layerWasAdded.connect
         # noinspection PyArgumentList
-        QgsMapLayerRegistry.instance().removeAll.connect(self.removeAllLayers)
+        QgsMapLayerRegistry.instance().removeAll.connect
 
         # For processing module
         self.destCrs = None

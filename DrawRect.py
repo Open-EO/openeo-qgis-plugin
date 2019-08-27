@@ -32,8 +32,8 @@ class RectangleAreaTool(QgsMapTool):
 
     def canvasReleaseEvent(self, e):
         self.isEmittingPoint = False
-        self.rubberBand.hide()
-        self.transformCoordinates()
+        self.rubberBand.show()
+        #self.transformCoordinates() # do not activate, otherwise coordinates will not match the crs
         #self.rectangleCreated.emit(self.startPoint.x(), self.startPoint.y(), self.endPoint.x(), self.endPoint.y())
         self.action.getRect(self.startPoint.x(), self.startPoint.y(), self.endPoint.x(), self.endPoint.y())
 

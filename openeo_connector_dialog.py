@@ -133,6 +133,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.getRect,
              "Draw Polygon": self.drawPoly, "Insert Shapefile": self.insertShape})  # Set Label to improve
         self.extentBox.addItems(list(extentBoxItems.keys()))
+        self.takeSettings.clicked.connect(self.drawRect)
 
         ### Change to incorporate the WebEditor:
         self.moveButton.clicked.connect(self.web_view)
@@ -168,7 +169,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def getRect(self, x1, y1, x2, y2):
         if not iface.activeLayer():
-            return "Please open a new layer to get extent from"
+            warning(self.iface, "Please open a new layer to get extent from.")
+            return
         else:
             crs = iface.activeLayer().crs().authid()
 
@@ -202,18 +204,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.rectangleMapTool = RectangleAreaTool(iface.mapCanvas(), self)
         iface.mapCanvas().setMapTool(self.rectangleMapTool)
 
-        # if not iface.activeLayer():
-        #    return "Please open a new layer to get extent from"
-        # else:
-        # crs = iface.activeLayer().crs().authid()
-
-        # spatial_extent = {}
-        # spatial_extent["west"] = self.x1
-        # spatial_extent["east"] = self.x2
-        # spatial_extent["north"] = self.y2
-        # spatial_extent["south"] = self.y1
-        # spatial_extent["crs"] = crs
-        # return str(spatial_extent)
+    def copySettings(self):
+        DisplayedExtent = self.processgraphEdit.toPlainText()
+        return str(DisplayedExtent)
 
     def drawPoly(self):
         if not iface.activeLayer():
@@ -258,7 +251,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
             return self.set_canvas()
         elif str(self.extentBox.currentText()) == "Draw Rectangle":
-            return self.drawRect()
+            self.drawRect()
+            return self.copySettings()
         elif str(self.extentBox.currentText()) == "Draw Polygon":
             return self.drawPoly()
         elif str(self.extentBox.currentText()) == "Insert Shapefile":

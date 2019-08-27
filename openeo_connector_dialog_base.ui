@@ -484,6 +484,19 @@
       </size>
      </property>
     </widget>
+    <widget class="QPushButton" name="takeSettings">
+     <property name="geometry">
+      <rect>
+       <x>540</x>
+       <y>650</y>
+       <width>161</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Use Settings displayed</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="tab_2">
     <attribute name="title">

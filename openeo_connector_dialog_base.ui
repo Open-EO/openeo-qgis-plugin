@@ -7,19 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>850</width>
-    <height>900</height>
+    <height>950</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>850</width>
-    <height>900</height>
+    <height>950</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>850</width>
-    <height>900</height>
+    <height>950</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -184,7 +184,7 @@
      <x>0</x>
      <y>170</y>
      <width>851</width>
-     <height>731</height>
+     <height>781</height>
     </rect>
    </property>
    <property name="currentIndex">
@@ -238,9 +238,9 @@
     <widget class="QPushButton" name="sendButton">
      <property name="geometry">
       <rect>
-       <x>740</x>
-       <y>650</y>
-       <width>91</width>
+       <x>570</x>
+       <y>670</y>
+       <width>101</width>
        <height>31</height>
       </rect>
      </property>
@@ -313,8 +313,8 @@
     <widget class="QPushButton" name="clearButton">
      <property name="geometry">
       <rect>
-       <x>480</x>
-       <y>650</y>
+       <x>730</x>
+       <y>670</y>
        <width>101</width>
        <height>31</height>
       </rect>
@@ -329,7 +329,7 @@
        <x>410</x>
        <y>30</y>
        <width>421</width>
-       <height>611</height>
+       <height>631</height>
       </rect>
      </property>
     </widget>
@@ -363,8 +363,8 @@
      <property name="geometry">
       <rect>
        <x>410</x>
-       <y>650</y>
-       <width>71</width>
+       <y>670</y>
+       <width>101</width>
        <height>31</height>
       </rect>
      </property>
@@ -375,8 +375,8 @@
     <widget class="QLabel" name="label_21">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>675</y>
+       <x>30</x>
+       <y>720</y>
        <width>171</width>
        <height>21</height>
       </rect>
@@ -431,7 +431,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>420</y>
+       <y>460</y>
        <width>361</width>
        <height>241</height>
       </rect>
@@ -468,19 +468,6 @@
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QPushButton" name="takeSettings">
-     <property name="geometry">
-      <rect>
-       <x>580</x>
-       <y>650</y>
-       <width>161</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Use Settings displayed</string>
-     </property>
-    </widget>
     <widget class="QTableWidget" name="processTableWidget">
      <property name="geometry">
       <rect>
@@ -491,6 +478,37 @@
       </rect>
      </property>
     </widget>
+    <widget class="QPushButton" name="DrawButton">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>420</y>
+       <width>181</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Draw and Display Extent</string>
+     </property>
+    </widget>
+    <zorder>processgraphEdit</zorder>
+    <zorder>sendButton</zorder>
+    <zorder>collectionBox</zorder>
+    <zorder>processBox</zorder>
+    <zorder>addButton</zorder>
+    <zorder>label_6</zorder>
+    <zorder>label_7</zorder>
+    <zorder>clearButton</zorder>
+    <zorder>label_4</zorder>
+    <zorder>line</zorder>
+    <zorder>loadButton</zorder>
+    <zorder>label_21</zorder>
+    <zorder>line_2</zorder>
+    <zorder>label_8</zorder>
+    <zorder>extentBox</zorder>
+    <zorder>calendarWidget</zorder>
+    <zorder>processTableWidget</zorder>
+    <zorder>DrawButton</zorder>
    </widget>
    <widget class="QWidget" name="tab_2">
     <attribute name="title">

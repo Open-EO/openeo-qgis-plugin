@@ -256,6 +256,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if self.called == False:
             DisplayedExtent = self.processgraphEdit.toPlainText()
             self.called = True
+            warning(self.iface, "Extent is registered.")
             return str(DisplayedExtent)
         else:
             warning(self.iface, "Extent can be added only once!")
@@ -265,20 +266,37 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
             self.set_canvas()
             self.called = False
+            warning(self.iface, "Extent was updated.")
         elif str(self.extentBox.currentText()) == "Draw Polygon":
             self.drawPoly()
             self.called = False
+            warning(self.iface, "Extent was updated.")
         elif str(self.extentBox.currentText()) == "Draw Rectangle":
             self.drawRect()
-            self.add_extent()
             self.called = False
+            warning(self.iface, "Extent was updated.")
         elif str(self.extentBox.currentText()) == "Insert Shapefile":
             self.insertShape()
             self.called = False
+            warning(self.iface, "Extent was updated.")
         else:
             return 999
 
     def add_temporal(self):
+        # QCalendarWidget
+
+        ## GeeV4 = requests.get('https://earthengine.openeo.org/v0.4/collections')
+        ## GeeV4_Json = GeeV4.json()
+
+        ##for element in GeeV4_Json:
+        ##    coll.append(element)
+
+                ##  coll[0]
+                ##  'collections'
+                ##  coll[1]
+                ##  'links'
+
+
         # minDate = calendar.setMinimumDate() #shall be the min and max of each data set - read respective jsons..
         # maxDate = calendar.setMaximumDate() # use calendar.setDateRange(min, max) for this restriction
 
@@ -293,11 +311,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         # endDate = QCalendarWidget.maximumDate(self.calendar) # last date which can possibly be chosen is: 31.12.7999
 
         # temporal_extent = "[{}, {}]".format(str(startDate), str(endDate))
-        return str(startDate) + ", " + str(endDate)
-
+        return str(startDate) + ", " + str(endDate)   # e.g. "temporal_extent": ["2018-01-01", "2018-02-01"]
 
     def bands(self):
-        bands = "[\"{}\", \"{}\", \"{}\"]".format("B04", "B03", "B02")
+        bands = []  # e.g. "bands": ["B08", "B04", "B02"]
         return bands
 
     def web_view(self):
@@ -380,11 +397,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         for pr in process_result:
             if "id" in pr:
                 self.processBox.addItem(pr['id'])
-
-        # Give Extent to Backend
-        # for ex in add_extent:
-        #    if "id" in ex:
-        #        self.extentBox.addItem(ex['id'])
 
         self.refresh_jobs()
 

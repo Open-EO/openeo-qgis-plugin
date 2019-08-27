@@ -200,10 +200,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             return "Error: Draw a new rectangle"
 
+        QMainWindow.show(self)
+
         spatial_extent["crs"] = crs
         self.processgraphEdit.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
 
     def drawRect(self):
+        QMainWindow.hide(self)
         self.rectangleMapTool = RectangleAreaTool(iface.mapCanvas(), self)
         iface.mapCanvas().setMapTool(self.rectangleMapTool)
 

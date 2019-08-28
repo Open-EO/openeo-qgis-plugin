@@ -38,8 +38,7 @@ from qgis.gui import QgsMapToolPan
 from qgis.core import *
 # from qgis.core import QgsVectorLayer, QgsProject
 from qgis.utils import *  # imports iface
-from PyQt5.QtCore import *
-import tkinter as Tk
+from qgis.core import Qgis
 
 ## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
 from PyQt5 import QtWidgets
@@ -141,8 +140,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.DrawButton.clicked.connect(self.displayBeforeLoad) # "Draw a Display Extent"-Button shall display all extents in the window and enable the drawing tool + change methods again shall be possible
 
         ### Temporal Extent
-        self.startDate.clicked.connect(self.add_temporal)
-        self.endDate.clicked.connect(self.add_temporal)
+        self.selectDate.clicked.connect(self.add_temporal)
 
         ### Change to incorporate the WebEditor:
         self.moveButton.clicked.connect(self.web_view)
@@ -156,7 +154,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def set_canvas(self):
         if not iface.activeLayer():
-            warning(self.iface, "Please open a new layer to get extent from.")
+            self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", level=Qgis.MessageLevel, duration=5)
         else:
             crs = iface.activeLayer().crs().authid()
 
@@ -181,12 +179,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         spatial_extent["north"] = nr
         spatial_extent["south"] = sr
         spatial_extent["crs"] = crs
-        self.processgraphEdit.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+        self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
         #return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "
 
     def getRect(self, x1, y1, x2, y2):
         if not iface.activeLayer():
-            warning(self.iface, "Please open a new layer to get extent from.")
+            self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", level=Qgis.MessageLevel, duration=5)
             return
         else:
             crs = iface.activeLayer().crs().authid()
@@ -213,7 +211,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         QMainWindow.show(self)
 
         spatial_extent["crs"] = crs
-        self.processgraphEdit.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+        self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
 
     def drawRect(self):
         QMainWindow.hide(self)
@@ -231,7 +229,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         spatial_extent = {}
         spatial_extent["crs"] = crs
-        self.processgraphEdit.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+        self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
         #return json.dumps(spatial_extent, indent=2, sort_keys=False)
 
     def insertShape(self):
@@ -260,103 +258,80 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             spatial_extent["north"] = nr
             spatial_extent["south"] = sr
             spatial_extent["crs"] = crs
-            self.processgraphEdit.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+            self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
             #return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "
         else:
             return "Layer failed to load!"
 
     def add_extent(self):
         if self.called == False:
-            DisplayedExtent = self.processgraphEdit.toPlainText()
+            DisplayedExtent = self.processgraphSpatialExtent.toPlainText()
             self.called = True
-            #warning(self.iface, "Extents are registered.")
             return str(DisplayedExtent)
         else:
             warning(self.iface, "Extent can be added only once!")
 
     def displayBeforeLoad(self):
-        # If rectangle is drawn, the Draw and Display Extent Button works
-        if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent" and iface.activeLayer():
+        if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
             self.set_canvas()
             self.called = False
-            warning(self.iface, "Extent was updated.")
-        elif str(self.extentBox.currentText()) == "Draw Polygon" and iface.activeLayer():
+            #warning(self.iface, "Extent was updated.")
+        elif str(self.extentBox.currentText()) == "Draw Polygon":
             self.drawPoly()
             self.called = False
-            warning(self.iface, "Extent was updated.")
-        elif str(self.extentBox.currentText()) == "Draw Rectangle" and iface.activeLayer():
+            #warning(self.iface, "Extent was updated.")
+        elif str(self.extentBox.currentText()) == "Draw Rectangle":
             self.drawRect()
             self.called = False
-            warning(self.iface, "Extent was updated.")
+            #warning(self.iface, "Extent was updated.")
         elif str(self.extentBox.currentText()) == "Insert Shapefile":
             self.insertShape()
             self.called = False
-            warning(self.iface, "Extent was updated.")
+            #warning(self.iface, "Extent was updated.")
         else:
             return 999
-
-    def closeCalendar(self):
-        self.dateWindow.close()
-        return
-
-    def showDate(self):
-        return "abcdefghijklmnop"
 
     def add_temporal(self):
         self.dateWindow = QWidget()
         self.calendar = QCalendarWidget(self)
-        self.calendar.clicked[QDate].connect(self.closeCalendar)
+        self.calendar1 = QCalendarWidget(self)
+        #self.calendar.dateTextFormat('yyyy-MM-dd')  # ISSUE Set Date Format properly
+        self.calendar.clicked[QDate].connect(self.showStart)
+        self.calendar1.clicked[QDate].connect(self.showEnd)
+        self.calendar1.clicked[QDate].connect(self.closeCalendar)
         self.hbox = QHBoxLayout()
         self.hbox.addWidget(self.calendar)
+        self.hbox.addWidget(self.calendar1)
         self.dateWindow.setLayout(self.hbox)
         self.dateWindow.setGeometry(400, 400, 450, 400)
         self.dateWindow.setWindowTitle('Calendar')
         self.dateWindow.show()
 
-        #self.calendar = QCalendarWidget(self)
-        #self.calendar.monthShown()
-        #self.calendar.yearShown()
-        #self.calendar.setSelectionMode(QCalendarWidget.selectionMode())
-
         #self.calendar.setMaximumDate(QDate(2017-06-29))
         #self.calendar.setMinimumDate(QDate(2017-06-29))
 
-        ## GeeV4 = requests.get('https://earthengine.openeo.org/v0.4/collections')
-        ## GeeV4_Json = GeeV4.json()
+    def closeCalendar(self):
+        self.dateWindow.close()
+        return
 
-        ##for element in GeeV4_Json:
-        ##    coll.append(element)
+    def showStart(self):
+        if self.selectDate.clicked:
+            startDate = self.calendar.selectedDate().getDate()
+            self.processgraphStartDate.setText(str(startDate))
+            return str(startDate) # e.g. "temporal_extent": ["2018-01-01", "2018-02-01"]
+        else:
+            return ""
 
-                ##  coll[0]
-                ##  'collections'
-                ##  coll[1]
-                ##  'links'
-
-
-        #minDate = self.calendar.setMinimumDate() #shall be the min and max of each data set - read respective jsons..
-        #maxDate = self.calendar.setMaximumDate() # use calendar.setDateRange(min, max) for this restriction
-
-
-
-
- #       self.calendar.clicked[QDate].connect(self.showDate)
-        #self.calendar.selectionMode{SingleSelection} # Whether the user can select a date or not.
-
-  #      startDate = self.calendar.selectedDate().getDate()
-        #endDate = self.calendar.selectedDate().getDate()
-        #        startDate.getDate()
-        #        endDate.getDate()
-
-        # startDate = QCalendarWidget.minimumDate(calendar) # first date which can possibly be chosen is: 25.11.-4714 :D
-        # startDate = QDate.currentDate() # works
-        ## Attribute 2: Date 2
-        # endDate = QCalendarWidget.maximumDate(self.calendar) # last date which can possibly be chosen is: 31.12.7999
-
-   #     temporal_extent = "[{}]".format(startDate) #, endDate)
-    #    return temporal_extent  # e.g. "temporal_extent": ["2018-01-01", "2018-02-01"]
+    def showEnd(self):
+        if self.selectDate.clicked:
+            endDate = self.calendar1.selectedDate().getDate()
+            self.processgraphEndDate.setText(str(endDate))
+            return str(endDate)
+        else:
+            return ""
 
     def bands(self):
-        bands = []  # e.g. "bands": ["B08", "B04", "B02"]
+        bands = ["None"]  # e.g. "bands": ["B08", "B04", "B02"]
         return bands
 
     def web_view(self):
@@ -566,8 +541,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Loads the collection form the GUI and starts a new process graph in doing so.
         """
         col = str(self.collectionBox.currentText())
-        ex = self.add_extent()  # shall not display current text but values!
-        tex = self.showDate()
+        ex = self.processgraphSpatialExtent.toPlainText()  # shall not display current text but values!
+        texS = self.showStart()
+        texE = self.showEnd()
         B = self.bands()
 
         ### west=None
@@ -593,7 +569,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         arguments = OrderedDict({
             "id": col,
             "spatial_extent": ex,
-            "temporal_extent": tex,
+            "temporal_extent": [texS, texE],
             "bands": B,
         })
 

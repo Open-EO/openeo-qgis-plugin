@@ -252,7 +252,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>40</y>
+       <y>30</y>
        <width>381</width>
        <height>21</height>
       </rect>
@@ -262,7 +262,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>120</y>
+       <y>100</y>
        <width>291</width>
        <height>21</height>
       </rect>
@@ -272,7 +272,7 @@
      <property name="geometry">
       <rect>
        <x>310</x>
-       <y>120</y>
+       <y>100</y>
        <width>80</width>
        <height>21</height>
       </rect>
@@ -298,7 +298,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>90</y>
+       <y>80</y>
        <width>101</width>
        <height>20</height>
       </rect>
@@ -350,7 +350,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>70</y>
+       <y>60</y>
        <width>401</width>
        <height>20</height>
       </rect>
@@ -375,10 +375,10 @@
     <widget class="QLabel" name="label_21">
      <property name="geometry">
       <rect>
-       <x>30</x>
+       <x>10</x>
        <y>720</y>
        <width>171</width>
-       <height>21</height>
+       <height>31</height>
       </rect>
      </property>
      <property name="text">
@@ -389,7 +389,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>330</y>
+       <y>310</y>
        <width>401</width>
        <height>20</height>
       </rect>
@@ -402,7 +402,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>350</y>
+       <y>330</y>
        <width>131</width>
        <height>20</height>
       </rect>
@@ -418,7 +418,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>380</y>
+       <y>350</y>
        <width>381</width>
        <height>31</height>
       </rect>
@@ -428,7 +428,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>150</y>
+       <y>130</y>
        <width>381</width>
        <height>171</height>
       </rect>
@@ -438,7 +438,7 @@
      <property name="geometry">
       <rect>
        <x>100</x>
-       <y>430</y>
+       <y>390</y>
        <width>201</width>
        <height>31</height>
       </rect>
@@ -447,37 +447,24 @@
       <string>Draw, Get and Display Extent</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="startDate">
+    <widget class="QPushButton" name="selectDate">
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>530</y>
-       <width>131</width>
+       <y>630</y>
+       <width>281</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string>Select Start Date</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="endDate">
-     <property name="geometry">
-      <rect>
-       <x>210</x>
-       <y>530</y>
-       <width>131</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Select End Date</string>
+      <string>Select Start and End Date</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_9">
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>490</y>
+       <y>600</y>
        <width>161</width>
        <height>20</height>
       </rect>
@@ -493,13 +480,43 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>470</y>
+       <y>580</y>
        <width>401</width>
        <height>20</height>
       </rect>
      </property>
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+    <widget class="QTextEdit" name="processgraphSpatialExtent">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>430</y>
+       <width>381</width>
+       <height>141</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QTextEdit" name="processgraphStartDate">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>670</y>
+       <width>131</width>
+       <height>41</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QTextEdit" name="processgraphEndDate">
+     <property name="geometry">
+      <rect>
+       <x>200</x>
+       <y>670</y>
+       <width>131</width>
+       <height>41</height>
+      </rect>
      </property>
     </widget>
     <zorder>processgraphEdit</zorder>
@@ -519,10 +536,12 @@
     <zorder>extentBox</zorder>
     <zorder>processTableWidget</zorder>
     <zorder>DrawButton</zorder>
-    <zorder>startDate</zorder>
-    <zorder>endDate</zorder>
+    <zorder>selectDate</zorder>
     <zorder>label_9</zorder>
     <zorder>line_3</zorder>
+    <zorder>processgraphSpatialExtent</zorder>
+    <zorder>processgraphStartDate</zorder>
+    <zorder>processgraphEndDate</zorder>
    </widget>
    <widget class="QWidget" name="tab_2">
     <attribute name="title">

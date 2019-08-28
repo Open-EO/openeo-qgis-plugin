@@ -43,6 +43,7 @@ import tkinter as Tk
 
 ## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
 from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout
 from PyQt5 import QtCore
 from PyQt5.QtCore import QDate
 from PyQt5 import QtGui
@@ -129,8 +130,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.clearButton.clicked.connect(self.clear) # Clear Button
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
-        self.calendarWidget.clicked.connect(self.add_temporal)
-        ### Draw desired extent
+
+        ### Draw desired Spatial Extent
         extentBoxItems = OrderedDict(
             {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.getRect,
              "Draw Polygon": self.drawPoly, "Insert Shapefile": self.insertShape})  # Set Label to improve
@@ -138,6 +139,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         #self.takeSettings.clicked.connect(self.add_extent) # "Use Extent display"-Button shall transfer the current canvas choice to the collection
         self.DrawButton.clicked.connect(self.displayBeforeLoad) # "Draw a Display Extent"-Button shall display all extents in the window and enable the drawing tool + change methods again shall be possible
+
+        ### Temporal Extent
+        self.startDate.clicked.connect(self.add_temporal)
+        self.endDate.clicked.connect(self.add_temporal)
 
         ### Change to incorporate the WebEditor:
         self.moveButton.clicked.connect(self.web_view)
@@ -154,9 +159,14 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             warning(self.iface, "Please open a new layer to get extent from.")
         else:
             crs = iface.activeLayer().crs().authid()
-        iface.actionPan().trigger()
 
+        iface.actionPan().trigger()
         extent = iface.mapCanvas().extent()  # Problem is: Object of type 'MapCanvas' is not JSON serializable
+
+        #Dangerous Game Here:
+        #QMainWindow.setWindowFlags(self, Qt.WindowStaysOnTopHint) # ISSUE - nach Änderung wieder einblenden
+        # QMainWindow.show(self)  # https://pythonprogramminglanguage.com/pyqt5-window-flags/
+
         e = extent.xMaximum()
         er = round(e, 1)
         n = extent.yMaximum()
@@ -259,22 +269,22 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if self.called == False:
             DisplayedExtent = self.processgraphEdit.toPlainText()
             self.called = True
-            warning(self.iface, "Extent is registered.")
+            #warning(self.iface, "Extents are registered.")
             return str(DisplayedExtent)
         else:
             warning(self.iface, "Extent can be added only once!")
 
     def displayBeforeLoad(self):
         # If rectangle is drawn, the Draw and Display Extent Button works
-        if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
+        if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent" and iface.activeLayer():
             self.set_canvas()
             self.called = False
             warning(self.iface, "Extent was updated.")
-        elif str(self.extentBox.currentText()) == "Draw Polygon":
+        elif str(self.extentBox.currentText()) == "Draw Polygon" and iface.activeLayer():
             self.drawPoly()
             self.called = False
             warning(self.iface, "Extent was updated.")
-        elif str(self.extentBox.currentText()) == "Draw Rectangle":
+        elif str(self.extentBox.currentText()) == "Draw Rectangle" and iface.activeLayer():
             self.drawRect()
             self.called = False
             warning(self.iface, "Extent was updated.")
@@ -285,8 +295,31 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             return 999
 
+    def closeCalendar(self):
+        self.dateWindow.close()
+        return
+
+    def showDate(self):
+        return "abcdefghijklmnop"
+
     def add_temporal(self):
-        # QCalendarWidget
+        self.dateWindow = QWidget()
+        self.calendar = QCalendarWidget(self)
+        self.calendar.clicked[QDate].connect(self.closeCalendar)
+        self.hbox = QHBoxLayout()
+        self.hbox.addWidget(self.calendar)
+        self.dateWindow.setLayout(self.hbox)
+        self.dateWindow.setGeometry(400, 400, 450, 400)
+        self.dateWindow.setWindowTitle('Calendar')
+        self.dateWindow.show()
+
+        #self.calendar = QCalendarWidget(self)
+        #self.calendar.monthShown()
+        #self.calendar.yearShown()
+        #self.calendar.setSelectionMode(QCalendarWidget.selectionMode())
+
+        #self.calendar.setMaximumDate(QDate(2017-06-29))
+        #self.calendar.setMinimumDate(QDate(2017-06-29))
 
         ## GeeV4 = requests.get('https://earthengine.openeo.org/v0.4/collections')
         ## GeeV4_Json = GeeV4.json()
@@ -300,21 +333,27 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 ##  'links'
 
 
-        # minDate = calendar.setMinimumDate() #shall be the min and max of each data set - read respective jsons..
-        # maxDate = calendar.setMaximumDate() # use calendar.setDateRange(min, max) for this restriction
+        #minDate = self.calendar.setMinimumDate() #shall be the min and max of each data set - read respective jsons..
+        #maxDate = self.calendar.setMaximumDate() # use calendar.setDateRange(min, max) for this restriction
 
-        calendar = QCalendarWidget(self)
-        calendar.selectionMode()
-        #startDate = calendar.selectedDate()
-        endDate = calendar.selectedDate()
 
-        startDate = QCalendarWidget.minimumDate(calendar) # first date which can possibly be chosen is: 25.11.-4714 :D
+
+
+ #       self.calendar.clicked[QDate].connect(self.showDate)
+        #self.calendar.selectionMode{SingleSelection} # Whether the user can select a date or not.
+
+  #      startDate = self.calendar.selectedDate().getDate()
+        #endDate = self.calendar.selectedDate().getDate()
+        #        startDate.getDate()
+        #        endDate.getDate()
+
+        # startDate = QCalendarWidget.minimumDate(calendar) # first date which can possibly be chosen is: 25.11.-4714 :D
         # startDate = QDate.currentDate() # works
         ## Attribute 2: Date 2
         # endDate = QCalendarWidget.maximumDate(self.calendar) # last date which can possibly be chosen is: 31.12.7999
 
-        # temporal_extent = "[{}, {}]".format(str(startDate), str(endDate))
-        return str(startDate) + ", " + str(endDate)   # e.g. "temporal_extent": ["2018-01-01", "2018-02-01"]
+   #     temporal_extent = "[{}]".format(startDate) #, endDate)
+    #    return temporal_extent  # e.g. "temporal_extent": ["2018-01-01", "2018-02-01"]
 
     def bands(self):
         bands = []  # e.g. "bands": ["B08", "B04", "B02"]
@@ -528,7 +567,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         col = str(self.collectionBox.currentText())
         ex = self.add_extent()  # shall not display current text but values!
-        tex = self.add_temporal()
+        tex = self.showDate()
         B = self.bands()
 
         ### west=None

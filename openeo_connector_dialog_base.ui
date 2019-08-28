@@ -188,7 +188,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab_4">
     <attribute name="title">
@@ -437,14 +437,14 @@
     <widget class="QPushButton" name="DrawButton">
      <property name="geometry">
       <rect>
-       <x>100</x>
+       <x>50</x>
        <y>390</y>
-       <width>201</width>
+       <width>131</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string>Draw, Get and Display Extent</string>
+      <string>Draw Extent</string>
      </property>
     </widget>
     <widget class="QPushButton" name="selectDate">
@@ -499,23 +499,36 @@
       </rect>
      </property>
     </widget>
-    <widget class="QTextEdit" name="processgraphStartDate">
+    <widget class="QPushButton" name="GetButton">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>390</y>
+       <width>131</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Get Extent</string>
+     </property>
+    </widget>
+    <widget class="QDateEdit" name="StartDateEdit">
      <property name="geometry">
       <rect>
        <x>50</x>
        <y>670</y>
        <width>131</width>
-       <height>41</height>
+       <height>33</height>
       </rect>
      </property>
     </widget>
-    <widget class="QTextEdit" name="processgraphEndDate">
+    <widget class="QDateEdit" name="EndDateEdit">
      <property name="geometry">
       <rect>
        <x>200</x>
        <y>670</y>
        <width>131</width>
-       <height>41</height>
+       <height>33</height>
       </rect>
      </property>
     </widget>
@@ -540,8 +553,9 @@
     <zorder>label_9</zorder>
     <zorder>line_3</zorder>
     <zorder>processgraphSpatialExtent</zorder>
-    <zorder>processgraphStartDate</zorder>
-    <zorder>processgraphEndDate</zorder>
+    <zorder>GetButton</zorder>
+    <zorder>StartDateEdit</zorder>
+    <zorder>EndDateEdit</zorder>
    </widget>
    <widget class="QWidget" name="tab_2">
     <attribute name="title">

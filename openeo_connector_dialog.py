@@ -57,7 +57,7 @@ from .models.connect import Connection
 from .models.processgraph import Processgraph
 from .utils.logging import info, warning
 from .DrawRect import *
-# from .MapToolPoint import PointTool
+from datetime import datetime
 
 
 ########################################################################################################################
@@ -133,11 +133,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         ### Draw desired Spatial Extent
         extentBoxItems = OrderedDict(
             {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.getRect,
-             "Draw Polygon": self.drawPoly, "Insert Shapefile": self.insertShape})  # Set Label to improve
+             "Draw Polygon": self.drawPoly, "Use Active Layer Extent": self.useActiveLayer, "Insert Shapefile": self.insertShape})
         self.extentBox.addItems(list(extentBoxItems.keys()))
-
-        #self.takeSettings.clicked.connect(self.add_extent) # "Use Extent display"-Button shall transfer the current canvas choice to the collection
-        self.DrawButton.clicked.connect(self.displayBeforeLoad) # "Draw a Display Extent"-Button shall display all extents in the window and enable the drawing tool + change methods again shall be possible
+        self.DrawButton.clicked.connect(self.drawRect) # "Draw Extent" - Button shall enable the drawing tool
+        self.GetButton.clicked.connect(self.displayBeforeLoad) # "Get Extent"-Button shall display the desired extent in the window below
 
         ### Temporal Extent
         self.selectDate.clicked.connect(self.add_temporal)
@@ -182,6 +181,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         #return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "
 
     def getRect(self, x1, y1, x2, y2):
+        iface.actionPan().trigger()
         if not iface.activeLayer():
             self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", level=Qgis.MessageLevel, duration=5)
             return
@@ -213,9 +213,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
 
     def drawRect(self):
-        QMainWindow.hide(self)
-        self.rectangleMapTool = RectangleAreaTool(iface.mapCanvas(), self)
-        iface.mapCanvas().setMapTool(self.rectangleMapTool)
+        if str(self.extentBox.currentText()) == "Draw Rectangle":
+            QMainWindow.hide(self)
+            self.rectangleMapTool = RectangleAreaTool(iface.mapCanvas(), self)
+            iface.mapCanvas().setMapTool(self.rectangleMapTool)
+        elif str(self.extentBox.currentText()) == "Draw Polygon":
+            self.drawPoly()
+        else:
+            self.iface.messageBar().pushMessage("Draw Extent Option is not enabled for you choice of extent",
+                                                duration=5)
 
     def drawPoly(self):
         iface.actionPan().trigger() # deactivate later, it is just for some testing!
@@ -230,6 +236,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         spatial_extent["crs"] = crs
         self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
         #return json.dumps(spatial_extent, indent=2, sort_keys=False)
+
+    def useActiveLayer(self):
+        return 0
 
     def insertShape(self):
         iface.actionPan().trigger()
@@ -276,13 +285,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.called = False
             #warning(self.iface, "Extent was updated.")
         elif str(self.extentBox.currentText()) == "Draw Polygon":
-            self.drawPoly()
-            self.called = False
-            #warning(self.iface, "Extent was updated.")
+        #    self.drawPoly()
+        #    self.called = False
+            self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent",
+                                            duration=5)
         elif str(self.extentBox.currentText()) == "Draw Rectangle":
-            self.drawRect()
-            self.called = False
-            #warning(self.iface, "Extent was updated.")
+        #    self.drawRect()
+        #    self.called = False
+            self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent",
+                                            duration=5)
         elif str(self.extentBox.currentText()) == "Insert Shapefile":
             self.insertShape()
             self.called = False
@@ -297,14 +308,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         #self.calendar.dateTextFormat('yyyy-MM-dd')  # ISSUE Set Date Format properly
         self.calendar.clicked[QDate].connect(self.showStart)
         self.calendar1.clicked[QDate].connect(self.showEnd)
-        self.calendar1.clicked[QDate].connect(self.closeCalendar)
+        self.button = QPushButton('Close Window', self)
+        self.button.clicked.connect(self.closeCalendar)
         self.hbox = QHBoxLayout()
         self.hbox.addWidget(self.calendar)
         self.hbox.addWidget(self.calendar1)
+        self.hbox.addWidget(self.button)
         self.dateWindow.setLayout(self.hbox)
-        self.dateWindow.setGeometry(400, 400, 450, 400)
+        self.dateWindow.setGeometry(400, 400, 600, 350)
         self.dateWindow.setWindowTitle('Calendar')
         self.dateWindow.show()
+
+        self.StartDateEdit.setFormat("yyyy-MM-dd")
 
         #self.calendar.setMaximumDate(QDate(2017-06-29))
         #self.calendar.setMinimumDate(QDate(2017-06-29))
@@ -316,15 +331,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def showStart(self):
         if self.selectDate.clicked:
             startDate = self.calendar.selectedDate().getDate()
-            self.processgraphStartDate.setText(str(startDate))
-            return str(startDate) # e.g. "temporal_extent": ["2018-01-01", "2018-02-01"]
+            #self.StartDateEdit = startDate
+            return str(startDate)
+            #return str(startDate) # e.g. "temporal_extent": ["2018-01-01", "2018-02-01"]
         else:
             return ""
 
     def showEnd(self):
         if self.selectDate.clicked:
             endDate = self.calendar1.selectedDate().getDate()
-            self.processgraphEndDate.setText(str(endDate))
+            #self.EndDateEdit.setDate(self, Union[QDate, datetime.date])
             return str(endDate)
         else:
             return ""
@@ -333,10 +349,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         bands = ["None"]  # e.g. "bands": ["B08", "B04", "B02"]
         return bands
 
+
     def web_view(self):
         self.webWindow = QWidget()
         self.web = QWebView(self)
-        self.web.load(QUrl("https://open-eo.github.io/")) #"https://mliang8.github.io/SoilWaterCube/"))  # works
+        self.web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) #"https://open-eo.github.io/"))  # both work
         # web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # Error: Sorry, the openEO Web Editor requires a modern browsers.
         # Please update your browser or use Google Chrome or Mozilla Firefox as alternative.
 
@@ -530,9 +547,17 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Loads the collection form the GUI and starts a new process graph in doing so.
         """
         col = str(self.collectionBox.currentText())
-        ex = self.processgraphSpatialExtent.toPlainText()  # shall not display current text but values!
+        ex = self.processgraphSpatialExtent.toPlainText()
         texS = self.showStart()
         texE = self.showEnd()
+        if texE < texS:
+            self.iface.messageBar().pushMessage("Start Date must be before End Date",
+                                                duration=5)
+            return
+
+#        if not self.calendar:              # ISSUE: Fehlermeldung wenn Calender nicht aktiviert wird lösen
+#            texS = "No Date chosen!"
+
         B = self.bands()
 
         ### west=None

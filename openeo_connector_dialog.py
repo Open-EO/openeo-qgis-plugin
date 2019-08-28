@@ -144,8 +144,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         ### Change to incorporate the WebEditor:
         self.moveButton.clicked.connect(self.web_view)
-        self.moveButton_QGIS.clicked.connect(self.web_view_QGIS)
-        # self.returnButton.clicked.connect(self.web_view_QGIS)
+        self.returnButton.clicked.connect(self.web_viewClose)
 
         # self.processgraphEdit.textChanged.connect(self.update_processgraph)
 
@@ -335,37 +334,27 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         return bands
 
     def web_view(self):
-        return 1
-        # view = QWebEngineHttpRequest(self) # QWebEngineView is the new version, but can not be loaded into QGIS
-        # view.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/"))
-        # view.show()
-
-        # print(help('PyQt5'))
-
-        # add:https://earthengine.openeo.org/.well-known/openeo
-        ## send login data (backend, user, pwd, collection & process) - does the demo version work then?
-        ## another def request_ProcessGraph: get back generated process graph in web editor
-        ## Create Job at Backend then via QGIS Plugin
-
-    def web_view_QGIS(self):
-        web = QWebView(self)
-        web.load(QUrl("https://mliang8.github.io/SoilWaterCube/"))  # works
+        self.webWindow = QWidget()
+        self.web = QWebView(self)
+        self.web.load(QUrl("https://open-eo.github.io/")) #"https://mliang8.github.io/SoilWaterCube/"))  # works
         # web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # Error: Sorry, the openEO Web Editor requires a modern browsers.
         # Please update your browser or use Google Chrome or Mozilla Firefox as alternative.
 
-        if self.moveButton_QGIS.clicked:
-            web.show()
-
-        elif self.returnButton.clicked:
-            1
-
-        else:
-            return "Error"
+        self.hbox = QHBoxLayout()
+        self.hbox.addWidget(self.web)
+        self.webWindow.setLayout(self.hbox)
+        self.webWindow.setGeometry(550, 420, 800, 600)
+        self.webWindow.setWindowTitle('Web Editor')
+        self.webWindow.show()
 
         # add:
         ## send login data (backend, user, pwd, collection & process) - does the demo version work then?
         ## another def request_ProcessGraph: get back generated process graph in web editor
         ## Create Job at Backend then via QGIS Plugin
+
+    def web_viewClose(self):
+        self.webWindow.close()
+        return
 
     def connect(self):
         """

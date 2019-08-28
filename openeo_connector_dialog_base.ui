@@ -521,6 +521,9 @@
        <height>33</height>
       </rect>
      </property>
+     <property name="displayFormat">
+      <string>yyyy-MM-dd</string>
+     </property>
     </widget>
     <widget class="QDateEdit" name="EndDateEdit">
      <property name="geometry">
@@ -530,6 +533,9 @@
        <width>131</width>
        <height>33</height>
       </rect>
+     </property>
+     <property name="displayFormat">
+      <string>yyyy-MM-dd</string>
      </property>
     </widget>
     <zorder>processgraphEdit</zorder>

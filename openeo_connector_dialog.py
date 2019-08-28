@@ -319,8 +319,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.dateWindow.setWindowTitle('Calendar')
         self.dateWindow.show()
 
-        self.StartDateEdit.setFormat("yyyy-MM-dd")
-
         #self.calendar.setMaximumDate(QDate(2017-06-29))
         #self.calendar.setMinimumDate(QDate(2017-06-29))
 
@@ -329,21 +327,32 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         return
 
     def showStart(self):
-        if self.selectDate.clicked:
-            startDate = self.calendar.selectedDate().getDate()
+        Start = self.StartDateEdit.date()
+        sD = Start.toString("yyyy-MM-dd")
+        return sD
+        #self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+
+        #if self.selectDate.clicked:
+           # startDate = self.calendar.selectedDate().getDate()
+
             #self.StartDateEdit = startDate
-            return str(startDate)
+            #return str(startDate)
             #return str(startDate) # e.g. "temporal_extent": ["2018-01-01", "2018-02-01"]
-        else:
-            return ""
+        #else:
+        #    return ""
 
     def showEnd(self):
-        if self.selectDate.clicked:
-            endDate = self.calendar1.selectedDate().getDate()
+        End = self.EndDateEdit.date()
+        eD= End.toString("yyyy-MM-dd")
+        return eD
+
+
+        #if self.selectDate.clicked:
+         #   endDate = self.calendar1.selectedDate().getDate()
             #self.EndDateEdit.setDate(self, Union[QDate, datetime.date])
-            return str(endDate)
-        else:
-            return ""
+            #return str(endDate)
+        #else:
+          #  return ""
 
     def bands(self):
         bands = ["None"]  # e.g. "bands": ["B08", "B04", "B02"]

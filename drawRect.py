@@ -35,7 +35,7 @@ class DrawRectangle(QgsMapTool):
         self.rubberBand.show()
         #self.transformCoordinates() # do not activate, otherwise coordinates will not match the crs
         #self.rectangleCreated.emit(self.startPoint.x(), self.startPoint.y(), self.endPoint.x(), self.endPoint.y())
-        self.action.drawRect(self.startPoint.x(), self.startPoint.y(), self.endPoint.x(), self.endPoint.y())
+        self.action.draw_rect(self.startPoint.x(), self.startPoint.y(), self.endPoint.x(), self.endPoint.y())
 
     def canvasMoveEvent(self, e):
         if not self.isEmittingPoint:

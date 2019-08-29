@@ -32,9 +32,9 @@ from collections import OrderedDict
 from qgis.PyQt import uic, QtGui, QtWidgets
 from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, QApplication, QAction, QMainWindow
 import qgis.PyQt.QtCore as QtCore
-from qgis.gui import *
-from qgis.core import *
-from qgis.utils import *  # imports iface
+#from qgis.gui import *
+#from qgis.core import *
+from qgis.utils import iface
 
 ## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
 from PyQt5 import QtWidgets
@@ -43,8 +43,8 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import QDate
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QCalendarWidget
-from PyQt5.QtWebKit import *
-from PyQt5.QtWebKitWidgets import *
+#from PyQt5.QtWebKit import *
+#from PyQt5.QtWebKitWidgets import *
 from tkinter import filedialog
 
 from PyQt5.QtCore import QUrl
@@ -83,39 +83,30 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processes = None
 
         self.setupUi(self)
-        ### Backend Issue start
+        ### Backend Issue:
         backendURL = requests.get('http://hub.openeo.org/backends')
-        BackendsALL = backendURL.json()
-        # BackendsALL.items() # returns everything, # BackendsALL.keys() # returns the names, # BackendsALL.values() # returns the URLs
-        Backends = []
-        for element in BackendsALL.values():
-            e = str(element)
-            Backends.append(e) # would work as input
+        backendsALL = backendURL.json()
+        backends = []
+        for element in backendsALL.values():
+            backends.append(str(element)) # would work as input
 
-        Versions = []
-        i = Backends[1]
-        a = Backends[4]
-        Versions.append(i)
-        Versions.append(a)
+        versions = []
+        # Backends from json script directly (only one version)
+        backend_r = backends[1]
+        backend_eodc = backends[4]
+        versions.append(backend_r)
+        versions.append(backend_eodc)
         # Backends with more then one version
-        GEE = "https://earthengine.openeo.org/v0.3"
-        GEEv = "https://earthengine.openeo.org/v0.4"
-        EURAC = "https://openeo.eurac.edu/"
-        EURACv = "http://saocompute.eurac.edu/openEO_0_3_0/openeo/"
-        Vito = "http://openeo.vgt.vito.be/openeo/0.4.0"
-        Vitov = "http://openeo.vgt.vito.be/openeo"
-        Mundialis = "http://openeo.mundialis.de/api/v0.3/"
-        Mundialisv = "http://openeo.mundialis.de/api/v0.4/"
-        Versions.append(GEE)
-        Versions.append(GEEv)
-        Versions.append(EURAC)
-        Versions.append(EURACv)
-        Versions.append(Vito)
-        Versions.append(Vitov)
-        Versions.append(Mundialis)
-        Versions.append(Mundialisv)
+        versions.append("https://earthengine.openeo.org/v0.3")
+        versions.append("https://earthengine.openeo.org/v0.4")
+        versions.append("https://openeo.eurac.edu/")
+        versions.append("http://saocompute.eurac.edu/openEO_0_3_0/openeo/")
+        versions.append("http://openeo.vgt.vito.be/openeo/0.4.0")
+        versions.append("http://openeo.vgt.vito.be/openeo")
+        versions.append("http://openeo.mundialis.de/api/v0.3/")
+        versions.append("http://openeo.mundialis.de/api/v0.4/")
 
-        self.backendEdit.addItems(Versions) # or Backends
+        self.backendEdit.addItems(versions) # or Backends
         ### Backend Issue end
         self.connectButton.clicked.connect(self.connect)
         self.addButton.clicked.connect(self.add_process)
@@ -128,11 +119,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         ### Draw desired Spatial Extent
         extentBoxItems = OrderedDict(
-            {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.drawRect,
-             "Draw Polygon": self.drawPoly, "Use Active Layer Extent": self.useActiveLayer, "Insert Shapefile": self.insertShape})
+            {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.draw_rect,
+             "Draw Polygon": self.draw_poly, "Use Active Layer Extent": self.use_active_layer, "Insert Shapefile": self.insert_shape})
         self.extentBox.addItems(list(extentBoxItems.keys()))
         self.DrawButton.clicked.connect(self.draw) # "Draw Extent" - Button shall enable the drawing tool
-        self.GetButton.clicked.connect(self.displayBeforeLoad) # "Get Extent"-Button shall display the desired extent in the window below
+        self.GetButton.clicked.connect(self.display_before_load) # "Get Extent"-Button shall display the desired extent in the window below
 
         ### Temporal Extent
         self.selectDate.clicked.connect(self.add_temporal)
@@ -183,7 +174,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             self.iface.messageBar().pushMessage("Draw Extent Option is not enabled for you choice of extent", duration=5)
 
-    def drawRect(self, x1, y1, x2, y2):
+    def draw_rect(self, x1, y1, x2, y2):
         if iface.activeLayer():
             crs = iface.activeLayer().crs().authid()
             spatial_extent = {}
@@ -212,7 +203,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             iface.actionPan().trigger()
             self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
-    def drawPoly(self):
+    def draw_poly(self):
         if iface.activeLayer():
             crs = iface.activeLayer().crs().authid()
             spatial_extent = {}
@@ -237,7 +228,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             iface.actionPan().trigger()
             self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
-    def useActiveLayer(self):
+    def use_active_layer(self):
         iface.actionPan().trigger()
 
         # get List of active vector layers currently displayed in QGIS
@@ -254,7 +245,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.processgraphSpatialExtent.setText(json.dumps(777, indent=2, sort_keys=False))
 
-    def insertShape(self):
+    def insert_shape(self):
         iface.actionPan().trigger()
         # get generic home directory
         home = expanduser("~")
@@ -293,7 +284,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 #        else:
 #            warning(self.iface, "Extent can be added only once!")
 
-    def displayBeforeLoad(self):
+    def display_before_load(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
             self.set_canvas()
             self.called = False
@@ -302,10 +293,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         elif str(self.extentBox.currentText()) == "Draw Rectangle":
             self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent", duration=5)
         elif str(self.extentBox.currentText()) == "Use Active Layer Extent":
-            self.useActiveLayer()
+            self.use_active_layer()
             self.called = False
         elif str(self.extentBox.currentText()) == "Insert Shapefile":
-            self.insertShape()
+            self.insert_shape()
             self.called = False
         else:
             return 999
@@ -315,10 +306,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.calendar = QCalendarWidget(self)
         self.calendar1 = QCalendarWidget(self)
         #self.calendar.dateTextFormat('yyyy-MM-dd')  # ISSUE Set Date Format properly
-        self.calendar.clicked[QDate].connect(self.pickStart)
-        self.calendar1.clicked[QDate].connect(self.pickEnd)
+        self.calendar.clicked[QDate].connect(self.pick_start)
+        self.calendar1.clicked[QDate].connect(self.pick_end)
         #self.button = QPushButton('Close Window', self)
-        #self.button.clicked.connect(self.closeCalendar)
+        #self.button.clicked.connect(self.close_calendar)
         self.hbox = QHBoxLayout()
         self.hbox.addWidget(self.calendar)
         self.hbox.addWidget(self.calendar1)
@@ -331,40 +322,40 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         #self.calendar.setMaximumDate(QDate(2017-06-29))
         #self.calendar.setMinimumDate(QDate(2017-06-29))
 
-    def closeCalendar(self):
-        self.dateWindow.close()
-        return
+    #def close_calendar(self): # stays in script in case button of add_temporal() get reinstated
+    #    self.dateWindow.close()
+    #    return
 
-    def pickStart(self):
+    def pick_start(self):
         if self.selectDate.clicked:
             startDate = self.calendar.selectedDate().toString("yyyy-MM-dd")
             fS = QDate.fromString(startDate, "yyyy-MM-dd")
             self.StartDateEdit.setDate(fS)
 
-    def pickEnd(self):
+    def pick_end(self):
         if self.selectDate.clicked:
             endDate = self.calendar1.selectedDate().toString("yyyy-MM-dd")
             fE = QDate.fromString(endDate, "yyyy-MM-dd")
             self.EndDateEdit.setDate(fE)
 
-    def showStart(self):
+    def show_start(self):
         if self.StartDateEdit.dateChanged:
             Start = self.StartDateEdit.date()
             sD = Start.toString("yyyy-MM-dd")
             return sD
         elif self.selectDate.clicked:
-            self.pickStart()
+            self.pick_start()
             Start = self.StartDateEdit.date()
             sD = Start.toString("yyyy-MM-dd")
             return sD
 
-    def showEnd(self):
+    def show_end(self):
         if self.StartDateEdit.dateChanged:
             End = self.EndDateEdit.date()
             eD = End.toString("yyyy-MM-dd")
             return eD
         elif self.selectDate.clicked:
-            self.pickEnd()
+            self.pick_end()
             End = self.EndDateEdit.date()
             eD= End.toString("yyyy-MM-dd")
             return eD
@@ -381,7 +372,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         # Please update your browser or use Google Chrome or Mozilla Firefox as alternative.
 
         self.button = QPushButton('Close Web Editor', self)
-        self.button.clicked.connect(self.web_viewClose)
+        self.button.clicked.connect(self.web_view_close)
 
         self.hbox = QHBoxLayout()
         self.hbox.addWidget(self.web)
@@ -396,7 +387,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         ## another def request_ProcessGraph: get back generated process graph in web editor
         ## Create Job at Backend then via QGIS Plugin
 
-    def web_viewClose(self):
+    def web_view_close(self):
         self.webWindow.close()
         return
 
@@ -575,8 +566,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         col = str(self.collectionBox.currentText())
         ex = self.processgraphSpatialExtent.toPlainText()
-        texS = self.showStart()
-        texE = self.showEnd()
+        texS = self.show_start()
+        texE = self.show_end()
         if texE < texS:
             self.iface.messageBar().pushMessage("Start Date must be before End Date",
                                                 duration=5)

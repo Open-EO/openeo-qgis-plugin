@@ -306,8 +306,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.calendar = QCalendarWidget(self)
         self.calendar1 = QCalendarWidget(self)
         #self.calendar.dateTextFormat('yyyy-MM-dd')  # ISSUE Set Date Format properly
-        self.calendar.clicked[QDate].connect(self.showStart)
-        self.calendar1.clicked[QDate].connect(self.showEnd)
+        self.calendar.clicked[QDate].connect(self.pickStart)
+        self.calendar1.clicked[QDate].connect(self.pickEnd)
         self.button = QPushButton('Close Window', self)
         self.button.clicked.connect(self.closeCalendar)
         self.hbox = QHBoxLayout()
@@ -326,33 +326,29 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.dateWindow.close()
         return
 
+    def pickStart(self):
+        if self.selectDate.clicked:
+            startDate = self.calendar.selectedDate().toString("yyyy-MM-dd")
+            fS = QDate.fromString(startDate, "yyyy-MM-dd")
+            self.StartDateEdit.setDate(fS)
+
+    def pickEnd(self):
+        if self.selectDate.clicked:
+            endDate = self.calendar1.selectedDate().toString("yyyy-MM-dd")
+            fE = QDate.fromString(endDate, "yyyy-MM-dd")
+            self.EndDateEdit.setDate(fE)
+
     def showStart(self):
+        self.pickStart()
         Start = self.StartDateEdit.date()
         sD = Start.toString("yyyy-MM-dd")
         return sD
-        #self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
-
-        #if self.selectDate.clicked:
-           # startDate = self.calendar.selectedDate().getDate()
-
-            #self.StartDateEdit = startDate
-            #return str(startDate)
-            #return str(startDate) # e.g. "temporal_extent": ["2018-01-01", "2018-02-01"]
-        #else:
-        #    return ""
 
     def showEnd(self):
+        self.pickEnd()
         End = self.EndDateEdit.date()
         eD= End.toString("yyyy-MM-dd")
         return eD
-
-
-        #if self.selectDate.clicked:
-         #   endDate = self.calendar1.selectedDate().getDate()
-            #self.EndDateEdit.setDate(self, Union[QDate, datetime.date])
-            #return str(endDate)
-        #else:
-          #  return ""
 
     def bands(self):
         bands = ["None"]  # e.g. "bands": ["B08", "B04", "B02"]

@@ -3,7 +3,7 @@ from qgis.core import QgsWkbTypes, QgsPointXY, QgsCoordinateReferenceSystem, Qgs
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtCore import pyqtSignal
 
-class RectangleAreaTool(QgsMapTool):
+class DrawRectangle(QgsMapTool):
 
     rectangleCreated = pyqtSignal(float, float, float, float)
 

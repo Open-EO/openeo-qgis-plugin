@@ -26,7 +26,6 @@
 import os
 import json
 import requests
-from osgeo import ogr
 from os.path import expanduser
 from collections import OrderedDict
 
@@ -34,11 +33,8 @@ from qgis.PyQt import uic, QtGui, QtWidgets
 from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, QApplication, QAction, QMainWindow
 import qgis.PyQt.QtCore as QtCore
 from qgis.gui import *
-from qgis.gui import QgsMapToolPan
 from qgis.core import *
-# from qgis.core import QgsVectorLayer, QgsProject
 from qgis.utils import *  # imports iface
-from qgis.core import Qgis
 
 ## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
 from PyQt5 import QtWidgets
@@ -46,7 +42,7 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout
 from PyQt5 import QtCore
 from PyQt5.QtCore import QDate
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QCalendarWidget, QLabel, QGraphicsView
+from PyQt5.QtWidgets import QCalendarWidget
 from PyQt5.QtWebKit import *
 from PyQt5.QtWebKitWidgets import *
 from tkinter import filedialog
@@ -56,8 +52,8 @@ from .models.result import Result
 from .models.connect import Connection
 from .models.processgraph import Processgraph
 from .utils.logging import info, warning
-from .DrawRect import *
-from datetime import datetime
+from .drawRect import DrawRectangle
+from .drawPoly import DrawPolygon
 
 
 ########################################################################################################################
@@ -178,10 +174,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def draw(self):
         if str(self.extentBox.currentText()) == "Draw Rectangle":
             QMainWindow.hide(self)
-            self.rectangleMapTool = RectangleAreaTool(iface.mapCanvas(), self)
-            iface.mapCanvas().setMapTool(self.rectangleMapTool)
+            self.drawRectangle = DrawRectangle(iface.mapCanvas(), self)
+            iface.mapCanvas().setMapTool(self.drawRectangle)
         elif str(self.extentBox.currentText()) == "Draw Polygon":
-            self.drawPoly()
+            QMainWindow.hide(self)
+            self.drawPolygon = DrawPolygon(iface.mapCanvas(), self)
+            iface.mapCanvas().setMapTool(self.drawPolygon)
         else:
             self.iface.messageBar().pushMessage("Draw Extent Option is not enabled for you choice of extent", duration=5)
 
@@ -221,6 +219,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             spatial_extent["crs"] = crs
             self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
             #return json.dumps(spatial_extent, indent=2, sort_keys=False)
+
+#        def drawPolygon(self):
+#            if self.tool:
+#                self.tool.reset()
+#            self.tool = DrawPolygon(self.iface, self.settings.getColor())
+#            self.tool.setAction(self.actions[4])
+#            self.tool.selectionDone.connect(self.draw)
+#            self.tool.move.connect(self.updateSB)
+#            self.iface.mapCanvas().setMapTool(self.tool)
+#            self.drawShape = 'polygon'
+#            self.toolname = 'drawPolygon'
+#            self.resetSB()
+
 
         elif not iface.activeLayer():
             iface.actionPan().trigger()
@@ -287,11 +298,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.set_canvas()
             self.called = False
         elif str(self.extentBox.currentText()) == "Draw Polygon":
-            self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent",
-                                            duration=5)
+            self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent", duration=5)
         elif str(self.extentBox.currentText()) == "Draw Rectangle":
-            self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent",
-                                            duration=5)
+            self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent", duration=5)
         elif str(self.extentBox.currentText()) == "Use Active Layer Extent":
             self.useActiveLayer()
             self.called = False

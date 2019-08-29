@@ -132,10 +132,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         ### Draw desired Spatial Extent
         extentBoxItems = OrderedDict(
-            {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.getRect,
+            {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.drawRect,
              "Draw Polygon": self.drawPoly, "Use Active Layer Extent": self.useActiveLayer, "Insert Shapefile": self.insertShape})
         self.extentBox.addItems(list(extentBoxItems.keys()))
-        self.DrawButton.clicked.connect(self.drawRect) # "Draw Extent" - Button shall enable the drawing tool
+        self.DrawButton.clicked.connect(self.draw) # "Draw Extent" - Button shall enable the drawing tool
         self.GetButton.clicked.connect(self.displayBeforeLoad) # "Get Extent"-Button shall display the desired extent in the window below
 
         ### Temporal Extent
@@ -152,68 +152,30 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.init_jobs()
 
     def set_canvas(self):
-        if not iface.activeLayer():
-            self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", level=Qgis.MessageLevel, duration=5)
-        else:
-            crs = iface.activeLayer().crs().authid()
-
         iface.actionPan().trigger()
-        extent = iface.mapCanvas().extent()  # Problem is: Object of type 'MapCanvas' is not JSON serializable
-
-        #Dangerous Game Here:
-        #QMainWindow.setWindowFlags(self, Qt.WindowStaysOnTopHint) # ISSUE - nach Änderung wieder einblenden
-        # QMainWindow.show(self)  # https://pythonprogramminglanguage.com/pyqt5-window-flags/
-
-        e = extent.xMaximum()
-        er = round(e, 1)
-        n = extent.yMaximum()
-        nr = round(n, 1)
-        w = extent.xMinimum()
-        wr = round(w, 1)
-        s = extent.yMinimum()
-        sr = round(s, 1)
-        spatial_extent = {}
-        spatial_extent["west"] = wr
-        spatial_extent["east"] = er
-        spatial_extent["north"] = nr
-        spatial_extent["south"] = sr
-        spatial_extent["crs"] = crs
-        self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
-        #return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "
-
-    def getRect(self, x1, y1, x2, y2):
-        iface.actionPan().trigger()
-        if not iface.activeLayer():
-            self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", level=Qgis.MessageLevel, duration=5)
-            return
-        else:
+        #QMainWindow.show(self) # ISSUE 1
+        if iface.activeLayer():
             crs = iface.activeLayer().crs().authid()
+            extent = iface.mapCanvas().extent()
+            e = extent.xMaximum()
+            er = round(e, 1)
+            n = extent.yMaximum()
+            nr = round(n, 1)
+            w = extent.xMinimum()
+            wr = round(w, 1)
+            s = extent.yMinimum()
+            sr = round(s, 1)
+            spatial_extent = {}
+            spatial_extent["west"] = wr
+            spatial_extent["east"] = er
+            spatial_extent["north"] = nr
+            spatial_extent["south"] = sr
+            spatial_extent["crs"] = crs
+            self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False)) # Improvement: Change ' in json to "
+        elif not iface.activeLayer():
+            self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
-        spatial_extent = {}
-        if x1 <= x2:
-            spatial_extent["west"] = x1
-            spatial_extent["east"] = x2
-        elif x2 <= x1:
-            spatial_extent["west"] = x2
-            spatial_extent["east"] = x1
-        else:
-            return "Error: Draw a new rectangle"
-
-        if y1 <= y2:
-            spatial_extent["north"] = y2
-            spatial_extent["south"] = y1
-        elif y2 <= y1:
-            spatial_extent["north"] = y1
-            spatial_extent["south"] = y2
-        else:
-            return "Error: Draw a new rectangle"
-
-        QMainWindow.show(self)
-
-        spatial_extent["crs"] = crs
-        self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
-
-    def drawRect(self):
+    def draw(self):
         if str(self.extentBox.currentText()) == "Draw Rectangle":
             QMainWindow.hide(self)
             self.rectangleMapTool = RectangleAreaTool(iface.mapCanvas(), self)
@@ -221,22 +183,48 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         elif str(self.extentBox.currentText()) == "Draw Polygon":
             self.drawPoly()
         else:
-            self.iface.messageBar().pushMessage("Draw Extent Option is not enabled for you choice of extent",
-                                                duration=5)
+            self.iface.messageBar().pushMessage("Draw Extent Option is not enabled for you choice of extent", duration=5)
+
+    def drawRect(self, x1, y1, x2, y2):
+        if iface.activeLayer():
+            crs = iface.activeLayer().crs().authid()
+            spatial_extent = {}
+            if x1 <= x2:
+                spatial_extent["west"] = x1
+                spatial_extent["east"] = x2
+            elif x2 <= x1:
+                spatial_extent["west"] = x2
+                spatial_extent["east"] = x1
+            else:
+                return "Error: Draw a new rectangle"
+
+            if y1 <= y2:
+                spatial_extent["north"] = y2
+                spatial_extent["south"] = y1
+            elif y2 <= y1:
+                spatial_extent["north"] = y1
+                spatial_extent["south"] = y2
+            else:
+                return "Error: Draw a new rectangle"
+            QMainWindow.show(self)
+            spatial_extent["crs"] = crs
+            self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+
+        elif not iface.activeLayer():
+            iface.actionPan().trigger()
+            self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
     def drawPoly(self):
-        iface.actionPan().trigger() # deactivate later, it is just for some testing!
-        # ISSUE: Draw a polygon
-
-        if not iface.activeLayer():
-            warning(self.iface, "Please open a new layer to get extent from.")
-        else:
+        if iface.activeLayer():
             crs = iface.activeLayer().crs().authid()
+            spatial_extent = {}
+            spatial_extent["crs"] = crs
+            self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+            #return json.dumps(spatial_extent, indent=2, sort_keys=False)
 
-        spatial_extent = {}
-        spatial_extent["crs"] = crs
-        self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
-        #return json.dumps(spatial_extent, indent=2, sort_keys=False)
+        elif not iface.activeLayer():
+            iface.actionPan().trigger()
+            self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
     def useActiveLayer(self):
         iface.actionPan().trigger()

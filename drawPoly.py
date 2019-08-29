@@ -35,7 +35,13 @@ class DrawPolygon(QgsMapTool):
             if self.rb.numberOfVertices() > 2:
                 self.status = 0
                 self.selectionDone.emit()
-                self.action.draw_poly()
+                geometry = self.rb.asGeometry()
+                #extent_pol = extent_geometry.extent()
+                #west = extent_pol.xMinimum()
+                #east = extent_pol.xMaximum()
+                #north = extent_pol.yMaximum()
+                #south = extent_pol.yMinimum()
+                self.action.draw_poly(geometry)  # (west, east, north, south)
             else:
                 self.reset()
         return None

@@ -199,10 +199,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             iface.actionPan().trigger()
             self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
-    def draw_poly(self):
+    def draw_poly(self, geometry): # (west, east, north, south):
         if iface.activeLayer():
             crs = iface.activeLayer().crs().authid()
             spatial_extent = {}
+            spatial_extent["vertex"] = str(geometry)
+            #spatial_extent["west"] = west
+            #spatial_extent["east"] = east
+            #spatial_extent["north"] = north
+            #spatial_extent["south"] = south
             spatial_extent["crs"] = crs
             self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
             QMainWindow.show(self)
@@ -290,24 +295,23 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def add_temporal(self):
         self.dateWindow = QWidget()
-        self.calendar = QCalendarWidget(self)
-        self.calendar1 = QCalendarWidget(self)
-        #self.calendar.dateTextFormat('yyyy-MM-dd')  # ISSUE Set Date Format properly
-        self.calendar.clicked[QDate].connect(self.pick_start)
-        self.calendar1.clicked[QDate].connect(self.pick_end)
+        self.start_calendar = QCalendarWidget(self)
+        self.end_calendar = QCalendarWidget(self)
+        self.start_calendar.clicked[QDate].connect(self.pick_start)
+        self.end_calendar.clicked[QDate].connect(self.pick_end)
         #self.button = QPushButton('Close Window', self)
         #self.button.clicked.connect(self.close_calendar)
         self.hbox = QHBoxLayout()
-        self.hbox.addWidget(self.calendar)
-        self.hbox.addWidget(self.calendar1)
+        self.hbox.addWidget(self.start_calendar)
+        self.hbox.addWidget(self.end_calendar)
         #self.hbox.addWidget(self.button)
         self.dateWindow.setLayout(self.hbox)
         self.dateWindow.setGeometry(400, 400, 600, 350)
         self.dateWindow.setWindowTitle('Calendar')
         self.dateWindow.show()
 
-        #self.calendar.setMaximumDate(QDate(2017-06-29))
-        #self.calendar.setMinimumDate(QDate(2017-06-29))
+        #self.start_calendar.setMaximumDate(QDate(2017-06-29))
+        #self.end_calendar.setMinimumDate(QDate(2017-06-29))
 
     #def close_calendar(self): # stays in script in case button of add_temporal() get reinstated
     #    self.dateWindow.close()
@@ -315,13 +319,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def pick_start(self):
         if self.selectDate.clicked:
-            startDate = self.calendar.selectedDate().toString("yyyy-MM-dd")
+            startDate = self.start_calendar.selectedDate().toString("yyyy-MM-dd")
             fS = QDate.fromString(startDate, "yyyy-MM-dd")
             self.StartDateEdit.setDate(fS)
 
     def pick_end(self):
         if self.selectDate.clicked:
-            endDate = self.calendar1.selectedDate().toString("yyyy-MM-dd")
+            endDate = self.end_calendar.selectedDate().toString("yyyy-MM-dd")
             fE = QDate.fromString(endDate, "yyyy-MM-dd")
             self.EndDateEdit.setDate(fE)
 
@@ -556,13 +560,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         texS = self.show_start()
         texE = self.show_end()
         if texE < texS:
-            self.iface.messageBar().pushMessage("Start Date must be before End Date",
-                                                duration=5)
-            return
-
-#        if not self.calendar:              # ISSUE: Fehlermeldung wenn Calender nicht aktiviert wird lösen
-#            texS = "No Date chosen!"
-
+            self.iface.messageBar().pushMessage("Start Date must be before End Date", duration=5)
         B = self.bands()
 
         ### west=None

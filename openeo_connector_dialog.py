@@ -145,7 +145,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         ### Change to incorporate the WebEditor:
         self.moveButton.clicked.connect(self.web_view)
-        self.returnButton.clicked.connect(self.web_viewClose)
 
         # self.processgraphEdit.textChanged.connect(self.update_processgraph)
 
@@ -384,8 +383,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         # web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # Error: Sorry, the openEO Web Editor requires a modern browsers.
         # Please update your browser or use Google Chrome or Mozilla Firefox as alternative.
 
+        self.button = QPushButton('Close Web Editor', self)
+        self.button.clicked.connect(self.web_viewClose)
+
         self.hbox = QHBoxLayout()
         self.hbox.addWidget(self.web)
+        self.hbox.addWidget(self.button)
         self.webWindow.setLayout(self.hbox)
         self.webWindow.setGeometry(550, 420, 800, 600)
         self.webWindow.setWindowTitle('Web Editor')

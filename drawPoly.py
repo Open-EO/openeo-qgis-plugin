@@ -35,7 +35,8 @@ class DrawPolygon(QgsMapTool):
             if self.rb.numberOfVertices() > 2:
                 self.status = 0
                 self.selectionDone.emit()
-                geometry = self.rb.asGeometry()
+                #geometry = self.rb.asGeometry().boundingBox() # Discussion if boundingBox() or orientedMinimumBoundingBox() # this would also be an option
+                geometry = self.rb.asGeometry().orientedMinimumBoundingBox() # Favourable one, as it only returns the 4 best points + cost point
                 #extent_pol = extent_geometry.extent()
                 #west = extent_pol.xMinimum()
                 #east = extent_pol.xMaximum()

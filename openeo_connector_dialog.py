@@ -44,7 +44,7 @@ from PyQt5.QtCore import QDate
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QCalendarWidget
 #from PyQt5.QtWebKit import *
-#from PyQt5.QtWebKitWidgets import *
+from PyQt5.QtWebKitWidgets import QWebView
 from tkinter import filedialog
 
 from PyQt5.QtCore import QUrl
@@ -199,17 +199,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             iface.actionPan().trigger()
             self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
-    def draw_poly(self, geometry): # (west, east, north, south):
+    def draw_poly(self, geometry):
         if iface.activeLayer():
             crs = iface.activeLayer().crs().authid()
-            spatial_extent = {}
-            spatial_extent["vertex"] = str(geometry)
+            polygons_boundingBox_tuples = geometry
+            polygons_boundingBox = polygons_boundingBox_tuples[0].asJson(1)  # this returns only the 4 desired points, rounded
+            #=polVertices[1]
+            #spatial_extent = {}
             #spatial_extent["west"] = west
             #spatial_extent["east"] = east
             #spatial_extent["north"] = north
             #spatial_extent["south"] = south
-            spatial_extent["crs"] = crs
-            self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+            #spatial_extent["crs"] = crs
+            self.processgraphSpatialExtent.setText(polygons_boundingBox)
             QMainWindow.show(self)
 
         elif not iface.activeLayer():

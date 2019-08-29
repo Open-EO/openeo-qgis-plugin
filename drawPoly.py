@@ -1,23 +1,24 @@
-from qgis.gui import QgsMapTool, QgsRubberBand, QgsMapCanvas
-from qgis.utils import *
+from qgis.gui import QgsMapTool, QgsRubberBand
 from qgis.core import QgsWkbTypes
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtGui import QKeySequence
+from PyQt5.QtGui import QKeySequence, QColor
 
 
 class DrawPolygon(QgsMapTool):
     selectionDone = pyqtSignal()
     move = pyqtSignal()
 
-    def __init__(self, iface, couleur):
-        canvas = iface.mapCanvas()
+    def __init__(self, iface, action):
+        canvas = iface  #.mapCanvas()
         QgsMapTool.__init__(self, canvas)
         self.canvas = canvas
         self.iface = iface
+        self.action = action
         self.status = 0
+        mFillColor = QColor(254, 178, 76, 63)
         self.rb = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
-        self.rb.setColor(couleur)
-        return None
+        self.rb.setColor(mFillColor)
+        #return None
 
     def keyPressEvent(self, e):
         if e.matches(QKeySequence.Undo):
@@ -34,6 +35,7 @@ class DrawPolygon(QgsMapTool):
             if self.rb.numberOfVertices() > 2:
                 self.status = 0
                 self.selectionDone.emit()
+                self.action.draw_poly()
             else:
                 self.reset()
         return None

@@ -144,19 +144,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if iface.activeLayer():
             crs = iface.activeLayer().crs().authid()
             extent = iface.mapCanvas().extent()
-            e = extent.xMaximum()
-            er = round(e, 1)
-            n = extent.yMaximum()
-            nr = round(n, 1)
-            w = extent.xMinimum()
-            wr = round(w, 1)
-            s = extent.yMinimum()
-            sr = round(s, 1)
+            east = round(extent.xMaximum(), 1)
+            north = round(extent.yMaximum(), 1)
+            west = round(extent.xMinimum(), 1)
+            south = round(extent.yMinimum(), 1)
             spatial_extent = {}
-            spatial_extent["west"] = wr
-            spatial_extent["east"] = er
-            spatial_extent["north"] = nr
-            spatial_extent["south"] = sr
+            spatial_extent["west"] = west
+            spatial_extent["east"] = east
+            spatial_extent["north"] = north
+            spatial_extent["south"] = south
             spatial_extent["crs"] = crs
             self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False)) # Improvement: Change ' in json to "
         elif not iface.activeLayer():
@@ -195,9 +191,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 spatial_extent["south"] = y2
             else:
                 return "Error: Draw a new rectangle"
-            QMainWindow.show(self)
             spatial_extent["crs"] = crs
             self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+            QMainWindow.show(self)
 
         elif not iface.activeLayer():
             iface.actionPan().trigger()
@@ -209,20 +205,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             spatial_extent = {}
             spatial_extent["crs"] = crs
             self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
-            #return json.dumps(spatial_extent, indent=2, sort_keys=False)
-
-#        def drawPolygon(self):
-#            if self.tool:
-#                self.tool.reset()
-#            self.tool = DrawPolygon(self.iface, self.settings.getColor())
-#            self.tool.setAction(self.actions[4])
-#            self.tool.selectionDone.connect(self.draw)
-#            self.tool.move.connect(self.updateSB)
-#            self.iface.mapCanvas().setMapTool(self.tool)
-#            self.drawShape = 'polygon'
-#            self.toolname = 'drawPolygon'
-#            self.resetSB()
-
+            QMainWindow.show(self)
 
         elif not iface.activeLayer():
             iface.actionPan().trigger()
@@ -235,15 +218,24 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         #shape = QgsVectorLayer(, "*.shp", "ogr")
         #crs = shape.crs().authid()
 
-#        spatial_extent = {}
-#        spatial_extent["west"] = wr
-#        spatial_extent["east"] = er
-#        spatial_extent["north"] = nr
-#        spatial_extent["south"] = sr
-#        spatial_extent["crs"] = crs
-#        self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
-
-        self.processgraphSpatialExtent.setText(json.dumps(777, indent=2, sort_keys=False))
+        # if there are layers listed...
+        #crs = vlayer.crs().authid()
+        #if vlayer.isValid():
+        #    extent = vlayer.extent()
+        #    east = round(extent.xMaximum(), 1)
+        #    north = round(extent.yMaximum(), 1)
+        #    west = round(extent.xMinimum(), 1)
+        #    south = round(extent.yMinimum(), 1)
+        #    spatial_extent = {}
+        #    spatial_extent["west"] = west
+        #    spatial_extent["east"] = east
+        #    spatial_extent["north"] = north
+        #    spatial_extent["south"] = south
+        #    spatial_extent["crs"] = crs
+        self.processgraphSpatialExtent.setText(json.dumps(7777777, indent=2, sort_keys=False))
+            # return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "
+        #else:
+        #    return "Layer failed to load!"
 
     def insert_shape(self):
         iface.actionPan().trigger()
@@ -255,21 +247,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         vlayer = QgsVectorLayer(root, "*.shp", "ogr")
         crs = vlayer.crs().authid()
         if vlayer.isValid():
-            elayer = vlayer.extent()
-            w = elayer.xMinimum()
-            wr = round(w, 1)
-            e = elayer.xMaximum()
-            er = round(e, 1)
-            n = elayer.yMaximum()
-            nr = round(n, 1)
-            s = elayer.yMinimum()
-            sr = round(s, 1)
-
+            extent = vlayer.extent()
+            east = round(extent.xMaximum(), 1)
+            north = round(extent.yMaximum(), 1)
+            west = round(extent.xMinimum(), 1)
+            south = round(extent.yMinimum(), 1)
             spatial_extent = {}
-            spatial_extent["west"] = wr
-            spatial_extent["east"] = er
-            spatial_extent["north"] = nr
-            spatial_extent["south"] = sr
+            spatial_extent["west"] = west
+            spatial_extent["east"] = east
+            spatial_extent["north"] = north
+            spatial_extent["south"] = south
             spatial_extent["crs"] = crs
             self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
             #return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "

@@ -1,4 +1,4 @@
-from qgis.gui import QgsMapTool, QgsRubberBand
+from qgis.gui import QgsMapTool, QgsRubberBand, QgsMapCanvas
 from qgis.core import QgsWkbTypes, QgsPointXY, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtCore import pyqtSignal

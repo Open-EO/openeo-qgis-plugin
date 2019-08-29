@@ -1,4 +1,5 @@
 from  .graphbuilder import GraphBuilder
+import collections
 
 class Processgraph:
 
@@ -61,12 +62,19 @@ class Processgraph:
         """
         self.builder = GraphBuilder()
 
+        #collection_id = None
+        #ex = None
+        #tex = None
+        #bands = None
+
         process_id = 'load_collection'
-        #arguments = {
+
+        #arguments = collections.OrderedDict({
         #    'id': collection_id,
-       #     'spatial_extent': None,
-       #     'temporal_extent': None,
-        #}
+        #    'spatial_extent': ex,
+        #    'temporal_extent': tex,
+        #    'bands': bands
+        #})
         self.node_id = self.builder.process(process_id, arguments)
         self.graph = self.builder.processes
 

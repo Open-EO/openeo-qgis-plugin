@@ -11,7 +11,6 @@
         copyright            : (C) 2019 by Bernhard Goesswein
         email                : bernhard.goesswein@geo.tuwien.ac.at
  ***************************************************************************/
-
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -21,19 +20,48 @@
  *                                                                         *
  ***************************************************************************/
 """
+########################################################################################################################
+########################################################################################################################
 
 import os
+import json
+import requests
+from osgeo import ogr
+from os.path import expanduser
+from collections import OrderedDict
 
 from qgis.PyQt import uic, QtGui, QtWidgets
-from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton
+from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, QApplication, QAction, QMainWindow
 import qgis.PyQt.QtCore as QtCore
-import json
+from qgis.gui import *
+from qgis.gui import QgsMapToolPan
+from qgis.core import *
+# from qgis.core import QgsVectorLayer, QgsProject
+from qgis.utils import *  # imports iface
+from qgis.core import Qgis
 
+## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout
+from PyQt5 import QtCore
+from PyQt5.QtCore import QDate
+from PyQt5 import QtGui
+from PyQt5.QtWidgets import QCalendarWidget, QLabel, QGraphicsView
+from PyQt5.QtWebKit import *
+from PyQt5.QtWebKitWidgets import *
+from tkinter import filedialog
+
+from PyQt5.QtCore import QUrl
 from .models.result import Result
 from .models.connect import Connection
 from .models.processgraph import Processgraph
 from .utils.logging import info, warning
+from .DrawRect import *
+from datetime import datetime
 
+
+########################################################################################################################
+########################################################################################################################
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -54,29 +82,301 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.iface = iface
         self.connection = Connection()
         self.processgraph = Processgraph()
+        self.called = False
+
         self.processes = None
 
         self.setupUi(self)
+        ### Backend Issue start
+        backendURL = requests.get('http://hub.openeo.org/backends')
+        BackendsALL = backendURL.json()
+        # BackendsALL.items() # returns everything, # BackendsALL.keys() # returns the names, # BackendsALL.values() # returns the URLs
+        Backends = []
+        for element in BackendsALL.values():
+            e = str(element)
+            Backends.append(e) # would work as input
+
+        Versions = []
+        i = Backends[1]
+        a = Backends[4]
+        Versions.append(i)
+        Versions.append(a)
+        # Backends with more then one version
+        GEE = "https://earthengine.openeo.org/v0.3"
+        GEEv = "https://earthengine.openeo.org/v0.4"
+        EURAC = "https://openeo.eurac.edu/"
+        EURACv = "http://saocompute.eurac.edu/openEO_0_3_0/openeo/"
+        Vito = "http://openeo.vgt.vito.be/openeo/0.4.0"
+        Vitov = "http://openeo.vgt.vito.be/openeo"
+        Mundialis = "http://openeo.mundialis.de/api/v0.3/"
+        Mundialisv = "http://openeo.mundialis.de/api/v0.4/"
+        Versions.append(GEE)
+        Versions.append(GEEv)
+        Versions.append(EURAC)
+        Versions.append(EURACv)
+        Versions.append(Vito)
+        Versions.append(Vitov)
+        Versions.append(Mundialis)
+        Versions.append(Mundialisv)
+
+        self.backendEdit.addItems(Versions) # or Backends
+        ### Backend Issue end
         self.connectButton.clicked.connect(self.connect)
         self.addButton.clicked.connect(self.add_process)
         self.processBox.currentTextChanged.connect(self.process_selected)
         # self.collectionBox.currentTextChanged.connect(self.collection_selected)
         self.refreshButton.clicked.connect(self.refresh_jobs)
-        self.clearButton.clicked.connect(self.collection_selected)
-        self.sendButton.clicked.connect(self.send_job)
-        self.loadButton.clicked.connect(self.load_collection)
+        self.clearButton.clicked.connect(self.clear) # Clear Button
+        self.sendButton.clicked.connect(self.send_job)  # Create Job Button
+        self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
 
-        self.processgraphEdit.textChanged.connect(self.update_processgraph)
+        ### Draw desired Spatial Extent
+        extentBoxItems = OrderedDict(
+            {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.getRect,
+             "Draw Polygon": self.drawPoly, "Use Active Layer Extent": self.useActiveLayer, "Insert Shapefile": self.insertShape})
+        self.extentBox.addItems(list(extentBoxItems.keys()))
+        self.DrawButton.clicked.connect(self.drawRect) # "Draw Extent" - Button shall enable the drawing tool
+        self.GetButton.clicked.connect(self.displayBeforeLoad) # "Get Extent"-Button shall display the desired extent in the window below
 
-        # Init filter boxes validators
-        self.westEdit.setValidator(QtGui.QDoubleValidator())
-        self.eastEdit.setValidator(QtGui.QDoubleValidator())
-        self.southEdit.setValidator(QtGui.QDoubleValidator())
-        self.northEdit.setValidator(QtGui.QDoubleValidator())
-        self.crsEdit.setValidator(QtGui.QIntValidator())
+        ### Temporal Extent
+        self.selectDate.clicked.connect(self.add_temporal)
+
+        ### Change to incorporate the WebEditor:
+        self.moveButton.clicked.connect(self.web_view)
+        self.returnButton.clicked.connect(self.web_viewClose)
+
+        # self.processgraphEdit.textChanged.connect(self.update_processgraph)
 
         # Jobs Tab
         self.init_jobs()
+
+    def set_canvas(self):
+        if not iface.activeLayer():
+            self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", level=Qgis.MessageLevel, duration=5)
+        else:
+            crs = iface.activeLayer().crs().authid()
+
+        iface.actionPan().trigger()
+        extent = iface.mapCanvas().extent()  # Problem is: Object of type 'MapCanvas' is not JSON serializable
+
+        #Dangerous Game Here:
+        #QMainWindow.setWindowFlags(self, Qt.WindowStaysOnTopHint) # ISSUE - nach Änderung wieder einblenden
+        # QMainWindow.show(self)  # https://pythonprogramminglanguage.com/pyqt5-window-flags/
+
+        e = extent.xMaximum()
+        er = round(e, 1)
+        n = extent.yMaximum()
+        nr = round(n, 1)
+        w = extent.xMinimum()
+        wr = round(w, 1)
+        s = extent.yMinimum()
+        sr = round(s, 1)
+        spatial_extent = {}
+        spatial_extent["west"] = wr
+        spatial_extent["east"] = er
+        spatial_extent["north"] = nr
+        spatial_extent["south"] = sr
+        spatial_extent["crs"] = crs
+        self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+        #return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "
+
+    def getRect(self, x1, y1, x2, y2):
+        iface.actionPan().trigger()
+        if not iface.activeLayer():
+            self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", level=Qgis.MessageLevel, duration=5)
+            return
+        else:
+            crs = iface.activeLayer().crs().authid()
+
+        spatial_extent = {}
+        if x1 <= x2:
+            spatial_extent["west"] = x1
+            spatial_extent["east"] = x2
+        elif x2 <= x1:
+            spatial_extent["west"] = x2
+            spatial_extent["east"] = x1
+        else:
+            return "Error: Draw a new rectangle"
+
+        if y1 <= y2:
+            spatial_extent["north"] = y2
+            spatial_extent["south"] = y1
+        elif y2 <= y1:
+            spatial_extent["north"] = y1
+            spatial_extent["south"] = y2
+        else:
+            return "Error: Draw a new rectangle"
+
+        QMainWindow.show(self)
+
+        spatial_extent["crs"] = crs
+        self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+
+    def drawRect(self):
+        if str(self.extentBox.currentText()) == "Draw Rectangle":
+            QMainWindow.hide(self)
+            self.rectangleMapTool = RectangleAreaTool(iface.mapCanvas(), self)
+            iface.mapCanvas().setMapTool(self.rectangleMapTool)
+        elif str(self.extentBox.currentText()) == "Draw Polygon":
+            self.drawPoly()
+        else:
+            self.iface.messageBar().pushMessage("Draw Extent Option is not enabled for you choice of extent",
+                                                duration=5)
+
+    def drawPoly(self):
+        iface.actionPan().trigger() # deactivate later, it is just for some testing!
+        # ISSUE: Draw a polygon
+
+        if not iface.activeLayer():
+            warning(self.iface, "Please open a new layer to get extent from.")
+        else:
+            crs = iface.activeLayer().crs().authid()
+
+        spatial_extent = {}
+        spatial_extent["crs"] = crs
+        self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+        #return json.dumps(spatial_extent, indent=2, sort_keys=False)
+
+    def useActiveLayer(self):
+        return 0
+
+    def insertShape(self):
+        iface.actionPan().trigger()
+        # get generic home directory
+        home = expanduser("~")
+        # get location of file
+        root = filedialog.askopenfilename(initialdir=home, title="Select A File",
+                                          filetypes=(("Shapefiles", "*.shp"), ("All Files", "*.*")))
+        vlayer = QgsVectorLayer(root, "*.shp", "ogr")
+        crs = vlayer.crs().authid()
+        if vlayer.isValid():
+            elayer = vlayer.extent()
+            w = elayer.xMinimum()
+            wr = round(w, 1)
+            e = elayer.xMaximum()
+            er = round(e, 1)
+            n = elayer.yMaximum()
+            nr = round(n, 1)
+            s = elayer.yMinimum()
+            sr = round(s, 1)
+
+            spatial_extent = {}
+            spatial_extent["west"] = wr
+            spatial_extent["east"] = er
+            spatial_extent["north"] = nr
+            spatial_extent["south"] = sr
+            spatial_extent["crs"] = crs
+            self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+            #return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "
+        else:
+            return "Layer failed to load!"
+
+    def add_extent(self):
+        if self.called == False:
+            DisplayedExtent = self.processgraphSpatialExtent.toPlainText()
+            self.called = True
+            return str(DisplayedExtent)
+        else:
+            warning(self.iface, "Extent can be added only once!")
+
+    def displayBeforeLoad(self):
+        if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
+            self.set_canvas()
+            self.called = False
+            #warning(self.iface, "Extent was updated.")
+        elif str(self.extentBox.currentText()) == "Draw Polygon":
+        #    self.drawPoly()
+        #    self.called = False
+            self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent",
+                                            duration=5)
+        elif str(self.extentBox.currentText()) == "Draw Rectangle":
+        #    self.drawRect()
+        #    self.called = False
+            self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent",
+                                            duration=5)
+        elif str(self.extentBox.currentText()) == "Insert Shapefile":
+            self.insertShape()
+            self.called = False
+            #warning(self.iface, "Extent was updated.")
+        else:
+            return 999
+
+    def add_temporal(self):
+        self.dateWindow = QWidget()
+        self.calendar = QCalendarWidget(self)
+        self.calendar1 = QCalendarWidget(self)
+        #self.calendar.dateTextFormat('yyyy-MM-dd')  # ISSUE Set Date Format properly
+        self.calendar.clicked[QDate].connect(self.pickStart)
+        self.calendar1.clicked[QDate].connect(self.pickEnd)
+        self.button = QPushButton('Close Window', self)
+        self.button.clicked.connect(self.closeCalendar)
+        self.hbox = QHBoxLayout()
+        self.hbox.addWidget(self.calendar)
+        self.hbox.addWidget(self.calendar1)
+        self.hbox.addWidget(self.button)
+        self.dateWindow.setLayout(self.hbox)
+        self.dateWindow.setGeometry(400, 400, 600, 350)
+        self.dateWindow.setWindowTitle('Calendar')
+        self.dateWindow.show()
+
+        #self.calendar.setMaximumDate(QDate(2017-06-29))
+        #self.calendar.setMinimumDate(QDate(2017-06-29))
+
+    def closeCalendar(self):
+        self.dateWindow.close()
+        return
+
+    def pickStart(self):
+        if self.selectDate.clicked:
+            startDate = self.calendar.selectedDate().toString("yyyy-MM-dd")
+            fS = QDate.fromString(startDate, "yyyy-MM-dd")
+            self.StartDateEdit.setDate(fS)
+
+    def pickEnd(self):
+        if self.selectDate.clicked:
+            endDate = self.calendar1.selectedDate().toString("yyyy-MM-dd")
+            fE = QDate.fromString(endDate, "yyyy-MM-dd")
+            self.EndDateEdit.setDate(fE)
+
+    def showStart(self):
+        self.pickStart()
+        Start = self.StartDateEdit.date()
+        sD = Start.toString("yyyy-MM-dd")
+        return sD
+
+    def showEnd(self):
+        self.pickEnd()
+        End = self.EndDateEdit.date()
+        eD= End.toString("yyyy-MM-dd")
+        return eD
+
+    def bands(self):
+        bands = ["None"]  # e.g. "bands": ["B08", "B04", "B02"]
+        return bands
+
+
+    def web_view(self):
+        self.webWindow = QWidget()
+        self.web = QWebView(self)
+        self.web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) #"https://open-eo.github.io/"))  # both work
+        # web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # Error: Sorry, the openEO Web Editor requires a modern browsers.
+        # Please update your browser or use Google Chrome or Mozilla Firefox as alternative.
+
+        self.hbox = QHBoxLayout()
+        self.hbox.addWidget(self.web)
+        self.webWindow.setLayout(self.hbox)
+        self.webWindow.setGeometry(550, 420, 800, 600)
+        self.webWindow.setWindowTitle('Web Editor')
+        self.webWindow.show()
+
+        # add:
+        ## send login data (backend, user, pwd, collection & process) - does the demo version work then?
+        ## another def request_ProcessGraph: get back generated process graph in web editor
+        ## Create Job at Backend then via QGIS Plugin
+
+    def web_viewClose(self):
+        self.webWindow.close()
+        return
 
     def connect(self):
         """
@@ -84,10 +384,20 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         If there are no credentials, it connects to the backend without authentication.
         This method also loads all collections and processes from the backend.
         """
+
+        # Load Backend options
+        backends = {}
+        backends["Google Earth Engine"] = "https://earthengine.openeo.org/.well-known/openeo"
+        backends["R Deo Server"] = "https://r-server.openeo.org/"
+        backends["Eurac WCPS"] = "https://openeo.eurac.edu/.well-known/openeo"
+
+        if self.backendEdit.currentText() == "None of the listed ones match":
+            url = self.backendEdit2.text()
+        else:
+            url = self.backendEdit.currentText()
+
         pwd = self.passwordEdit.text()
         user = self.usernameEdit.text()
-        url = self.backendEdit.text()
-
         if user == "":
             user = None
         if pwd == "":
@@ -218,7 +528,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         job_id = self.jobsTableWidget.item(row, 0).text()
         download_dir = self.connection.job_result_download(job_id)
         if download_dir:
-            info(self.iface, "Downloaded to {}".format(download_dir))
+            info(self.iface, "Downloaded to {}".format(download_dir))  # def web_view(self):
             result = Result(path=download_dir)
             result.display()
 
@@ -242,57 +552,78 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Loads the collection form the GUI and starts a new process graph in doing so.
         """
         col = str(self.collectionBox.currentText())
+        ex = self.processgraphSpatialExtent.toPlainText()
+        texS = self.showStart()
+        texE = self.showEnd()
+        if texE < texS:
+            self.iface.messageBar().pushMessage("Start Date must be before End Date",
+                                                duration=5)
+            return
 
-        west=None
-        east=None
-        south=None
-        north=None
-        crs=None
+#        if not self.calendar:              # ISSUE: Fehlermeldung wenn Calender nicht aktiviert wird lösen
+#            texS = "No Date chosen!"
 
-        if self.westEdit.text() != "":
-            west = float(self.westEdit.text())
-        if self.eastEdit.text() != "":
-            east = float(self.eastEdit.text())
-        if self.southEdit.text() != "":
-            south = float(self.southEdit.text())
-        if self.northEdit.text() != "":
-            north = float(self.northEdit.text())
-        if self.crsEdit.text() != "":
-            crs = int(self.crsEdit.text())
+        B = self.bands()
 
-        start = self.startDateEdit.date().toPyDate()
-        end = self.endDateEdit.date().toPyDate()
+        ### west=None
+        ### east=None
+        ### south=None
+        ### north=None
+        ### crs=None
 
-        arguments = {
+        ### if self.westEdit.text() != "":
+        ###    west = float(self.westEdit.text())
+        ###if self.eastEdit.text() != "":
+        ###    east = float(self.eastEdit.text())
+        ###if self.southEdit.text() != "":
+        ###    south = float(self.southEdit.text())
+        ###if self.northEdit.text() != "":
+        ###    north = float(self.northEdit.text())
+        ###if self.crsEdit.text() != "":
+        ###    crs = int(self.crsEdit.text())
+
+        ### start = self.startDateEdit.date().toPyDate()
+        ### end = self.endDateEdit.date().toPyDate()
+
+        arguments = OrderedDict({
             "id": col,
-            "temporal_extent": [str(start), str(end)],
-            "spatial_extent": {}
-        }
+            "spatial_extent": ex,
+            "temporal_extent": [texS, texE],
+            "bands": B,
+        })
 
-        if west:
-            arguments["spatial_extent"]["west"] = west
-        if east:
-            arguments["spatial_extent"]["east"] = east
-        if south:
-            arguments["spatial_extent"]["south"] = south
-        if north:
-            arguments["spatial_extent"]["north"] = north
-        if crs:
-            arguments["spatial_extent"]["crs"] = crs
+        ### "temporal_extent": [str(start), str(end)],
+        ### "spatial_extent": {}
+
+        ### if west:
+        ###    arguments["spatial_extent"]["west"] = west
+        ### if east:
+        ###    arguments["spatial_extent"]["east"] = east
+        ### if south:
+        ###    arguments["spatial_extent"]["south"] = south
+        ### if north:
+        ###    arguments["spatial_extent"]["north"] = north
+        ### if crs:
+        ###    arguments["spatial_extent"]["crs"] = crs
 
         # info(self.iface, "Load Collection {}".format(str(arguments)))
 
         self.processgraph.load_collection(arguments)
         # Refresh process graph in GUI
         self.reload_processgraph_view()
+        # if ["spatial_extent"].__contains__("arguments"):           # ISSUE!!
+         #   self.processgraphEdit.clear()
 
     def collection_selected(self):
         """
         Gets called if a new collection is selected, resets the process graph with an initial one and the collection id.
         --Deprecated--
         """
-        self.processgraph.set_collection(str(self.collectionBox.currentText()))
-        self.reload_processgraph_view()
+        #self.processgraph.set_collection(str(self.collectionBox.currentText()))
+        #self.reload_processgraph_view()
+
+    def clear(self):
+        self.processgraphEdit.clear()
 
     def add_process(self):
         """
@@ -329,22 +660,22 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         Reloads the process graph tree widget by loading the current processgraph into it.
         """
-        #widget = self.processgraphWidget
-        #self.load_dict_into_widget(widget, self.processgraph.graph)
+        # widget = self.processgraphWidget
+        # self.load_dict_into_widget(widget, self.processgraph.graph)
         self.processgraphEdit.setText(json.dumps(self.processgraph.graph, indent=2, sort_keys=True))
-        #widget.show()
+        # widget.show()
 
-    def update_processgraph(self):
-        """
-            Reloads the process graph from the raw process graph text field
-        """
-        graph = self.processgraphEdit.toPlainText()
-        self.processgraph.graph = json.loads(graph)
-        self.processgraph.builder.processes = json.loads(graph)
-        #widget = self.processgraphWidget
-        #self.load_dict_into_widget(widget, self.processgraph.graph)
-        #widget.show()
+    # def update_processgraph(self):
+    #    """
+    #        Reloads the process graph from the raw process graph text field
+    #    """
+    #    graph = self.processgraphEdit.toPlainText()
+    #    self.processgraph.graph = json.loads(graph)
+    #    self.processgraph.builder.processes = json.loads(graph)
 
+    # widget = self.processgraphWidget
+    # self.load_dict_into_widget(widget, self.processgraph.graph)
+    # widget.show()
 
     def process_selected(self):
         """
@@ -357,7 +688,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 if p['id'] == str(self.processBox.currentText()):
                     process = p
                     if "parameters" in process:
-                        #info(self.iface, "New Process {}".format(process['parameters']))
+                        # info(self.iface, "New Process {}".format(process['parameters']))
                         self.processTableWidget.setRowCount(len(process['parameters']))
                         self.processTableWidget.setColumnCount(3)
                         self.processTableWidget.setHorizontalHeaderLabels(['Parameter', 'Type', 'Value'])

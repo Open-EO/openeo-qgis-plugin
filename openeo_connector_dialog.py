@@ -352,21 +352,30 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.EndDateEdit.setDate(fE)
 
     def showStart(self):
-        self.pickStart()
-        Start = self.StartDateEdit.date()
-        sD = Start.toString("yyyy-MM-dd")
-        return sD
+        if self.StartDateEdit.dateChanged:
+            Start = self.StartDateEdit.date()
+            sD = Start.toString("yyyy-MM-dd")
+            return sD
+        elif self.selectDate.clicked:
+            self.pickStart()
+            Start = self.StartDateEdit.date()
+            sD = Start.toString("yyyy-MM-dd")
+            return sD
 
     def showEnd(self):
-        self.pickEnd()
-        End = self.EndDateEdit.date()
-        eD= End.toString("yyyy-MM-dd")
-        return eD
+        if self.StartDateEdit.dateChanged:
+            End = self.EndDateEdit.date()
+            eD = End.toString("yyyy-MM-dd")
+            return eD
+        elif self.selectDate.clicked:
+            self.pickEnd()
+            End = self.EndDateEdit.date()
+            eD= End.toString("yyyy-MM-dd")
+            return eD
 
     def bands(self):
         bands = ["None"]  # e.g. "bands": ["B08", "B04", "B02"]
         return bands
-
 
     def web_view(self):
         self.webWindow = QWidget()

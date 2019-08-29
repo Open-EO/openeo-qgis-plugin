@@ -524,13 +524,6 @@
      <property name="readOnly">
       <bool>false</bool>
      </property>
-     <property name="date">
-      <date>
-       <year>2019</year>
-       <month>6</month>
-       <day>1</day>
-      </date>
-     </property>
      <property name="displayFormat">
       <string>yyyy-MM-dd</string>
      </property>
@@ -543,13 +536,6 @@
        <width>131</width>
        <height>33</height>
       </rect>
-     </property>
-     <property name="date">
-      <date>
-       <year>2019</year>
-       <month>6</month>
-       <day>5</day>
-      </date>
      </property>
      <property name="displayFormat">
       <string>yyyy-MM-dd</string>

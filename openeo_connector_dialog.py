@@ -140,6 +140,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         ### Temporal Extent
         self.selectDate.clicked.connect(self.add_temporal)
+        self.StartDateEdit.setDate(QDate.currentDate())
+        self.EndDateEdit.setDate(QDate.currentDate())
 
         ### Change to incorporate the WebEditor:
         self.moveButton.clicked.connect(self.web_view)
@@ -238,7 +240,21 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         #return json.dumps(spatial_extent, indent=2, sort_keys=False)
 
     def useActiveLayer(self):
-        return 0
+        iface.actionPan().trigger()
+
+        # get List of active vector layers currently displayed in QGIS
+        #shape = QgsVectorLayer(, "*.shp", "ogr")
+        #crs = shape.crs().authid()
+
+#        spatial_extent = {}
+#        spatial_extent["west"] = wr
+#        spatial_extent["east"] = er
+#        spatial_extent["north"] = nr
+#        spatial_extent["south"] = sr
+#        spatial_extent["crs"] = crs
+#        self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+
+        self.processgraphSpatialExtent.setText(json.dumps(777, indent=2, sort_keys=False))
 
     def insertShape(self):
         iface.actionPan().trigger()
@@ -276,28 +292,25 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             DisplayedExtent = self.processgraphSpatialExtent.toPlainText()
             self.called = True
             return str(DisplayedExtent)
-        else:
-            warning(self.iface, "Extent can be added only once!")
+#        else:
+#            warning(self.iface, "Extent can be added only once!")
 
     def displayBeforeLoad(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
             self.set_canvas()
             self.called = False
-            #warning(self.iface, "Extent was updated.")
         elif str(self.extentBox.currentText()) == "Draw Polygon":
-        #    self.drawPoly()
-        #    self.called = False
             self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent",
                                             duration=5)
         elif str(self.extentBox.currentText()) == "Draw Rectangle":
-        #    self.drawRect()
-        #    self.called = False
             self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent",
                                             duration=5)
+        elif str(self.extentBox.currentText()) == "Use Active Layer Extent":
+            self.useActiveLayer()
+            self.called = False
         elif str(self.extentBox.currentText()) == "Insert Shapefile":
             self.insertShape()
             self.called = False
-            #warning(self.iface, "Extent was updated.")
         else:
             return 999
 
@@ -308,12 +321,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         #self.calendar.dateTextFormat('yyyy-MM-dd')  # ISSUE Set Date Format properly
         self.calendar.clicked[QDate].connect(self.pickStart)
         self.calendar1.clicked[QDate].connect(self.pickEnd)
-        self.button = QPushButton('Close Window', self)
-        self.button.clicked.connect(self.closeCalendar)
+        #self.button = QPushButton('Close Window', self)
+        #self.button.clicked.connect(self.closeCalendar)
         self.hbox = QHBoxLayout()
         self.hbox.addWidget(self.calendar)
         self.hbox.addWidget(self.calendar1)
-        self.hbox.addWidget(self.button)
+        #self.hbox.addWidget(self.button)
         self.dateWindow.setLayout(self.hbox)
         self.dateWindow.setGeometry(400, 400, 600, 350)
         self.dateWindow.setWindowTitle('Calendar')

@@ -32,8 +32,8 @@ from collections import OrderedDict
 from qgis.PyQt import uic, QtGui, QtWidgets
 from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, QApplication, QAction, QMainWindow
 import qgis.PyQt.QtCore as QtCore
-#from qgis.gui import *
-#from qgis.core import *
+from qgis.gui import QgisInterface, QgsMapToolZoom
+from qgis.core import QgsProject
 from qgis.utils import iface
 
 ## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
@@ -140,7 +140,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def set_canvas(self):
         iface.actionPan().trigger()
-        #QMainWindow.show(self) # ISSUE 1
+        #QMainWindow.show(self) # ISSUE 1 Nina
         if iface.activeLayer():
             crs = iface.activeLayer().crs().authid()
             extent = iface.mapCanvas().extent()
@@ -197,6 +197,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         elif not iface.activeLayer():
             iface.actionPan().trigger()
+            QMainWindow.show(self)
             self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
     def draw_poly(self, geometry):
@@ -244,12 +245,21 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         elif not iface.activeLayer():
             iface.actionPan().trigger()
+            QMainWindow.show(self)
+            self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
+
+        else:
+            iface.actionPan().trigger()
+            QMainWindow.show(self)
             self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
     def use_active_layer(self):
         iface.actionPan().trigger()
+        map_legend_items = []
+        map_legend_items.append(QgisInterface.actionAddAllToOverview())
+        #QgisInterface.editableLayers
 
-        # get List of active vector layers currently displayed in QGIS
+        # get List of active vector layers currently displayed in QGIS Map Legend
         #shape = QgsVectorLayer(, "*.shp", "ogr")
         #crs = shape.crs().authid()
 
@@ -267,10 +277,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         #    spatial_extent["north"] = north
         #    spatial_extent["south"] = south
         #    spatial_extent["crs"] = crs
-        self.processgraphSpatialExtent.setText(str("7777777"))
+        self.processgraphSpatialExtent.setText(str(map_legend_items))
             # return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "
         #else:
         #    return "Layer failed to load!"
+
 
     def insert_shape(self):
         iface.actionPan().trigger()
@@ -323,6 +334,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             return 999
 
     def add_temporal(self):
+        QMainWindow.show(self)
         self.dateWindow = QWidget()
         self.start_calendar = QCalendarWidget(self)
         self.end_calendar = QCalendarWidget(self)
@@ -338,6 +350,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.dateWindow.setGeometry(400, 400, 600, 350)
         self.dateWindow.setWindowTitle('Calendar')
         self.dateWindow.show()
+
 
         #self.start_calendar.setMaximumDate(QDate(2017-06-29))
         #self.end_calendar.setMinimumDate(QDate(2017-06-29))
@@ -385,7 +398,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         return bands
 
     def web_view(self):
-        QMainWindow.show(self)
         self.webWindow = QWidget()
         self.web = QWebView(self)
         self.web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) #"https://open-eo.github.io/"))  # both work
@@ -496,6 +508,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Refreshes the job table, so fetches all jobs of the user from the backend and lists them in the table.
         This method also generates the "Execute" and "Display" buttons.
         """
+
         jobs = self.connection.user_jobs()
 
         self.init_jobs()
@@ -537,6 +550,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     dispBtn.setText('Display')
                     self.jobsTableWidget.setCellWidget(row, 5, dispBtn)
                     dispBtn.clicked.connect(lambda *args, row=row: self.job_display(row))
+                    iface.actionZoomIn().trigger()
 
             self.jobsTableWidget.setCellWidget(row, 4, execBtn)
             execBtn.clicked.connect(lambda *args, row=row: self.job_execute(row))

@@ -154,7 +154,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             spatial_extent["north"] = north
             spatial_extent["south"] = south
             spatial_extent["crs"] = crs
-            self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False)) # Improvement: Change ' in json to "
+            self.processgraphSpatialExtent.setText(str(spatial_extent)) # Improvement: Change ' in json to "
         elif not iface.activeLayer():
             self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
@@ -192,7 +192,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             else:
                 return "Error: Draw a new rectangle"
             spatial_extent["crs"] = crs
-            self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+            self.processgraphSpatialExtent.setText(str(spatial_extent))
             QMainWindow.show(self)
 
         elif not iface.activeLayer():
@@ -207,22 +207,37 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             polygons_boundingBox_json = json.loads(polygons_boundingBox_json_string)
             values = []
             items = []
-            points = []
             for value in polygons_boundingBox_json.values():   # keys = ['type', 'coordinates'] , values
                 values.append(value)
             for item in value:
                 items.append(item)
             point1 = items[0][0]  # longitude first position, latitude second position
+            point1_long = point1[0]
+            point1_lat = point1[1]
             point2 = items[0][1]
+            point2_long = point2[0]
+            point2_lat = point2[1]
             point3 = items[0][2]
+            point3_long = point3[0]
+            point3_lat = point3[1]
             point4 = items[0][3]
+            point4_long = point4[0]
+            point4_lat = point4[1]
+
+            long = []
+            lat = []
+            long.append([point1_long,point2_long, point3_long, point4_long])
+            long_min = min(long[0])
+            long_max = max(long[0])
+            lat.append([point1_lat, point2_lat, point3_lat, point4_lat])
+            lat_min = min(lat[0])
+            lat_max = max(lat[0])
 
             spatial_extent = {}
-            spatial_extent["west"] = point1
-            spatial_extent["east"] = point2
-            spatial_extent["north"] = point3
-            spatial_extent["south"] = point4
-
+            spatial_extent["west"] = long_min
+            spatial_extent["east"] = long_max
+            spatial_extent["north"] = lat_max
+            spatial_extent["south"] = lat_min
             spatial_extent["crs"] = crs
             self.processgraphSpatialExtent.setText(str(spatial_extent))
             QMainWindow.show(self)
@@ -252,7 +267,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         #    spatial_extent["north"] = north
         #    spatial_extent["south"] = south
         #    spatial_extent["crs"] = crs
-        self.processgraphSpatialExtent.setText(json.dumps(7777777, indent=2, sort_keys=False))
+        self.processgraphSpatialExtent.setText(str("7777777"))
             # return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "
         #else:
         #    return "Layer failed to load!"
@@ -262,8 +277,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         # get generic home directory
         home = expanduser("~")
         # get location of file
-        root = filedialog.askopenfilename(initialdir=home, title="Select A File",
-                                          filetypes=(("Shapefiles", "*.shp"), ("All Files", "*.*")))
+        root = filedialog.askopenfilename(initialdir=home, title="Select A File", filetypes=(("Shapefiles", "*.shp"), ("All Files", "*.*")))
         vlayer = QgsVectorLayer(root, "*.shp", "ogr")
         crs = vlayer.crs().authid()
         if vlayer.isValid():
@@ -278,7 +292,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             spatial_extent["north"] = north
             spatial_extent["south"] = south
             spatial_extent["crs"] = crs
-            self.processgraphSpatialExtent.setText(json.dumps(spatial_extent, indent=2, sort_keys=False))
+            self.processgraphSpatialExtent.setText(str(spatial_extent))
             #return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "
         else:
             return "Layer failed to load!"

@@ -550,7 +550,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     dispBtn.setText('Display')
                     self.jobsTableWidget.setCellWidget(row, 5, dispBtn)
                     dispBtn.clicked.connect(lambda *args, row=row: self.job_display(row))
-                    iface.actionZoomIn().trigger()
+
 
             self.jobsTableWidget.setCellWidget(row, 4, execBtn)
             execBtn.clicked.connect(lambda *args, row=row: self.job_execute(row))
@@ -579,6 +579,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             info(self.iface, "Downloaded to {}".format(download_dir))  # def web_view(self):
             result = Result(path=download_dir)
             result.display()
+            iface.zoomToActiveLayer()
 
         self.refresh_jobs()
         # info(self.iface, "New Job {}".format(job_id))

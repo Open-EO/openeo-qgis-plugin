@@ -154,7 +154,6 @@ class OpenEO:
             callback=self.run,
             parent=self.iface.mainWindow())
 
-
         # will be set False in run()
         self.first_start = True
 
@@ -175,6 +174,8 @@ class OpenEO:
             self.first_start = False
             self.dlg = OpenEODialog(iface=self.iface)
             self.dlg.label_20.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'icon_new.png')))
+            self.dlg.InfoLabel_Collection.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
+            self.dlg.InfoLabel_Process.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
 
         # show the dialog
         self.dlg.show()

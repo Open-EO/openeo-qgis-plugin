@@ -122,8 +122,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.draw_rect,
              "Draw Polygon": self.draw_poly, "Use Active Layer Extent": self.use_active_layer, "Insert Shapefile": self.insert_shape})
         self.extentBox.addItems(list(extentBoxItems.keys()))
-        self.DrawButton.clicked.connect(self.draw) # "Draw Extent" - Button shall enable the drawing tool
-        self.GetButton.clicked.connect(self.display_before_load) # "Get Extent"-Button shall display the desired extent in the window below
+
+        # Buttons
+        self.drawBtn = QPushButton('Draw Extent', self.tab_3)#, self.tab_3)  # "Draw Extent" - Button shall enable the drawing tool
+        self.drawBtn.setGeometry(60, 420, 131, 31)
+        self.drawBtn.clicked.connect(self.draw)
+        # self.drawBtn.hide()
+        self.getBtn = QPushButton('Get Extent', self.tab_3)  # "Draw Extent" - Button shall enable the drawing tool
+        self.getBtn.setGeometry(220, 420, 131, 31)
+        self.getBtn.clicked.connect(self.display_before_load)
+        # self.getBtn.hide()
 
         ### Temporal Extent
         self.selectDate.clicked.connect(self.add_temporal)
@@ -203,26 +211,42 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if iface.activeLayer():
             crs = iface.activeLayer().crs().authid()
             polygons_boundingBox_tuples = geometry
-            polygons_boundingBox_json_string = polygons_boundingBox_tuples[0].asJson(1)  # this returns only the 4 desired points, rounded
+            polygons_boundingBox_json_string = polygons_boundingBox_tuples[0].asJson(
+                1)  # this returns only the 4 desired points, rounded
             polygons_boundingBox_json = json.loads(polygons_boundingBox_json_string)
             values = []
             items = []
-            points = []
-            for value in polygons_boundingBox_json.values():   # keys = ['type', 'coordinates'] , values
+            for value in polygons_boundingBox_json.values():  # keys = ['type', 'coordinates'] , values
                 values.append(value)
             for item in value:
                 items.append(item)
             point1 = items[0][0]  # longitude first position, latitude second position
+            point1_long = point1[0]
+            point1_lat = point1[1]
             point2 = items[0][1]
+            point2_long = point2[0]
+            point2_lat = point2[1]
             point3 = items[0][2]
+            point3_long = point3[0]
+            point3_lat = point3[1]
             point4 = items[0][3]
+            point4_long = point4[0]
+            point4_lat = point4[1]
+
+            long = []
+            lat = []
+            long.append([point1_long, point2_long, point3_long, point4_long])
+            long_min = min(long[0])
+            long_max = max(long[0])
+            lat.append([point1_lat, point2_lat, point3_lat, point4_lat])
+            lat_min = min(lat[0])
+            lat_max = max(lat[0])
 
             spatial_extent = {}
-            spatial_extent["west"] = point1
-            spatial_extent["east"] = point2
-            spatial_extent["north"] = point3
-            spatial_extent["south"] = point4
-
+            spatial_extent["west"] = long_min
+            spatial_extent["east"] = long_max
+            spatial_extent["north"] = lat_max
+            spatial_extent["south"] = lat_min
             spatial_extent["crs"] = crs
             self.processgraphSpatialExtent.setText(str(spatial_extent))
             QMainWindow.show(self)
@@ -371,7 +395,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         return bands
 
     def web_view(self):
-        QMainWindow.show(self)
         self.webWindow = QWidget()
         self.web = QWebView(self)
         self.web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) #"https://open-eo.github.io/"))  # both work
@@ -523,6 +546,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     dispBtn.setText('Display')
                     self.jobsTableWidget.setCellWidget(row, 5, dispBtn)
                     dispBtn.clicked.connect(lambda *args, row=row: self.job_display(row))
+                    iface.actionZoomIn().trigger()
 
             self.jobsTableWidget.setCellWidget(row, 4, execBtn)
             execBtn.clicked.connect(lambda *args, row=row: self.job_execute(row))

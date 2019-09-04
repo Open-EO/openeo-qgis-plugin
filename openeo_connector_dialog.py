@@ -30,10 +30,10 @@ from os.path import expanduser
 from collections import OrderedDict
 
 from qgis.PyQt import uic, QtGui, QtWidgets
-from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, QApplication, QAction, QMainWindow
+from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, QApplication, QAction, QMainWindow, QFileDialog
 import qgis.PyQt.QtCore as QtCore
 from qgis.gui import QgisInterface, QgsMapToolZoom
-from qgis.core import QgsProject
+from qgis.core import QgsVectorLayer
 from qgis.utils import iface
 
 ## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
@@ -87,16 +87,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         backendURL = requests.get('http://hub.openeo.org/backends')
         backendsALL = backendURL.json()
         backends = []
-        versions = []
-
-
-
-
-
         for backend in backendsALL.values():
             backends.append(str(backend))
-
-
 
         # Backends from json script directly (only one version)
         #backend_r = backends[1]
@@ -302,8 +294,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         # get generic home directory
         home = expanduser("~")
         # get location of file
-        root = filedialog.askopenfilename(initialdir=home, title="Select A File", filetypes=(("Shapefiles", "*.shp"), ("All Files", "*.*")))
-        vlayer = QgsVectorLayer(root, "*.shp", "ogr")
+        root = QFileDialog.getOpenFileName(self, "Select a file", home) #, "All Files (*.*), Shape Files (*.shp)")
+        #root = QFileDialog.getOpenFileName(initialdir=home, title="Select A File", filetypes=(("Shapefiles", "*.shp"), ("All Files", "*.*")))
+        #QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","All Files (*);;Python Files (*.py)", options=options)
+
+        vlayer = QgsVectorLayer(root[0])
         crs = vlayer.crs().authid()
         if vlayer.isValid():
             extent = vlayer.extent()
@@ -318,7 +313,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             spatial_extent["south"] = south
             spatial_extent["crs"] = crs
             self.processgraphSpatialExtent.setText(str(spatial_extent))
-            #return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "
         else:
             return "Layer failed to load!"
 

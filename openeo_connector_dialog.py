@@ -87,8 +87,14 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         backendURL = requests.get('http://hub.openeo.org/backends')
         backendsALL = backendURL.json()
         backends = []
+        for item in backendsALL['VITO GeoPySpark'].values():
+            backends.append(str(item))
+        del backendsALL['VITO GeoPySpark']
         for backend in backendsALL.values():
             backends.append(str(backend))
+
+
+
 
         # Backends from json script directly (only one version)
         #backend_r = backends[1]
@@ -123,6 +129,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.extentBox.addItems(list(extentBoxItems.keys()))
         self.extentBox.activated.connect(self.load_extent)
 
+        # Hiding Buttons
         self.drawBtn.clicked.connect(self.draw)
         self.drawBtn.setVisible(False)
         self.getBtn.clicked.connect(self.display_before_load)
@@ -137,8 +144,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         ### Change to incorporate the WebEditor:
         self.moveButton.clicked.connect(self.web_view)
-
-        # self.processgraphEdit.textChanged.connect(self.update_processgraph)
 
         # Jobs Tab
         self.init_jobs()
@@ -276,19 +281,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         spatial_extent["crs"] = crs
         self.processgraphSpatialExtent.setText(str(spatial_extent))
 
-
-        #    east = round(ex_layer.xMaximum(), 1)
-        #    north = round(ex_layer.yMaximum(), 1)
-        #    west = round(ex_layer.xMinimum(), 1)
-        #    south = round(ex_layer.yMinimum(), 1)
-        #    spatial_extent = {}
-        #    spatial_extent["west"] = west
-        #    spatial_extent["east"] = east
-        #    spatial_extent["north"] = north
-        #    spatial_extent["south"] = south
-        #    spatial_extent["crs"] = crs
-        #    self.processgraphSpatialExtent.setText(str(spatial_extent))
-
     def insert_shape(self):
         iface.actionPan().trigger()
         # get generic home directory
@@ -407,6 +399,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def web_view(self):
         webbrowser.open("https://open-eo.github.io/openeo-web-editor/demo/")
+
         ### Old approach, which opens Webeditor Demoversion directly in QGIS
         #self.webWindow = QWidget()
         #self.web = QWebView(self)

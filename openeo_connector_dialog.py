@@ -122,8 +122,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.draw_rect,
              "Draw Polygon": self.draw_poly, "Use Active Layer Extent": self.use_active_layer, "Insert Shapefile": self.insert_shape})
         self.extentBox.addItems(list(extentBoxItems.keys()))
-        self.DrawButton.clicked.connect(self.draw) # "Draw Extent" - Button shall enable the drawing tool
-        self.GetButton.clicked.connect(self.display_before_load) # "Get Extent"-Button shall display the desired extent in the window below
+        #self.DrawButton.clicked.connect(self.draw) # "Draw Extent" - Button shall enable the drawing tool
+        #self.GetButton.clicked.connect(self.display_before_load) # "Get Extent"-Button shall display the desired extent in the window below
+
+        # Buttons
+        self.drawBtn = QPushButton('Draw Extent', self.tab_3)#, self.tab_3)  # "Draw Extent" - Button shall enable the drawing tool
+        self.drawBtn.setGeometry(60, 420, 131, 31)
+        self.drawBtn.clicked.connect(self.draw)
+        self.drawBtn.hide()
+        self.getBtn = QPushButton('Get Extent', self.tab_3)  # "Draw Extent" - Button shall enable the drawing tool
+        self.getBtn.setGeometry(220, 420, 131, 31)
+        self.getBtn.clicked.connect(self.display_before_load)
+        # self.getBtn.hide()
 
         ### Temporal Extent
         self.selectDate.clicked.connect(self.add_temporal)

@@ -28,6 +28,7 @@ import json
 import requests
 from os.path import expanduser
 from collections import OrderedDict
+import webbrowser
 
 from qgis.PyQt import uic, QtGui, QtWidgets
 from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, QApplication, QAction, QMainWindow, QFileDialog
@@ -45,7 +46,6 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import QCalendarWidget
 #from PyQt5.QtWebKit import *
 from PyQt5.QtWebKitWidgets import QWebView
-from tkinter import filedialog
 
 from PyQt5.QtCore import QUrl
 from .models.result import Result
@@ -406,27 +406,22 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         return bands
 
     def web_view(self):
-        self.webWindow = QWidget()
-        self.web = QWebView(self)
-        self.web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) #"https://open-eo.github.io/"))  # both work
+        webbrowser.open("https://open-eo.github.io/openeo-web-editor/demo/")
+        ### Old approach, which opens Webeditor Demoversion directly in QGIS
+        #self.webWindow = QWidget()
+        #self.web = QWebView(self)
+        #self.web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) #"https://open-eo.github.io/"))  # both work
         # web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # Error: Sorry, the openEO Web Editor requires a modern browsers.
         # Please update your browser or use Google Chrome or Mozilla Firefox as alternative.
-
-        self.button = QPushButton('Close Web Editor', self)
-        self.button.clicked.connect(self.web_view_close)
-
-        self.hbox = QHBoxLayout()
-        self.hbox.addWidget(self.web)
-        self.hbox.addWidget(self.button)
-        self.webWindow.setLayout(self.hbox)
-        self.webWindow.setGeometry(550, 420, 800, 600)
-        self.webWindow.setWindowTitle('Web Editor')
-        self.webWindow.show()
-
-        # add:
-        ## send login data (backend, user, pwd, collection & process) - does the demo version work then?
-        ## another def request_ProcessGraph: get back generated process graph in web editor
-        ## Create Job at Backend then via QGIS Plugin
+        #self.button = QPushButton('Close Web Editor', self)
+        #self.button.clicked.connect(self.web_view_close)
+        #self.hbox = QHBoxLayout()
+        #self.hbox.addWidget(self.web)
+        #self.hbox.addWidget(self.button)
+        #self.webWindow.setLayout(self.hbox)
+        #self.webWindow.setGeometry(550, 420, 800, 600)
+        #self.webWindow.setWindowTitle('Web Editor')
+        #self.webWindow.show()
 
     def web_view_close(self):
         self.webWindow.close()

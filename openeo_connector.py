@@ -23,6 +23,7 @@
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon, QPixmap
 from qgis.PyQt.QtWidgets import QAction
+from PyQt5.QtGui import QIcon
 
 
 # Initialize Qt resources from file resources.py
@@ -177,6 +178,7 @@ class OpenEO:
             self.dlg.label_20.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'icon_new.png')))
             self.dlg.InfoLabel.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
             self.dlg.InfoLabel_2.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
+            self.dlg.reloadBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'reload_icon.png')))
 
         # show the dialog
         self.dlg.show()

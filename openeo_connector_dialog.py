@@ -117,23 +117,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
 
-        ### Draw desired Spatial Extent
         extentBoxItems = OrderedDict(
             {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.draw_rect,
-             "Draw Polygon": self.draw_poly, "Use Active Layer Extent": self.use_active_layer, "Insert Shapefile": self.insert_shape})
+             "Draw Polygon": self.draw_poly, "Use Active Layer Extent": self.use_active_layer,
+             "Insert Shapefile": self.insert_shape})
         self.extentBox.addItems(list(extentBoxItems.keys()))
-        #self.DrawButton.clicked.connect(self.draw) # "Draw Extent" - Button shall enable the drawing tool
-        #self.GetButton.clicked.connect(self.display_before_load) # "Get Extent"-Button shall display the desired extent in the window below
+        self.extentBox.activated.connect(self.load_extent)
 
-        # Buttons
-        self.drawBtn = QPushButton('Draw Extent', self.tab_3)#, self.tab_3)  # "Draw Extent" - Button shall enable the drawing tool
-        self.drawBtn.setGeometry(60, 420, 131, 31)
         self.drawBtn.clicked.connect(self.draw)
-        self.drawBtn.hide()
-        self.getBtn = QPushButton('Get Extent', self.tab_3)  # "Draw Extent" - Button shall enable the drawing tool
-        self.getBtn.setGeometry(220, 420, 131, 31)
+        self.drawBtn.setVisible(False)
         self.getBtn.clicked.connect(self.display_before_load)
-        # self.getBtn.hide()
+        self.getBtn.setVisible(False)
+        self.reloadBtn.setVisible(False)
+        self.layersBox.setVisible(False)
 
         ### Temporal Extent
         self.selectDate.clicked.connect(self.add_temporal)
@@ -174,6 +170,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.drawRectangle = DrawRectangle(iface.mapCanvas(), self)
             iface.mapCanvas().setMapTool(self.drawRectangle)
         elif str(self.extentBox.currentText()) == "Draw Polygon":
+            self.drawBtn.setVisible(True)
             QMainWindow.hide(self)
             self.drawPolygon = DrawPolygon(iface.mapCanvas(), self)
             iface.mapCanvas().setMapTool(self.drawPolygon)
@@ -265,33 +262,33 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def use_active_layer(self):
         iface.actionPan().trigger()
-        map_legend_items = []
-        map_legend_items.append(QgisInterface.actionAddAllToOverview())
-        #QgisInterface.editableLayers
 
-        # get List of active vector layers currently displayed in QGIS Map Legend
-        #shape = QgsVectorLayer(, "*.shp", "ogr")
-        #crs = shape.crs().authid()
+        crs = self.layers.crs().authid()
+        ex_layer = self.layers.extent()
+        east = round(ex_layer.xMaximum(), 1)
+        north = round(ex_layer.yMaximum(), 1)
+        west = round(ex_layer.xMinimum(), 1)
+        south = round(ex_layer.yMinimum(), 1)
+        spatial_extent = {}
+        spatial_extent["west"] = west
+        spatial_extent["east"] = east
+        spatial_extent["north"] = north
+        spatial_extent["south"] = south
+        spatial_extent["crs"] = crs
+        self.processgraphSpatialExtent.setText(str(spatial_extent))
 
-        # if there are layers listed...
-        #crs = vlayer.crs().authid()
-        #if vlayer.isValid():
-        #    extent = vlayer.extent()
-        #    east = round(extent.xMaximum(), 1)
-        #    north = round(extent.yMaximum(), 1)
-        #    west = round(extent.xMinimum(), 1)
-        #    south = round(extent.yMinimum(), 1)
+
+        #    east = round(ex_layer.xMaximum(), 1)
+        #    north = round(ex_layer.yMaximum(), 1)
+        #    west = round(ex_layer.xMinimum(), 1)
+        #    south = round(ex_layer.yMinimum(), 1)
         #    spatial_extent = {}
         #    spatial_extent["west"] = west
         #    spatial_extent["east"] = east
         #    spatial_extent["north"] = north
         #    spatial_extent["south"] = south
         #    spatial_extent["crs"] = crs
-        self.processgraphSpatialExtent.setText(str(map_legend_items))
-            # return json.dumps(spatial_extent, indent=2, sort_keys=False)  # Improvement: Change ' in json to "
-        #else:
-        #    return "Layer failed to load!"
-
+        #    self.processgraphSpatialExtent.setText(str(spatial_extent))
 
     def insert_shape(self):
         iface.actionPan().trigger()
@@ -329,17 +326,17 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def display_before_load(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
             self.set_canvas()
-            self.called = False
+            #self.called = False
         elif str(self.extentBox.currentText()) == "Draw Polygon":
             self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent", duration=5)
         elif str(self.extentBox.currentText()) == "Draw Rectangle":
             self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent", duration=5)
         elif str(self.extentBox.currentText()) == "Use Active Layer Extent":
             self.use_active_layer()
-            self.called = False
+            #self.called = False
         elif str(self.extentBox.currentText()) == "Insert Shapefile":
             self.insert_shape()
-            self.called = False
+            #self.called = False
         else:
             return 999
 
@@ -560,7 +557,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     dispBtn.setText('Display')
                     self.jobsTableWidget.setCellWidget(row, 5, dispBtn)
                     dispBtn.clicked.connect(lambda *args, row=row: self.job_display(row))
-
+                    iface.actionZoomIn().trigger()
 
             self.jobsTableWidget.setCellWidget(row, 4, execBtn)
             execBtn.clicked.connect(lambda *args, row=row: self.job_execute(row))
@@ -666,6 +663,40 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.reload_processgraph_view()
         # if ["spatial_extent"].__contains__("arguments"):           # ISSUE!!
          #   self.processgraphEdit.clear()
+
+    def load_extent(self):
+        if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
+            self.drawBtn.setVisible(False)
+            self.getBtn.setVisible(True)
+            self.layersBox.setVisible(False)
+            self.reloadBtn.setVisible(False)
+        elif str(self.extentBox.currentText()) == "Draw Polygon":
+            self.drawBtn.setVisible(True)
+            self.getBtn.setVisible(False)
+            self.layersBox.setVisible(False)
+            self.reloadBtn.setVisible(False)
+        elif str(self.extentBox.currentText()) == "Draw Rectangle":
+            self.drawBtn.setVisible(True)
+            self.getBtn.setVisible(False)
+            self.layersBox.setVisible(False)
+            self.reloadBtn.setVisible(False)
+        elif str(self.extentBox.currentText()) == "Use Active Layer Extent":
+            self.drawBtn.setVisible(False)
+            self.getBtn.setVisible(False)
+            self.layersBox.setVisible(True)
+            self.reloadBtn.setVisible(True)
+            layers = iface.mapCanvas().layers()
+            for layer in layers:
+                self.layersBox.addItem(layer.name())
+                self.layers = layer
+            self.reloadBtn.clicked.connect(self.use_active_layer)
+        elif str(self.extentBox.currentText()) == "Insert Shapefile":
+            self.drawBtn.setVisible(False)
+            self.getBtn.setVisible(True)
+            self.layersBox.setVisible(False)
+            self.reloadBtn.setVisible(False)
+        else:
+            return 999
 
     def collection_selected(self):
         """

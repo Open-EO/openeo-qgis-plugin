@@ -87,27 +87,34 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         backendURL = requests.get('http://hub.openeo.org/backends')
         backendsALL = backendURL.json()
         backends = []
-        for element in backendsALL.values():
-            backends.append(str(element)) # would work as input
-
         versions = []
-        # Backends from json script directly (only one version)
-        backend_r = backends[1]
-        backend_eodc = backends[4]
-        versions.append(backend_r)
-        versions.append(backend_eodc)
-        # Backends with more then one version
-        versions.append("https://earthengine.openeo.org/v0.3")
-        versions.append("https://earthengine.openeo.org/v0.4")
-        versions.append("https://openeo.eurac.edu/")
-        versions.append("http://saocompute.eurac.edu/openEO_0_3_0/openeo/")
-        versions.append("http://openeo.vgt.vito.be/openeo/0.4.0")
-        versions.append("http://openeo.vgt.vito.be/openeo")
-        versions.append("http://openeo.mundialis.de/api/v0.3/")
-        versions.append("http://openeo.mundialis.de/api/v0.4/")
 
-        self.backendEdit.addItems(versions) # or Backends
-        ### Backend Issue end
+
+
+
+
+        for backend in backendsALL.values():
+            backends.append(str(backend))
+
+
+
+        # Backends from json script directly (only one version)
+        #backend_r = backends[1]
+        #backend_eodc = backends[4]
+        #versions.append(backend_r)
+        #versions.append(backend_eodc)
+        # Backends with more then one version
+        #versions.append("https://earthengine.openeo.org/v0.3")
+        #versions.append("https://earthengine.openeo.org/v0.4")
+        #versions.append("https://openeo.eurac.edu/")
+        #versions.append("http://saocompute.eurac.edu/openEO_0_3_0/openeo/")
+        #versions.append("http://openeo.vgt.vito.be/openeo/0.4.0")
+        #versions.append("http://openeo.vgt.vito.be/openeo")
+        #versions.append("http://openeo.mundialis.de/api/v0.3/")
+        #versions.append("http://openeo.mundialis.de/api/v0.4/")
+
+        self.backendEdit.addItems(backends) # or Backends
+
         self.connectButton.clicked.connect(self.connect)
         self.addButton.clicked.connect(self.add_process)
         self.processBox.currentTextChanged.connect(self.process_selected)
@@ -615,48 +622,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.iface.messageBar().pushMessage("Start Date must be before End Date", duration=5)
         B = self.bands()
 
-        ### west=None
-        ### east=None
-        ### south=None
-        ### north=None
-        ### crs=None
-
-        ### if self.westEdit.text() != "":
-        ###    west = float(self.westEdit.text())
-        ###if self.eastEdit.text() != "":
-        ###    east = float(self.eastEdit.text())
-        ###if self.southEdit.text() != "":
-        ###    south = float(self.southEdit.text())
-        ###if self.northEdit.text() != "":
-        ###    north = float(self.northEdit.text())
-        ###if self.crsEdit.text() != "":
-        ###    crs = int(self.crsEdit.text())
-
-        ### start = self.startDateEdit.date().toPyDate()
-        ### end = self.endDateEdit.date().toPyDate()
-
         arguments = OrderedDict({
             "id": col,
             "spatial_extent": ex,
             "temporal_extent": [texS, texE],
             "bands": B,
         })
-
-        ### "temporal_extent": [str(start), str(end)],
-        ### "spatial_extent": {}
-
-        ### if west:
-        ###    arguments["spatial_extent"]["west"] = west
-        ### if east:
-        ###    arguments["spatial_extent"]["east"] = east
-        ### if south:
-        ###    arguments["spatial_extent"]["south"] = south
-        ### if north:
-        ###    arguments["spatial_extent"]["north"] = north
-        ### if crs:
-        ###    arguments["spatial_extent"]["crs"] = crs
-
-        # info(self.iface, "Load Collection {}".format(str(arguments)))
 
         self.processgraph.load_collection(arguments)
         # Refresh process graph in GUI

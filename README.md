@@ -11,6 +11,7 @@ The openEO QGIS Plugin "OpenEO Connector" allows for connecting to an openEO bac
 
 ### Features
 
+* Listing all openeo compliant backends with API version 0.4.0 and above from http://hub.openeo.org/ 
 * Connecting to an openeo compliant backend (openAPI version above 0.4.0)
 * Listing all available collections ("Load Collection" combobox) and processes ("Add Process" combobox) including parameters (see table under the process combobox) of the backend
 * Spatial extent selection ("Add Spatial Extent" combobox) by: 
@@ -29,6 +30,27 @@ The openEO QGIS Plugin "OpenEO Connector" allows for connecting to an openEO bac
    
 Need some additional features? Leave an issue at this repository!
 
+## Install
+
+To install the plugin to your local QGIS Desktop application follow these steps:
+
+1. Download this repository as zip file
+2. Start QGIS application
+3. Go to Plugins/Manage and Install Plugins
+4. Click on "Install from ZIP" and choose the downloaded zip file.
+5. Press "Install Plugin"
+6. You may need to activate it in the plugin manager and the openEO logo should be visible in the toolpanel.
+
+## Usage
+
+First you have to connect to the server with your user credentials in the upper part of the Window. Then all existing jobs are displayed at the "Jobs" tab. There the jobs can be executed again or displayed in QGIS. In the "New Job" tab it is possible to create a new process graph and to send it to the backend to create a new job. The process graph editor is in an early stage, so it is recommended to just copy the complete process graph into the process graph text field. 
+
+The following Screenshots show how it looks like:
+
+<img src="https://github.com/Open-EO/openeo-qgis-plugin/raw/master/examples/create_processgraph.png" alt="create-processgraph" width="900"/>
+
+<img src="https://github.com/Open-EO/openeo-qgis-plugin/raw/master/examples/job_list.png" alt="job-list" width="900"/>
+
 ## Building
 
 To build the plugin and deploy to your plugin directory you will need the [pb_tool](http://g-sherman.github.io/plugin_build_tool/) CLI tool.
@@ -44,18 +66,6 @@ To deploy the application to your QGIS plugins directory run the following comma
     pb_tool deploy 
 
 It's recommended to use the Plugin Reloader plugin within QGIS to easily reload the plugin during development.
-
-## Usage
-
-First you have to connect to the server with your user credentials in the upper part of the Window. Then all existing jobs are displayed at the "Jobs" tab. There the jobs can be executed again or displayed in QGIS. In the "New Job" tab it is possible to create a new process graph and to send it to the backend to create a new job. The process graph editor is in an early stage, so it is recommended to just copy the complete process graph into the process graph text field. 
-
-The following Screenshots show how it looks like:
-
-<img src="https://github.com/Open-EO/openeo-qgis-plugin/raw/master/examples/create_processgraph.png" alt="create-processgraph" width="900"/>
-
-<img src="https://github.com/Open-EO/openeo-qgis-plugin/raw/master/examples/job_list.png" alt="job-list" width="900"/>
-
-
 
 ## Troubleshooting 
 

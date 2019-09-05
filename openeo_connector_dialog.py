@@ -55,6 +55,7 @@ from .utils.logging import info, warning
 from .drawRect import DrawRectangle
 from .drawPoly import DrawPolygon
 
+from distutils.version import LooseVersion
 
 ########################################################################################################################
 ########################################################################################################################
@@ -98,7 +99,23 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 del backendsALL['VITO GeoPySpark']
 
             for backend in backendsALL.values():
-                backends.append(str(backend))
+                if ".well-known" in str(backend):
+                    backend_versions = requests.get(backend)
+
+                    if backend_versions.status_code == 200:
+                        backend_versions = backend_versions.json()
+                        for version in backend_versions.values():
+                            version = version[0]
+                            #backends.append(str(version))
+                            if "api_version" in version:
+                                if LooseVersion("0.4.0") <= LooseVersion(version["api_version"]):
+                                    if "url" in version:
+                                        backends.append(str(version["url"]))
+
+                else:
+                    backends.append(str(backend))
+
+
 
         # Backends from json script directly (only one version)
         #backend_r = backends[1]
@@ -439,10 +456,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
 
         # Load Backend options
-        backends = {}
-        backends["Google Earth Engine"] = "https://earthengine.openeo.org/.well-known/openeo"
-        backends["R Deo Server"] = "https://r-server.openeo.org/"
-        backends["Eurac WCPS"] = "https://openeo.eurac.edu/.well-known/openeo"
+        # backends = {}
+        # backends["Google Earth Engine"] = "https://earthengine.openeo.org/.well-known/openeo"
+        # backends["R Deo Server"] = "https://r-server.openeo.org/"
+        # backends["Eurac WCPS"] = "https://openeo.eurac.edu/.well-known/openeo"
 
         if self.backendEdit.currentText() == "None of the listed ones match":
             url = self.backendEdit2.text()

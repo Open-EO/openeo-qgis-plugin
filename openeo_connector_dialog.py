@@ -100,9 +100,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             for backend in backendsALL.values():
                 backends.append(str(backend))
 
-
-
-
         # Backends from json script directly (only one version)
         #backend_r = backends[1]
         #backend_eodc = backends[4]
@@ -136,11 +133,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.extentBox.addItems(list(extentBoxItems.keys()))
         self.extentBox.activated.connect(self.load_extent)
 
-        # Hiding Buttons
+        # Set initial button visibility correctly
         self.drawBtn.clicked.connect(self.draw)
         self.drawBtn.setVisible(False)
         self.getBtn.clicked.connect(self.display_before_load)
-        self.getBtn.setVisible(False)
+        self.getBtn.setVisible(True)
         self.reloadBtn.setVisible(False)
         self.layersBox.setVisible(False)
 

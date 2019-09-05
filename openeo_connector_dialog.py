@@ -84,14 +84,21 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.setupUi(self)
         ### Backend Issue:
-        backendURL = requests.get('http://hub.openeo.org/backends')
-        backendsALL = backendURL.json()
+        backendURL = requests.get('http://hub.openeo.org/api/backends')
+
         backends = []
-        for item in backendsALL['VITO GeoPySpark'].values():
-            backends.append(str(item))
-        del backendsALL['VITO GeoPySpark']
-        for backend in backendsALL.values():
-            backends.append(str(backend))
+
+        if backendURL.status_code == 200:
+            backendsALL = backendURL.json()
+
+
+            if 'VITO GeoPySpark' in backendsALL:
+                for item in backendsALL['VITO GeoPySpark'].values():
+                    backends.append(str(item))
+                del backendsALL['VITO GeoPySpark']
+
+            for backend in backendsALL.values():
+                backends.append(str(backend))
 
 
 

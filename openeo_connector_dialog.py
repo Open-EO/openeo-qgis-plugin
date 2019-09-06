@@ -527,17 +527,17 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         collection_info_result = self.connection.list_collections()
         for col_info in collection_info_result:
             if "description" in col_info:
-                    #self.infoWindow = QWidget()
-                    #self.hbox = QHBoxLayout()
-                    #self.infoBox = QTextEdit()
-                    #self.infoBox.setText(str(col_info['id'] + ': ' + col_info['description']))
-                    #self.infoBox.setReadOnly(True)
-                    #self.hbox.addWidget(self.infoBox)
-                    #self.infoWindow.setLayout(self.hbox)
-                    #self.infoWindow.setGeometry(400, 400, 600, 450)
-                    #self.infoWindow.setWindowTitle('Collection Information')
-                    #self.infoWindow.show()
-                self.processgraphEdit.setText(str(col_info['id']) + ": " +  str(col_info['description']))
+                self.infoWindow = QWidget()
+                self.hbox = QHBoxLayout()
+                self.infoBox = QTextEdit()
+                self.infoBox.setText(str(col_info['id']) + ': ' + str(col_info['description']))
+                self.infoBox.setReadOnly(True)
+                self.hbox.addWidget(self.infoBox)
+                self.infoWindow.setLayout(self.hbox)
+                self.infoWindow.setGeometry(400, 400, 600, 450)
+                self.infoWindow.setWindowTitle('Collection Information')
+                self.infoWindow.show()
+                #self.processgraphEdit.setText(str(col_info['id']) + ": " +  str(col_info['description']))
 
     def pr_info(self):
         process_info_result = self.connection.list_processes()

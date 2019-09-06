@@ -157,6 +157,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
         self.infoBtn.clicked.connect(self.col_info)
+        self.collectionBox.setGeometry(10, 60, 381, 21)
         self.infoBtn2.setStyleSheet('''   
                                  border-image: url("./info_icon.png") 10 10 0 0;
                                  border-top: 10px transparent;
@@ -164,6 +165,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
         self.infoBtn2.clicked.connect(self.pr_info)
+        self.processBox.setGeometry(10, 130, 291, 21)
         self.infoBtn.setVisible(False)
         self.infoBtn2.setVisible(False)
 
@@ -489,7 +491,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processes = process_result
 
         self.infoBtn.setVisible(True)
+        self.collectionBox.setGeometry(10, 60, 351, 21)
         self.infoBtn2.setVisible(True)
+        self.processBox.setGeometry(10, 130, 261, 21)
 
         self.collectionBox.clear()
         self.processBox.clear()
@@ -523,19 +527,17 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         collection_info_result = self.connection.list_collections()
         for col_info in collection_info_result:
             if "description" in col_info:
-#                return col_info['id'] + ': ' + col_info['description']
-                self.infoWindow = QWidget()
-                self.hbox = QHBoxLayout()
-                self.infoBox = QTextEdit()
-                self.infoBox.setText(str(col_info['id'] + ': ' + col_info['description']))
-                self.infoBox.setReadOnly(True)
-                self.hbox.addWidget(self.infoBox)
-                self.infoWindow.setLayout(self.hbox)
-                self.infoWindow.setGeometry(400, 400, 600, 450)
-                self.infoWindow.setWindowTitle('Collection Information')
-                self.infoWindow.show()
-#                return str(col_info["description"])
-#                self.processgraphEdit.setText(str(col_info['id']) + ": " +  str(col_info['description']))
+                    #self.infoWindow = QWidget()
+                    #self.hbox = QHBoxLayout()
+                    #self.infoBox = QTextEdit()
+                    #self.infoBox.setText(str(col_info['id'] + ': ' + col_info['description']))
+                    #self.infoBox.setReadOnly(True)
+                    #self.hbox.addWidget(self.infoBox)
+                    #self.infoWindow.setLayout(self.hbox)
+                    #self.infoWindow.setGeometry(400, 400, 600, 450)
+                    #self.infoWindow.setWindowTitle('Collection Information')
+                    #self.infoWindow.show()
+                self.processgraphEdit.setText(str(col_info['id']) + ": " +  str(col_info['description']))
 
     def pr_info(self):
         process_info_result = self.connection.list_processes()

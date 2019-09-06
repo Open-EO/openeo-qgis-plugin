@@ -39,7 +39,7 @@ from qgis.utils import iface
 
 ## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit
 from PyQt5 import QtCore
 from PyQt5.QtCore import QDate
 from PyQt5 import QtGui
@@ -506,17 +506,35 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         collection_info_result = self.connection.list_collections()
         for col_info in collection_info_result:
             if "description" in col_info:
-                #self.infoWindow = QWidget()
-                #self.infoWindow.show()
-                self.processgraphEdit.setText(str(col_info['id']) + ": " +  str(col_info['description']))
+#                return col_info['id'] + ': ' + col_info['description']
+                self.infoWindow = QWidget()
+                self.hbox = QHBoxLayout()
+                self.infoBox = QTextEdit()
+                self.infoBox.setText(str(col_info['id'] + ': ' + col_info['description']))
+                self.infoBox.setReadOnly(True)
+                self.hbox.addWidget(self.infoBox)
+                self.infoWindow.setLayout(self.hbox)
+                self.infoWindow.setGeometry(400, 400, 600, 450)
+                self.infoWindow.setWindowTitle('Collection Information')
+                self.infoWindow.show()
+#                return str(col_info["description"])
+#                self.processgraphEdit.setText(str(col_info['id']) + ": " +  str(col_info['description']))
 
     def pr_info(self):
         process_info_result = self.connection.list_processes()
         for pr_info in process_info_result:
             if "description" in pr_info:
-                #self.infoWindow = QWidget()
-                #self.infoWindow.show()
-                self.processgraphEdit.setText(str(pr_info['id']) + ": " + str(pr_info['description']))
+                self.infoWindow = QWidget()
+                self.hbox = QHBoxLayout()
+                self.infoBox = QTextEdit()
+                self.infoBox.setText(str(pr_info['id'] + ': ' + pr_info['description']))
+                self.infoBox.setReadOnly(True)
+                self.hbox.addWidget(self.infoBox)
+                self.infoWindow.setLayout(self.hbox)
+                self.infoWindow.setGeometry(400, 400, 600, 350)
+                self.infoWindow.setWindowTitle('Process Information')
+                self.infoWindow.show()
+                #self.processgraphEdit.setText(str(pr_info['id']) + ": " + str(pr_info['description']))
 
     def init_jobs(self):
         """

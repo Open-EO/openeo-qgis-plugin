@@ -104,33 +104,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
                     if backend_versions.status_code == 200:
                         backend_versions = backend_versions.json()
-                        for version in backend_versions.values():
-                            version = version[0]
-                            #backends.append(str(version))
-                            if "api_version" in version:
-                                if LooseVersion("0.4.0") <= LooseVersion(version["api_version"]):
-                                    if "url" in version:
-                                        backends.append(str(version["url"]))
+                        for versions in backend_versions.values():
 
+                            for version in versions:
+                                if "api_version" in version:
+                                    if LooseVersion("0.4.0") <= LooseVersion(version["api_version"]):
+                                        if "url" in version:
+                                            backends.append(str(version["url"]))
                 else:
                     backends.append(str(backend))
-
-
-
-        # Backends from json script directly (only one version)
-        #backend_r = backends[1]
-        #backend_eodc = backends[4]
-        #versions.append(backend_r)
-        #versions.append(backend_eodc)
-        # Backends with more then one version
-        #versions.append("https://earthengine.openeo.org/v0.3")
-        #versions.append("https://earthengine.openeo.org/v0.4")
-        #versions.append("https://openeo.eurac.edu/")
-        #versions.append("http://saocompute.eurac.edu/openEO_0_3_0/openeo/")
-        #versions.append("http://openeo.vgt.vito.be/openeo/0.4.0")
-        #versions.append("http://openeo.vgt.vito.be/openeo")
-        #versions.append("http://openeo.mundialis.de/api/v0.3/")
-        #versions.append("http://openeo.mundialis.de/api/v0.4/")
 
         self.backendEdit.addItems(backends) # or Backends
 

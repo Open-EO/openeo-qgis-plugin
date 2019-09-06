@@ -557,50 +557,6 @@
       <string>Create New Job in Web Editor</string>
      </property>
     </widget>
-    <widget class="QLabel" name="InfoLabel">
-     <property name="geometry">
-      <rect>
-       <x>370</x>
-       <y>60</y>
-       <width>21</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="autoFillBackground">
-      <bool>false</bool>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-     <property name="pixmap">
-      <pixmap>info_icon.png</pixmap>
-     </property>
-     <property name="scaledContents">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QLabel" name="InfoLabel_2">
-     <property name="geometry">
-      <rect>
-       <x>280</x>
-       <y>130</y>
-       <width>21</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="autoFillBackground">
-      <bool>false</bool>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-     <property name="pixmap">
-      <pixmap>info_icon.png</pixmap>
-     </property>
-     <property name="scaledContents">
-      <bool>true</bool>
-     </property>
-    </widget>
     <widget class="QComboBox" name="layersBox">
      <property name="geometry">
       <rect>
@@ -654,6 +610,61 @@
        <normaloff>reload_icon.png</normaloff>reload_icon.png</iconset>
      </property>
     </widget>
+    <widget class="QPushButton" name="infoBtn">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>370</x>
+       <y>60</y>
+       <width>21</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>info_icon.png</normaloff>info_icon.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>21</width>
+       <height>21</height>
+      </size>
+     </property>
+     <property name="autoDefault">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="infoBtn2">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>130</y>
+       <width>21</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>info_icon.png</normaloff>info_icon.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>21</width>
+       <height>21</height>
+      </size>
+     </property>
+    </widget>
     <zorder>moveButton</zorder>
     <zorder>processgraphEdit</zorder>
     <zorder>sendButton</zorder>
@@ -678,12 +689,12 @@
     <zorder>StartDateEdit</zorder>
     <zorder>EndDateEdit</zorder>
     <zorder>label_10</zorder>
-    <zorder>InfoLabel</zorder>
-    <zorder>InfoLabel_2</zorder>
     <zorder>layersBox</zorder>
     <zorder>drawBtn</zorder>
     <zorder>getBtn</zorder>
     <zorder>reloadBtn</zorder>
+    <zorder>infoBtn</zorder>
+    <zorder>infoBtn2</zorder>
    </widget>
   </widget>
   <widget class="QLabel" name="statusLabel">

@@ -142,21 +142,22 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.reloadBtn.setVisible(False)
         self.layersBox.setVisible(False)
 
-
-        ### Temporal Extent
+        # Temporal Extent
         self.selectDate.clicked.connect(self.add_temporal)
         self.StartDateEdit.setDate(QDate.currentDate())
         self.EndDateEdit.setDate(QDate.currentDate())
 
-        ### Change to incorporate the WebEditor:
+        # Change to incorporate the WebEditor:
         self.moveButton.clicked.connect(self.web_view)
+
+        self.infoBtn.clicked.connect(self.col_info)
+        self.infoBtn2.clicked.connect(self.pr_info)
 
         # Jobs Tab
         self.init_jobs()
 
     def set_canvas(self):
         iface.actionPan().trigger()
-        #QMainWindow.show(self) # ISSUE 1 Nina
         if iface.activeLayer():
             crs = iface.activeLayer().crs().authid()
             extent = iface.mapCanvas().extent()
@@ -481,7 +482,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             if "id" in col:
                 self.collectionBox.addItem(col['id'])
 
-        # Load Processes of Backend
+        # Load Processes from Backend
         for pr in process_result:
             if "id" in pr:
                 self.processBox.addItem(pr['id'])
@@ -500,6 +501,22 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.statusLabel.setText("Connected to {} as {}".format(url, user))
         else:
             self.statusLabel.setText("Connected to {} without user".format(url))
+
+    def col_info(self):
+        collection_info_result = self.connection.list_collections()
+        for col_info in collection_info_result:
+            if "description" in col_info:
+                #self.infoWindow = QWidget()
+                #self.infoWindow.show()
+                self.processgraphEdit.setText(str(col_info['id']) + ": " +  str(col_info['description']))
+
+    def pr_info(self):
+        process_info_result = self.connection.list_processes()
+        for pr_info in process_info_result:
+            if "description" in pr_info:
+                #self.infoWindow = QWidget()
+                #self.infoWindow.show()
+                self.processgraphEdit.setText(str(pr_info['id']) + ": " + str(pr_info['description']))
 
     def init_jobs(self):
         """

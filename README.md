@@ -32,18 +32,34 @@ Need some additional features? Leave an issue at this repository!
 
 ## Install
 
-To install the plugin to your local QGIS Desktop application follow these steps:
+There are two options on installing the plugin to your local QGIS Desktop application:
+
+### Install via Plugin Manager
+
+This has the recommendet way if you want to get the **most recent stable** version of the plugin.
+
+1. Start QGIS Desktop application
+2. Go to "Plugins" and then "Manage and Install Plugins" 
+3. Go to "Settings" and make sure that "Show also experimental plugins" is activated
+4. Go to "Not Installed" and search for "OpenEO" 
+5. Click on "OpenEO" and click "Install"
+6. The openEO logo should be visible in the toolbar
+
+### Install from GitHub repository
+
+This has the recommendet way if you want to get the **most recent** version of the plugin.
 
 1. Download this repository as zip file
-2. Start QGIS application
-3. Go to Plugins/Manage and Install Plugins
-4. Click on "Install from ZIP" and choose the downloaded zip file.
+2. Start QGIS Desktop application
+3. Go to "Plugins" and then "Manage and Install Plugins" 
+4. Click on "Install from ZIP" and choose the downloaded zip file
 5. Press "Install Plugin"
-6. You may need to activate it in the plugin manager and the openEO logo should be visible in the toolpanel.
+6. You may have to activate it in the plugin manager (in "Installed")
+7. The openEO logo should be visible in the toolbar
 
 ## Usage
 
-First you have to connect to the server with your user credentials in the upper part of the Window. Then all existing jobs are displayed at the "Jobs" tab. There the jobs can be executed again or displayed in QGIS. In the "New Job" tab it is possible to create a new process graph and to send it to the backend to create a new job. The process graph editor is in an early stage, so it is recommended to just copy the complete process graph into the process graph text field. 
+First you have to connect to the server with your user credentials in the upper part of the Window. Then all existing jobs are displayed at the "Jobs" tab. There the jobs can be executed again or displayed in QGIS. In the "New Job" tab it is possible to create a new process graph and to send it to the backend to create a new job. The process graph editor is in an early stage, so it is recommended to just copy the complete process graph into the process graph text field. Nevertheless, the plugin supports the creation of an "load_collection" process via the "Load" button and the extent selection widgets on the left.  
 
 The following Screenshots show how it looks like:
 

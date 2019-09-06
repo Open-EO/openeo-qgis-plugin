@@ -150,7 +150,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         # Change to incorporate the WebEditor:
         self.moveButton.clicked.connect(self.web_view)
 
+        self.infoBtn.setStyleSheet('''   
+                                 border-image: url("./info_icon.png") 10 10 0 0;
+                                 border-top: 10px transparent;
+                                 border-bottom: 10px transparent;
+                                 border-right: 0px transparent;
+                                 border-left: 0px transparent''')
         self.infoBtn.clicked.connect(self.col_info)
+        self.infoBtn2.setStyleSheet('''   
+                                 border-image: url("./info_icon.png") 10 10 0 0;
+                                 border-top: 10px transparent;
+                                 border-bottom: 10px transparent;
+                                 border-right: 0px transparent;
+                                 border-left: 0px transparent''')
         self.infoBtn2.clicked.connect(self.pr_info)
 
         # Jobs Tab

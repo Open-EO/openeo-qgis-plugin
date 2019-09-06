@@ -36,7 +36,7 @@ There are two options on installing the plugin to your local QGIS Desktop applic
 
 ### Install via Plugin Manager
 
-This has the recommendet way if you want to get the **most recent stable** version of the plugin.
+This is the recommended way if you want to get the **most recent stable** version of the plugin.
 
 1. Start QGIS Desktop application
 2. Go to "Plugins" and then "Manage and Install Plugins" 
@@ -47,7 +47,7 @@ This has the recommendet way if you want to get the **most recent stable** versi
 
 ### Install from GitHub repository
 
-This has the recommendet way if you want to get the **most recent** version of the plugin.
+This is the recommended way if you want to get the **most recent** version of the plugin.
 
 1. Download this repository as zip file
 2. Start QGIS Desktop application

@@ -138,6 +138,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.drawBtn.setVisible(False)
         self.getBtn.clicked.connect(self.display_before_load)
         self.getBtn.setVisible(True)
+        self.reloadBtn.clicked.connect(self.refresh_layers)
         self.reloadBtn.setVisible(False)
         self.layersBox.setVisible(False)
 
@@ -289,6 +290,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         spatial_extent["south"] = south
         spatial_extent["crs"] = crs
         self.processgraphSpatialExtent.setText(str(spatial_extent))
+
+    def refresh_layers(self):
+        self.layersBox.clear()
+        layers = iface.mapCanvas().layers()
+        for layer in layers:
+            self.layersBox.addItem(layer.name())
+            self.layers = layer
 
     def insert_shape(self):
         iface.actionPan().trigger()
@@ -645,14 +653,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.reloadBtn.setVisible(False)
         elif str(self.extentBox.currentText()) == "Use Active Layer Extent":
             self.drawBtn.setVisible(False)
-            self.getBtn.setVisible(False)
+            self.getBtn.setVisible(True)
             self.layersBox.setVisible(True)
             self.reloadBtn.setVisible(True)
             layers = iface.mapCanvas().layers()
             for layer in layers:
                 self.layersBox.addItem(layer.name())
                 self.layers = layer
-            self.reloadBtn.clicked.connect(self.use_active_layer)
         elif str(self.extentBox.currentText()) == "Insert Shapefile":
             self.drawBtn.setVisible(False)
             self.getBtn.setVisible(True)

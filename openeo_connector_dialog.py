@@ -164,6 +164,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
         self.infoBtn2.clicked.connect(self.pr_info)
+        self.infoBtn.setVisible(False)
+        self.infoBtn2.setVisible(False)
 
         # Jobs Tab
         self.init_jobs()
@@ -485,6 +487,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         collection_result = self.connection.list_collections()
         process_result = self.connection.list_processes()
         self.processes = process_result
+
+        self.infoBtn.setVisible(True)
+        self.infoBtn2.setVisible(True)
 
         self.collectionBox.clear()
         self.processBox.clear()

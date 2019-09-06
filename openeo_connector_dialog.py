@@ -656,6 +656,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.getBtn.setVisible(True)
             self.layersBox.setVisible(True)
             self.reloadBtn.setVisible(True)
+            self.layersBox.clear()
             layers = iface.mapCanvas().layers()
             for layer in layers:
                 self.layersBox.addItem(layer.name())

@@ -168,8 +168,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
         self.infoBtn2.clicked.connect(self.pr_info)
-        self.processBox.setGeometry(10, 130, 291, 21)
+        self.processBox.setGeometry(10, 130, 381, 21) # when add Button visible, set 381 to 291
         self.infoBtn.setVisible(False)
+        self.infoBtn2.setGeometry(370, 130, 21, 21) # remove, when add Button is visible
         self.infoBtn2.setVisible(False)
 
         # Jobs Tab
@@ -496,7 +497,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.infoBtn.setVisible(True)
         self.collectionBox.setGeometry(10, 60, 351, 21)
         self.infoBtn2.setVisible(True)
-        self.processBox.setGeometry(10, 130, 261, 21)
+        self.processBox.setGeometry(10, 130, 351, 21) # when add Button is visible - set 351 to 261
 
         self.collectionBox.clear()
         self.processBox.clear()

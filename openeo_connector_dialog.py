@@ -118,6 +118,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.connectButton.clicked.connect(self.connect)
         self.addButton.clicked.connect(self.add_process)
+        # Until it works properly:
+        self.addButton.hide()
+
         self.processBox.currentTextChanged.connect(self.process_selected)
         # self.collectionBox.currentTextChanged.connect(self.collection_selected)
         self.refreshButton.clicked.connect(self.refresh_jobs)
@@ -525,35 +528,45 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def col_info(self):
         collection_info_result = self.connection.list_collections()
+        selected_col = str(self.collectionBox.currentText())
         for col_info in collection_info_result:
-            if "description" in col_info:
-                self.infoWindow = QWidget()
-                self.hbox = QHBoxLayout()
-                self.infoBox = QTextEdit()
-                self.infoBox.setText(str(col_info['id']) + ': ' + str(col_info['description']))
-                self.infoBox.setReadOnly(True)
-                self.hbox.addWidget(self.infoBox)
-                self.infoWindow.setLayout(self.hbox)
-                self.infoWindow.setGeometry(400, 400, 600, 450)
-                self.infoWindow.setWindowTitle('Collection Information')
-                self.infoWindow.show()
-                #self.processgraphEdit.setText(str(col_info['id']) + ": " +  str(col_info['description']))
+            if str(col_info['id']) == selected_col:
+                if "description" in col_info:
+                    self.infoWindow = QWidget()
+                    self.hbox = QHBoxLayout()
+                    self.infoBox = QTextEdit()
+                    self.infoBox.setText(str(col_info['id']) + ': ' + str(col_info['description']))
+                    self.infoBox.setReadOnly(True)
+                    self.hbox.addWidget(self.infoBox)
+                    self.infoWindow.setLayout(self.hbox)
+                    self.infoWindow.setGeometry(400, 400, 600, 450)
+                    self.infoWindow.setWindowTitle('Collection Information')
+                    self.infoWindow.show()
+                    #self.processgraphEdit.setText(str(col_info['id']) + ": " +  str(col_info['description']))
 
     def pr_info(self):
         process_info_result = self.connection.list_processes()
+        selected_process = str(self.processBox.currentText())
         for pr_info in process_info_result:
-            if "description" in pr_info:
-                self.infoWindow = QWidget()
-                self.hbox = QHBoxLayout()
-                self.infoBox = QTextEdit()
-                self.infoBox.setText(str(pr_info['id'] + ': ' + pr_info['description']))
-                self.infoBox.setReadOnly(True)
-                self.hbox.addWidget(self.infoBox)
-                self.infoWindow.setLayout(self.hbox)
-                self.infoWindow.setGeometry(400, 400, 600, 350)
-                self.infoWindow.setWindowTitle('Process Information')
-                self.infoWindow.show()
-                #self.processgraphEdit.setText(str(pr_info['id']) + ": " + str(pr_info['description']))
+            if str(pr_info['id']) == selected_process:
+                if "description" in pr_info:
+                    self.infoWindow = QWidget()
+                    self.hbox = QHBoxLayout()
+                    self.infoBox = QTextEdit()
+                    if "returns" in pr_info:
+
+                        self.infoBox.setText(
+                            str(str(pr_info['id']) + ': ' + str(pr_info['description']) + "\n\n Returns: \n" + str(pr_info['returns']['description'])))
+                    else:
+                        self.infoBox.setText(
+                            str(str(pr_info['id']) + ': ' + str(pr_info['description'])))
+                    self.infoBox.setReadOnly(True)
+                    self.hbox.addWidget(self.infoBox)
+                    self.infoWindow.setLayout(self.hbox)
+                    self.infoWindow.setGeometry(400, 400, 600, 350)
+                    self.infoWindow.setWindowTitle('Process Information')
+                    self.infoWindow.show()
+                    #self.processgraphEdit.setText(str(pr_info['id']) + ": " + str(pr_info['description']))
 
     def init_jobs(self):
         """
@@ -800,7 +813,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                         # info(self.iface, "New Process {}".format(process['parameters']))
                         self.processTableWidget.setRowCount(len(process['parameters']))
                         self.processTableWidget.setColumnCount(3)
-                        self.processTableWidget.setHorizontalHeaderLabels(['Parameter', 'Type', 'Value'])
+                        self.processTableWidget.setHorizontalHeaderLabels(['Parameter', 'Type', 'Example'])
                         header = self.processTableWidget.horizontalHeader()
                         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
                         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
@@ -824,7 +837,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                     type.setFlags(QtCore.Qt.ItemIsEnabled)
                                     self.processTableWidget.setItem(counter, 1, type)
                                 if "examples" in val["schema"]:
+                                    #type = QTableWidgetItem(str(val['schema']['type']))
+                                    #type.setFlags(QtCore.Qt.ItemIsEnabled)
+                                    #self.processTableWidget.setItem(counter, 2, type)
                                     example = QTableWidgetItem(str(val['schema']['examples'][0]))
+                                    example.setFlags(QtCore.Qt.ItemIsEnabled)
+                                    self.processTableWidget.setItem(counter, 2, example)
+                                else:
+                                    example = QTableWidgetItem("")
+                                    example.setFlags(QtCore.Qt.ItemIsEnabled)
                                     self.processTableWidget.setItem(counter, 2, example)
                             counter += 1
                         return

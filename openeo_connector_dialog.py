@@ -556,18 +556,35 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     #self.processgraphEdit.setText(str(pr_info['id']) + ": " + str(pr_info['description']))
 
     def job_info(self):
+        """
+        Returns detailed information about a submitted batch job in a PopUp-Window, such as:
+        - Start time
+        - Description
+        - Process Graph
+        - Progress
+        - Cost
+        """
+
+#        job_id = self.jobsTableWidget.item(row, 0).text()
+
+        startTime = "abc"
+        description ="abc"
+        processGraph = "abc"
+        progress ="abc"
+        cost ="abc"
+
+        job_info = "Start time: {} , \nDescription: {}, \nProcess Graph: {}, \nProgress: {}, \nCost: {}".format(startTime, description, processGraph, progress, cost)
+
         self.infoWindow3 = QWidget()
         self.hbox3 = QHBoxLayout()
         self.infoBox3 = QTextEdit()
-        #self.infoBox3.setText()
+        self.infoBox3.setText(str(job_info))
         self.infoBox3.setReadOnly(True)
         self.hbox3.addWidget(self.infoBox3)
         self.infoWindow3.setLayout(self.hbox3)
         self.infoWindow3.setGeometry(400, 400, 600, 450)
         self.infoWindow3.setWindowTitle('Job Information')
         self.infoWindow3.show()
-
-
 
     def init_jobs(self):
         """

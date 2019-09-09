@@ -299,19 +299,23 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def use_active_layer(self):
         iface.actionPan().trigger()
 
-        crs = self.layers.crs().authid()
-        ex_layer = self.layers.extent()
-        east = round(ex_layer.xMaximum(), 1)
-        north = round(ex_layer.yMaximum(), 1)
-        west = round(ex_layer.xMinimum(), 1)
-        south = round(ex_layer.yMinimum(), 1)
-        spatial_extent = {}
-        spatial_extent["west"] = west
-        spatial_extent["east"] = east
-        spatial_extent["north"] = north
-        spatial_extent["south"] = south
-        spatial_extent["crs"] = crs
-        self.processgraphSpatialExtent.setText(str(spatial_extent))
+        layers = iface.mapCanvas().layers()
+        self.chosenLayer = str(self.layersBox.currentText())
+        for layer in layers:
+            if str(layer.name()) == self.chosenLayer:
+                crs = layer.crs().authid()
+                ex_layer = layer.extent()
+                east = round(ex_layer.xMaximum(), 1)
+                north = round(ex_layer.yMaximum(), 1)
+                west = round(ex_layer.xMinimum(), 1)
+                south = round(ex_layer.yMinimum(), 1)
+                spatial_extent = {}
+                spatial_extent["west"] = west
+                spatial_extent["east"] = east
+                spatial_extent["north"] = north
+                spatial_extent["south"] = south
+                spatial_extent["crs"] = crs
+                self.processgraphSpatialExtent.setText(str(spatial_extent))
 
     def refresh_layers(self):
         self.layersBox.clear()
@@ -390,13 +394,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.dateWindow.setWindowTitle('Calendar')
         self.dateWindow.show()
 
-
         #self.start_calendar.setMaximumDate(QDate(2017-06-29))
         #self.end_calendar.setMinimumDate(QDate(2017-06-29))
-
-    #def close_calendar(self): # stays in script in case button of add_temporal() get reinstated
-    #    self.dateWindow.close()
-    #    return
 
     def pick_start(self):
         if self.selectDate.clicked:
@@ -466,12 +465,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         If there are no credentials, it connects to the backend without authentication.
         This method also loads all collections and processes from the backend.
         """
-
-        # Load Backend options
-        # backends = {}
-        # backends["Google Earth Engine"] = "https://earthengine.openeo.org/.well-known/openeo"
-        # backends["R Deo Server"] = "https://r-server.openeo.org/"
-        # backends["Eurac WCPS"] = "https://openeo.eurac.edu/.well-known/openeo"
 
         if self.backendEdit.currentText() == "None of the listed ones match":
             url = self.backendEdit2.text()
@@ -715,8 +708,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processgraph.load_collection(arguments)
         # Refresh process graph in GUI
         self.reload_processgraph_view()
-        # if ["spatial_extent"].__contains__("arguments"):           # ISSUE!!
-         #   self.processgraphEdit.clear()
 
     def load_extent(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":

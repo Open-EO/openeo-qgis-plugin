@@ -178,8 +178,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         # Jobs Tab
         self.init_jobs()
 
-    def set_layouts(self):
-        
+   # def set_layouts(self):
+
 
     def set_canvas(self):
         iface.actionPan().trigger()

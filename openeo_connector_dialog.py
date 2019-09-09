@@ -126,7 +126,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
         self.deleteButton.clicked.connect(self.del_job)
-
+        self.deleteButton.hide()
         extentBoxItems = OrderedDict(
             {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.draw_rect,
              "Draw Polygon": self.draw_poly, "Use Active Layer Extent": self.use_active_layer,
@@ -601,9 +601,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Initializes the jobs table
         """
         self.jobsTableWidget.clear()
-        self.jobsTableWidget.setColumnCount(7)
+        self.jobsTableWidget.setColumnCount(6)
         self.jobsTableWidget.setHorizontalHeaderLabels(['Job Id', 'Description/Error', 'Submission Date', 'Status',
-                                                        'Execute', 'Display', 'Information'])
+                                                        'Execute', 'Display'])
         header = self.jobsTableWidget.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
@@ -611,7 +611,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
+        #header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
 
     def refresh_jobs(self):
         """
@@ -672,10 +672,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.jobsTableWidget.setCellWidget(row, 4, execBtn)
             execBtn.clicked.connect(lambda *args, row=row: self.job_execute(row))
 
-            self.infoBtn3 = QPushButton(self.jobsTableWidget)
-            self.infoBtn3.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
-            self.jobsTableWidget.setCellWidget(row, 6, self.infoBtn3)
-            self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info())
+            #self.infoBtn3 = QPushButton(self.jobsTableWidget)
+            #self.infoBtn3.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
+           # self.jobsTableWidget.setCellWidget(row, 6, self.infoBtn3)
+           # self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info())
 
             row += 1
 

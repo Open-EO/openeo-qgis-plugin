@@ -521,12 +521,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             if str(col_info['id']) == selected_col:
                 if "description" in col_info:
                     self.infoWindow = QWidget()
-                    self.hbox = QHBoxLayout()
+                    self.hbox1 = QHBoxLayout()
                     self.infoBox = QTextEdit()
                     self.infoBox.setText(str(col_info['id']) + ': ' + str(col_info['description']))
                     self.infoBox.setReadOnly(True)
-                    self.hbox.addWidget(self.infoBox)
-                    self.infoWindow.setLayout(self.hbox)
+                    self.hbox1.addWidget(self.infoBox)
+                    self.infoWindow.setLayout(self.hbox1)
                     self.infoWindow.setGeometry(400, 400, 600, 450)
                     self.infoWindow.setWindowTitle('Collection Information')
                     self.infoWindow.show()
@@ -538,8 +538,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         for pr_info in process_info_result:
             if str(pr_info['id']) == selected_process:
                 if "description" in pr_info:
-                    self.infoWindow = QWidget()
-                    self.hbox = QHBoxLayout()
+                    self.infoWindow2 = QWidget()
+                    self.hbox2 = QHBoxLayout()
                     self.infoBox = QTextEdit()
                     if "returns" in pr_info:
                         self.infoBox.setText(
@@ -548,16 +548,26 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                         self.infoBox.setText(
                             str(str(pr_info['id']) + ': ' + str(pr_info['description'])))
                     self.infoBox.setReadOnly(True)
-                    self.hbox.addWidget(self.infoBox)
-                    self.infoWindow.setLayout(self.hbox)
-                    self.infoWindow.setGeometry(400, 400, 600, 350)
-                    self.infoWindow.setWindowTitle('Process Information')
-                    self.infoWindow.show()
+                    self.hbox2.addWidget(self.infoBox)
+                    self.infoWindow2.setLayout(self.hbox2)
+                    self.infoWindow2.setGeometry(400, 400, 600, 350)
+                    self.infoWindow2.setWindowTitle('Process Information')
+                    self.infoWindow2.show()
                     #self.processgraphEdit.setText(str(pr_info['id']) + ": " + str(pr_info['description']))
 
     def job_info(self):
-        self.jobInfo = QWidget()
-        self.jobInfo.show()
+        self.infoWindow3 = QWidget()
+        self.hbox3 = QHBoxLayout()
+        self.infoBox3 = QTextEdit()
+        #self.infoBox3.setText()
+        self.infoBox3.setReadOnly(True)
+        self.hbox3.addWidget(self.infoBox3)
+        self.infoWindow3.setLayout(self.hbox3)
+        self.infoWindow3.setGeometry(400, 400, 600, 450)
+        self.infoWindow3.setWindowTitle('Job Information')
+        self.infoWindow3.show()
+
+
 
     def init_jobs(self):
         """
@@ -638,7 +648,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.infoBtn3 = QPushButton(self.jobsTableWidget)
             self.infoBtn3.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
             self.jobsTableWidget.setCellWidget(row, 6, self.infoBtn3)
-            self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info)
+            self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info())
 
             row += 1
 

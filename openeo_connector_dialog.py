@@ -212,27 +212,22 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if iface.activeLayer():
             crs = iface.activeLayer().crs().authid()
 
-            x11 = round(x1, 1)
-            x22 = round(x2, 1)
-            y11 = round(y1, 1)
-            y22 = round(y2, 1)
-
             spatial_extent = {}
-            if x11 <= x22:
-                spatial_extent["west"] = x11
-                spatial_extent["east"] = x22
-            elif x22 <= x11:
-                spatial_extent["west"] = x22
-                spatial_extent["east"] = x11
+            if x1 <= x2:
+                spatial_extent["west"] = round(x1, 1)
+                spatial_extent["east"] = round(x2, 1)
+            elif x2 <= x1:
+                spatial_extent["west"] = round(x2, 1)
+                spatial_extent["east"] = round(x1, 1)
             else:
                 return "Error: Draw a new rectangle"
 
-            if y11 <= y22:
-                spatial_extent["north"] = y22
-                spatial_extent["south"] = y11
-            elif y22 <= y11:
-                spatial_extent["north"] = y11
-                spatial_extent["south"] = y22
+            if y1 <= y2:
+                spatial_extent["north"] = round(y2, 1)
+                spatial_extent["south"] = round(y1, 1)
+            elif y2 <= y1:
+                spatial_extent["north"] = round(y1, 1)
+                spatial_extent["south"] = round(y2, 1)
             else:
                 return "Error: Draw a new rectangle"
             spatial_extent["crs"] = crs

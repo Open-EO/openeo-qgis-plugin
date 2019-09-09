@@ -33,7 +33,6 @@ import webbrowser
 from qgis.PyQt import uic, QtGui, QtWidgets
 from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, QApplication, QAction, QMainWindow, QFileDialog
 import qgis.PyQt.QtCore as QtCore
-from qgis.gui import QgisInterface, QgsMapToolZoom
 from qgis.core import QgsVectorLayer
 from qgis.utils import iface
 
@@ -43,11 +42,11 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit
 from PyQt5 import QtCore
 from PyQt5.QtCore import QDate
 from PyQt5 import QtGui
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QCalendarWidget
 #from PyQt5.QtWebKit import *
 from PyQt5.QtWebKitWidgets import QWebView
 
-from PyQt5.QtCore import QUrl
 from .models.result import Result
 from .models.connect import Connection
 from .models.processgraph import Processgraph
@@ -118,12 +117,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.connectButton.clicked.connect(self.connect)
         self.addButton.clicked.connect(self.add_process)
+        # Until it works properly:
+        self.addButton.hide()
+
         self.processBox.currentTextChanged.connect(self.process_selected)
         # self.collectionBox.currentTextChanged.connect(self.collection_selected)
         self.refreshButton.clicked.connect(self.refresh_jobs)
         self.clearButton.clicked.connect(self.clear) # Clear Button
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
+        self.deleteButton.clicked.connect(self.del_job)
 
         extentBoxItems = OrderedDict(
             {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.draw_rect,
@@ -165,8 +168,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
         self.infoBtn2.clicked.connect(self.pr_info)
-        self.processBox.setGeometry(10, 130, 291, 21)
+        self.processBox.setGeometry(10, 130, 381, 21) # when add Button visible, set 381 to 291
         self.infoBtn.setVisible(False)
+        self.infoBtn2.setGeometry(370, 130, 21, 21) # remove, when add Button is visible
         self.infoBtn2.setVisible(False)
 
         # Jobs Tab
@@ -207,22 +211,23 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def draw_rect(self, x1, y1, x2, y2):
         if iface.activeLayer():
             crs = iface.activeLayer().crs().authid()
+
             spatial_extent = {}
             if x1 <= x2:
-                spatial_extent["west"] = x1
-                spatial_extent["east"] = x2
+                spatial_extent["west"] = round(x1, 1)
+                spatial_extent["east"] = round(x2, 1)
             elif x2 <= x1:
-                spatial_extent["west"] = x2
-                spatial_extent["east"] = x1
+                spatial_extent["west"] = round(x2, 1)
+                spatial_extent["east"] = round(x1, 1)
             else:
                 return "Error: Draw a new rectangle"
 
             if y1 <= y2:
-                spatial_extent["north"] = y2
-                spatial_extent["south"] = y1
+                spatial_extent["north"] = round(y2, 1)
+                spatial_extent["south"] = round(y1, 1)
             elif y2 <= y1:
-                spatial_extent["north"] = y1
-                spatial_extent["south"] = y2
+                spatial_extent["north"] = round(y1, 1)
+                spatial_extent["south"] = round(y2, 1)
             else:
                 return "Error: Draw a new rectangle"
             spatial_extent["crs"] = crs
@@ -294,19 +299,23 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def use_active_layer(self):
         iface.actionPan().trigger()
 
-        crs = self.layers.crs().authid()
-        ex_layer = self.layers.extent()
-        east = round(ex_layer.xMaximum(), 1)
-        north = round(ex_layer.yMaximum(), 1)
-        west = round(ex_layer.xMinimum(), 1)
-        south = round(ex_layer.yMinimum(), 1)
-        spatial_extent = {}
-        spatial_extent["west"] = west
-        spatial_extent["east"] = east
-        spatial_extent["north"] = north
-        spatial_extent["south"] = south
-        spatial_extent["crs"] = crs
-        self.processgraphSpatialExtent.setText(str(spatial_extent))
+        layers = iface.mapCanvas().layers()
+        self.chosenLayer = str(self.layersBox.currentText())
+        for layer in layers:
+            if str(layer.name()) == self.chosenLayer:
+                crs = layer.crs().authid()
+                ex_layer = layer.extent()
+                east = round(ex_layer.xMaximum(), 1)
+                north = round(ex_layer.yMaximum(), 1)
+                west = round(ex_layer.xMinimum(), 1)
+                south = round(ex_layer.yMinimum(), 1)
+                spatial_extent = {}
+                spatial_extent["west"] = west
+                spatial_extent["east"] = east
+                spatial_extent["north"] = north
+                spatial_extent["south"] = south
+                spatial_extent["crs"] = crs
+                self.processgraphSpatialExtent.setText(str(spatial_extent))
 
     def refresh_layers(self):
         self.layersBox.clear()
@@ -385,13 +394,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.dateWindow.setWindowTitle('Calendar')
         self.dateWindow.show()
 
-
         #self.start_calendar.setMaximumDate(QDate(2017-06-29))
         #self.end_calendar.setMinimumDate(QDate(2017-06-29))
-
-    #def close_calendar(self): # stays in script in case button of add_temporal() get reinstated
-    #    self.dateWindow.close()
-    #    return
 
     def pick_start(self):
         if self.selectDate.clicked:
@@ -462,12 +466,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         This method also loads all collections and processes from the backend.
         """
 
-        # Load Backend options
-        # backends = {}
-        # backends["Google Earth Engine"] = "https://earthengine.openeo.org/.well-known/openeo"
-        # backends["R Deo Server"] = "https://r-server.openeo.org/"
-        # backends["Eurac WCPS"] = "https://openeo.eurac.edu/.well-known/openeo"
-
         if self.backendEdit.currentText() == "None of the listed ones match":
             url = self.backendEdit2.text()
         else:
@@ -493,7 +491,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.infoBtn.setVisible(True)
         self.collectionBox.setGeometry(10, 60, 351, 21)
         self.infoBtn2.setVisible(True)
-        self.processBox.setGeometry(10, 130, 261, 21)
+        self.processBox.setGeometry(10, 130, 351, 21) # when add Button is visible - set 351 to 261
 
         self.collectionBox.clear()
         self.processBox.clear()
@@ -525,35 +523,45 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def col_info(self):
         collection_info_result = self.connection.list_collections()
+        selected_col = str(self.collectionBox.currentText())
         for col_info in collection_info_result:
-            if "description" in col_info:
-                self.infoWindow = QWidget()
-                self.hbox = QHBoxLayout()
-                self.infoBox = QTextEdit()
-                self.infoBox.setText(str(col_info['id']) + ': ' + str(col_info['description']))
-                self.infoBox.setReadOnly(True)
-                self.hbox.addWidget(self.infoBox)
-                self.infoWindow.setLayout(self.hbox)
-                self.infoWindow.setGeometry(400, 400, 600, 450)
-                self.infoWindow.setWindowTitle('Collection Information')
-                self.infoWindow.show()
-                #self.processgraphEdit.setText(str(col_info['id']) + ": " +  str(col_info['description']))
+            if str(col_info['id']) == selected_col:
+                if "description" in col_info:
+                    self.infoWindow = QWidget()
+                    self.hbox = QHBoxLayout()
+                    self.infoBox = QTextEdit()
+                    self.infoBox.setText(str(col_info['id']) + ': ' + str(col_info['description']))
+                    self.infoBox.setReadOnly(True)
+                    self.hbox.addWidget(self.infoBox)
+                    self.infoWindow.setLayout(self.hbox)
+                    self.infoWindow.setGeometry(400, 400, 600, 450)
+                    self.infoWindow.setWindowTitle('Collection Information')
+                    self.infoWindow.show()
+                    #self.processgraphEdit.setText(str(col_info['id']) + ": " +  str(col_info['description']))
 
     def pr_info(self):
         process_info_result = self.connection.list_processes()
+        selected_process = str(self.processBox.currentText())
         for pr_info in process_info_result:
-            if "description" in pr_info:
-                self.infoWindow = QWidget()
-                self.hbox = QHBoxLayout()
-                self.infoBox = QTextEdit()
-                self.infoBox.setText(str(pr_info['id'] + ': ' + pr_info['description']))
-                self.infoBox.setReadOnly(True)
-                self.hbox.addWidget(self.infoBox)
-                self.infoWindow.setLayout(self.hbox)
-                self.infoWindow.setGeometry(400, 400, 600, 350)
-                self.infoWindow.setWindowTitle('Process Information')
-                self.infoWindow.show()
-                #self.processgraphEdit.setText(str(pr_info['id']) + ": " + str(pr_info['description']))
+            if str(pr_info['id']) == selected_process:
+                if "description" in pr_info:
+                    self.infoWindow = QWidget()
+                    self.hbox = QHBoxLayout()
+                    self.infoBox = QTextEdit()
+                    if "returns" in pr_info:
+
+                        self.infoBox.setText(
+                            str(str(pr_info['id']) + ': ' + str(pr_info['description']) + "\n\n Returns: \n" + str(pr_info['returns']['description'])))
+                    else:
+                        self.infoBox.setText(
+                            str(str(pr_info['id']) + ': ' + str(pr_info['description'])))
+                    self.infoBox.setReadOnly(True)
+                    self.hbox.addWidget(self.infoBox)
+                    self.infoWindow.setLayout(self.hbox)
+                    self.infoWindow.setGeometry(400, 400, 600, 350)
+                    self.infoWindow.setWindowTitle('Process Information')
+                    self.infoWindow.show()
+                    #self.processgraphEdit.setText(str(pr_info['id']) + ": " + str(pr_info['description']))
 
     def init_jobs(self):
         """
@@ -614,11 +622,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 self.jobsTableWidget.setItem(row, 3, qitem)
 
                 if val["status"] == "finished":
+                    self.jobsTableWidget.item(row, 3).setBackground(QColor(75, 254, 40, 160))
+                    #self.green
                     dispBtn = QPushButton(self.jobsTableWidget)
                     dispBtn.setText('Display')
                     self.jobsTableWidget.setCellWidget(row, 5, dispBtn)
                     dispBtn.clicked.connect(lambda *args, row=row: self.job_display(row))
                     iface.actionZoomIn().trigger()
+
+                elif val["status"] == "submitted":
+                    self.jobsTableWidget.item(row, 3).setBackground(QColor(254, 178, 76, 200))
+
+                elif val["status"] == "error":
+                    self.jobsTableWidget.item(row, 3).setBackground(QColor(254, 100, 100, 200))
 
             self.jobsTableWidget.setCellWidget(row, 4, execBtn)
             execBtn.clicked.connect(lambda *args, row=row: self.job_execute(row))
@@ -664,6 +680,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             warning(self.iface, "Not able to created new job, Response: {}".format(str(response.json())))
 
+        self.refresh_jobs()
+
+    def del_job(self):
+        self.chosenRow = self.jobsTableWidget.currentRow()
+        self.jobsTableWidget.removeRow(self.chosenRow)
+
     def load_collection(self):
         """
         Loads the collection form the GUI and starts a new process graph in doing so.
@@ -686,8 +708,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processgraph.load_collection(arguments)
         # Refresh process graph in GUI
         self.reload_processgraph_view()
-        # if ["spatial_extent"].__contains__("arguments"):           # ISSUE!!
-         #   self.processgraphEdit.clear()
 
     def load_extent(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
@@ -800,7 +820,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                         # info(self.iface, "New Process {}".format(process['parameters']))
                         self.processTableWidget.setRowCount(len(process['parameters']))
                         self.processTableWidget.setColumnCount(3)
-                        self.processTableWidget.setHorizontalHeaderLabels(['Parameter', 'Type', 'Value'])
+                        self.processTableWidget.setHorizontalHeaderLabels(['Parameter', 'Type', 'Example'])
                         header = self.processTableWidget.horizontalHeader()
                         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
                         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
@@ -824,7 +844,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                     type.setFlags(QtCore.Qt.ItemIsEnabled)
                                     self.processTableWidget.setItem(counter, 1, type)
                                 if "examples" in val["schema"]:
+                                    #type = QTableWidgetItem(str(val['schema']['type']))
+                                    #type.setFlags(QtCore.Qt.ItemIsEnabled)
+                                    #self.processTableWidget.setItem(counter, 2, type)
                                     example = QTableWidgetItem(str(val['schema']['examples'][0]))
+                                    example.setFlags(QtCore.Qt.ItemIsEnabled)
+                                    self.processTableWidget.setItem(counter, 2, example)
+                                else:
+                                    example = QTableWidgetItem("")
+                                    example.setFlags(QtCore.Qt.ItemIsEnabled)
                                     self.processTableWidget.setItem(counter, 2, example)
                             counter += 1
                         return

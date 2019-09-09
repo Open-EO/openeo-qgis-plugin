@@ -33,14 +33,13 @@ import webbrowser
 from qgis.PyQt import uic, QtGui, QtWidgets
 from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, QApplication, QAction, QMainWindow, QFileDialog
 import qgis.PyQt.QtCore as QtCore
-from qgis.gui import QgisInterface, QgsMapToolZoom
 from qgis.core import QgsVectorLayer
 from qgis.utils import iface
 
 ## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit
-from PyQt5 import QtCore, Qt
+from PyQt5 import QtCore
 from PyQt5.QtCore import QDate
 from PyQt5 import QtGui
 from PyQt5.QtGui import QColor
@@ -48,7 +47,6 @@ from PyQt5.QtWidgets import QCalendarWidget
 #from PyQt5.QtWebKit import *
 from PyQt5.QtWebKitWidgets import QWebView
 
-from PyQt5.QtCore import QUrl
 from .models.result import Result
 from .models.connect import Connection
 from .models.processgraph import Processgraph

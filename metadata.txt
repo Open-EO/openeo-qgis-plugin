@@ -3,11 +3,11 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=OpenEO-Connector 
+name=OpenEO
 qgisMinimumVersion=3.0
 description=Plugin to access openEO compliant backends.
-version=0.1
-author=Bernhard Goesswein
+version=0.2
+author=Bernhard Goesswein, Nina Gnann
 email=bernhard.goesswein@geo.tuwien.ac.at
 
 about=The plugin can be used to access backends compliant with the openEO specification. It can be used to define jobs, execute them at the backend and visualize the results on QGIS.
@@ -27,7 +27,7 @@ tags=project, remote sensing, web, webservice, wms
 
 homepage=https://github.com/Open-EO/openeo-qgis-plugin
 category=Plugins
-icon=icon.png
+icon=icon_new.png
 # experimental flag
 experimental=True
 

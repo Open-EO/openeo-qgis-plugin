@@ -1,17 +1,17 @@
 # openeo-qgis-plugin
 QGIS Plugin to connect and use openEO compliant backends.
 
-Compatible with openeo API version 0.4.0 and above
+Compatible with openeo API version 0.4.0 and above.
 
-Tested with QGIS 3.4.8-Madeira
+Tested with QGIS 3.4.8-Madeira, but works with QGIS >= 3.0.0.
 
 ## About
 
-The openEO QGIS Plugin "OpenEO Connector" allows for connecting to an openEO backend, managing the user jobs and load the results into a new QGIS Layer. It is also possible to create a new job, by defining a custom process graph and sending it to the backend. The process graph editor is in an early stage, so it is recommended to just copy the complete process graph into the process graph text field.  
+The openEO QGIS Plugin "OpenEO" allows for connecting to an openEO backend, managing the user jobs and load the results into a new QGIS Layer. It is also possible to create a new job, by defining a custom process graph and sending it to the backend. The process graph editor is in an early stage, so it is recommended to just copy the complete process graph into the process graph text field.  
 
 ### Features
 
-* Listing all openeo compliant backends with API version 0.4.0 and above from http://hub.openeo.org/ 
+* Listing all openeo compliant backends with minimum API version 0.4.0 from http://hub.openeo.org/ 
 * Connecting to an openeo compliant backend (openAPI version above 0.4.0)
 * Listing all available collections ("Load Collection" combobox) and processes ("Add Process" combobox) including parameters (see table under the process combobox) of the backend
 * Spatial extent selection ("Add Spatial Extent" combobox) by: 

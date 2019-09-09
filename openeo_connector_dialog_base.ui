@@ -625,10 +625,6 @@
      <property name="text">
       <string/>
      </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>info_icon.png</normaloff>info_icon.png</iconset>
-     </property>
      <property name="iconSize">
       <size>
        <width>21</width>
@@ -653,10 +649,6 @@
      </property>
      <property name="text">
       <string/>
-     </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>info_icon.png</normaloff>info_icon.png</iconset>
      </property>
      <property name="iconSize">
       <size>

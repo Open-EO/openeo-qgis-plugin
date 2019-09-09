@@ -126,6 +126,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.clearButton.clicked.connect(self.clear) # Clear Button
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
+        self.deleteButton.clicked.connect(self.del_job)
 
         extentBoxItems = OrderedDict(
             {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.draw_rect,
@@ -685,6 +686,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             info(self.iface, "Successfully created new job, Response: {}".format(response.status_code))
         else:
             warning(self.iface, "Not able to created new job, Response: {}".format(str(response.json())))
+
+        self.refresh_jobs()
+
+    def del_job(self):
+        self.chosenRow = self.jobsTableWidget.currentRow()
+        self.jobsTableWidget.removeRow(self.chosenRow)
 
     def load_collection(self):
         """

@@ -178,6 +178,8 @@ class OpenEO:
             self.dlg.infoBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
             self.dlg.infoBtn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
             self.dlg.reloadBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'reload_icon.png')))
+            self.dlg.refreshButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'reload_icon.png')))
+            self.dlg.deleteButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'delete_job.png')))
 
         # show the dialog
         self.dlg.show()

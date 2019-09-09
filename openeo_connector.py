@@ -24,15 +24,16 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon, QPixmap
 from qgis.PyQt.QtWidgets import QAction
 from PyQt5.QtGui import QIcon
-
+from qgis.PyQt import QtWidgets
 
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
 from .openeo_connector_dialog import OpenEODialog
 import os.path
-
-
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
+QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 class OpenEO:
     """QGIS Plugin Implementation."""
 

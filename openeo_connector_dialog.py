@@ -51,6 +51,9 @@ from .utils.logging import info, warning
 from .drawRect import DrawRectangle
 from .drawPoly import DrawPolygon
 from distutils.version import LooseVersion
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
+QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 
 ########################################################################################################################
 ########################################################################################################################
@@ -168,13 +171,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.infoBtn2.setGeometry(370, 130, 21, 21) # remove, when add Button is visible
         self.infoBtn2.setVisible(False)
 
-        self.set_font()
+        #self.set_font()
         # Jobs Tab
         self.init_jobs()
 
-    def set_font(self):
-        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
-        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
+    #def set_font(self):
+    #    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
+    #    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 
     def set_canvas(self):
         iface.actionPan().trigger()

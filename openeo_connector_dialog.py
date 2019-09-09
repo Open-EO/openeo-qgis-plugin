@@ -36,16 +36,13 @@ import qgis.PyQt.QtCore as QtCore
 from qgis.core import QgsVectorLayer
 from qgis.utils import iface
 
-## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit
 from PyQt5 import QtCore
 from PyQt5.QtCore import QDate
 from PyQt5 import QtGui
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import QCalendarWidget
-#from PyQt5.QtWebKit import *
-from PyQt5.QtWebKitWidgets import QWebView
 
 from .models.result import Result
 from .models.connect import Connection
@@ -53,21 +50,21 @@ from .models.processgraph import Processgraph
 from .utils.logging import info, warning
 from .drawRect import DrawRectangle
 from .drawPoly import DrawPolygon
-
 from distutils.version import LooseVersion
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
+QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 
 ########################################################################################################################
 ########################################################################################################################
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'openeo_connector_dialog_base.ui'))
-
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'openeo_connector_dialog_base.ui'))
 
 class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, parent=None, iface=None):
-        """Constructor."""
-
+        """Constructor method
+        """
         super(OpenEODialog, self).__init__(parent)
         # Set up the user interface from Designer through FORM_CLASS.
         # After self.setupUi() you can access any designer object by doing
@@ -152,9 +149,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.StartDateEdit.setDate(QDate.currentDate())
         self.EndDateEdit.setDate(QDate.currentDate())
 
-        # Change to incorporate the WebEditor:
+        # Link to the Web Editor Demo Version:
         self.moveButton.clicked.connect(self.web_view)
 
+        # Info Buttons about Datasets and Methods
         self.infoBtn.setStyleSheet('''   
                                  border-image: url("./info_icon.png") 10 10 0 0;
                                  border-top: 10px transparent;
@@ -175,8 +173,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.infoBtn2.setGeometry(370, 130, 21, 21) # remove, when add Button is visible
         self.infoBtn2.setVisible(False)
 
+        #self.set_font()
         # Jobs Tab
         self.init_jobs()
+
+    #def set_font(self):
+    #    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
+    #    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 
     def set_canvas(self):
         iface.actionPan().trigger()
@@ -379,18 +382,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             return 999
 
     def add_temporal(self):
+
         QMainWindow.show(self)
         self.dateWindow = QWidget()
         self.start_calendar = QCalendarWidget(self)
         self.end_calendar = QCalendarWidget(self)
         self.start_calendar.clicked[QDate].connect(self.pick_start)
         self.end_calendar.clicked[QDate].connect(self.pick_end)
-        #self.button = QPushButton('Close Window', self)
-        #self.button.clicked.connect(self.close_calendar)
         self.hbox = QHBoxLayout()
         self.hbox.addWidget(self.start_calendar)
         self.hbox.addWidget(self.end_calendar)
-        #self.hbox.addWidget(self.button)
         self.dateWindow.setLayout(self.hbox)
         self.dateWindow.setGeometry(400, 400, 600, 350)
         self.dateWindow.setWindowTitle('Calendar')
@@ -530,12 +531,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             if str(col_info['id']) == selected_col:
                 if "description" in col_info:
                     self.infoWindow = QWidget()
-                    self.hbox = QHBoxLayout()
+                    self.hbox1 = QHBoxLayout()
                     self.infoBox = QTextEdit()
                     self.infoBox.setText(str(col_info['id']) + ': ' + str(col_info['description']))
                     self.infoBox.setReadOnly(True)
-                    self.hbox.addWidget(self.infoBox)
-                    self.infoWindow.setLayout(self.hbox)
+                    self.hbox1.addWidget(self.infoBox)
+                    self.infoWindow.setLayout(self.hbox1)
                     self.infoWindow.setGeometry(400, 400, 600, 450)
                     self.infoWindow.setWindowTitle('Collection Information')
                     self.infoWindow.show()
@@ -547,32 +548,62 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         for pr_info in process_info_result:
             if str(pr_info['id']) == selected_process:
                 if "description" in pr_info:
-                    self.infoWindow = QWidget()
-                    self.hbox = QHBoxLayout()
+                    self.infoWindow2 = QWidget()
+                    self.hbox2 = QHBoxLayout()
                     self.infoBox = QTextEdit()
                     if "returns" in pr_info:
-
                         self.infoBox.setText(
                             str(str(pr_info['id']) + ': ' + str(pr_info['description']) + "\n\n Returns: \n" + str(pr_info['returns']['description'])))
                     else:
                         self.infoBox.setText(
                             str(str(pr_info['id']) + ': ' + str(pr_info['description'])))
                     self.infoBox.setReadOnly(True)
-                    self.hbox.addWidget(self.infoBox)
-                    self.infoWindow.setLayout(self.hbox)
-                    self.infoWindow.setGeometry(400, 400, 600, 350)
-                    self.infoWindow.setWindowTitle('Process Information')
-                    self.infoWindow.show()
+                    self.hbox2.addWidget(self.infoBox)
+                    self.infoWindow2.setLayout(self.hbox2)
+                    self.infoWindow2.setGeometry(400, 400, 600, 350)
+                    self.infoWindow2.setWindowTitle('Process Information')
+                    self.infoWindow2.show()
                     #self.processgraphEdit.setText(str(pr_info['id']) + ": " + str(pr_info['description']))
+
+    def job_info(self):
+        """
+        Returns detailed information about a submitted batch job in a PopUp-Window, such as:
+        - Start time
+        - Description
+        - Process Graph
+        - Progress
+        - Cost
+        """
+
+#        job_id = self.jobsTableWidget.item(row, 0).text()
+
+        startTime = "abc"
+        description ="abc"
+        processGraph = "abc"
+        progress ="abc"
+        cost ="abc"
+
+        job_info = "Start time: {} , \nDescription: {}, \nProcess Graph: {}, \nProgress: {}, \nCost: {}".format(startTime, description, processGraph, progress, cost)
+
+        self.infoWindow3 = QWidget()
+        self.hbox3 = QHBoxLayout()
+        self.infoBox3 = QTextEdit()
+        self.infoBox3.setText(str(job_info))
+        self.infoBox3.setReadOnly(True)
+        self.hbox3.addWidget(self.infoBox3)
+        self.infoWindow3.setLayout(self.hbox3)
+        self.infoWindow3.setGeometry(400, 400, 600, 450)
+        self.infoWindow3.setWindowTitle('Job Information')
+        self.infoWindow3.show()
 
     def init_jobs(self):
         """
         Initializes the jobs table
         """
         self.jobsTableWidget.clear()
-        self.jobsTableWidget.setColumnCount(6)
+        self.jobsTableWidget.setColumnCount(7)
         self.jobsTableWidget.setHorizontalHeaderLabels(['Job Id', 'Description/Error', 'Submission Date', 'Status',
-                                                        'Execute', 'Display'])
+                                                        'Execute', 'Display', 'Information'])
         header = self.jobsTableWidget.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
@@ -580,6 +611,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
 
     def refresh_jobs(self):
         """
@@ -592,6 +624,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.init_jobs()
         self.jobsTableWidget.setRowCount(len(jobs))
         row = 0
+
         for val in jobs:
 
             if "id" in val:
@@ -615,8 +648,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
                 self.jobsTableWidget.setItem(row, 2, qitem)
 
-            execBtn = QPushButton(self.jobsTableWidget)
-            execBtn.setText('Execute')
+            execBtn = QPushButton('Execute', self.jobsTableWidget)
 
             if "status" in val:
                 qitem = QTableWidgetItem(val["status"])
@@ -625,7 +657,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
                 if val["status"] == "finished":
                     self.jobsTableWidget.item(row, 3).setBackground(QColor(75, 254, 40, 160))
-                    #self.green
                     dispBtn = QPushButton(self.jobsTableWidget)
                     dispBtn.setText('Display')
                     self.jobsTableWidget.setCellWidget(row, 5, dispBtn)
@@ -640,6 +671,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
             self.jobsTableWidget.setCellWidget(row, 4, execBtn)
             execBtn.clicked.connect(lambda *args, row=row: self.job_execute(row))
+
+            self.infoBtn3 = QPushButton(self.jobsTableWidget)
+            self.infoBtn3.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
+            self.jobsTableWidget.setCellWidget(row, 6, self.infoBtn3)
+            self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info())
 
             row += 1
 

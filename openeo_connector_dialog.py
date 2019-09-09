@@ -40,9 +40,10 @@ from qgis.utils import iface
 ## from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit
-from PyQt5 import QtCore
+from PyQt5 import QtCore, Qt
 from PyQt5.QtCore import QDate
 from PyQt5 import QtGui
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QCalendarWidget
 #from PyQt5.QtWebKit import *
 from PyQt5.QtWebKitWidgets import QWebView
@@ -629,11 +630,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 self.jobsTableWidget.setItem(row, 3, qitem)
 
                 if val["status"] == "finished":
+                    self.jobsTableWidget.item(row, 3).setBackground(QColor(75, 254, 40, 160))
+                    #self.green
                     dispBtn = QPushButton(self.jobsTableWidget)
                     dispBtn.setText('Display')
                     self.jobsTableWidget.setCellWidget(row, 5, dispBtn)
                     dispBtn.clicked.connect(lambda *args, row=row: self.job_display(row))
                     iface.actionZoomIn().trigger()
+
+                elif val["status"] == "submitted":
+                    self.jobsTableWidget.item(row, 3).setBackground(QColor(254, 178, 76, 200))
+
+                elif val["status"] == "error":
+                    self.jobsTableWidget.item(row, 3).setBackground(QColor(254, 100, 100, 200))
 
             self.jobsTableWidget.setCellWidget(row, 4, execBtn)
             execBtn.clicked.connect(lambda *args, row=row: self.job_execute(row))

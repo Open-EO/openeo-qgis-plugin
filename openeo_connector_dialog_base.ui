@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>850</width>
-    <height>950</height>
+    <height>745</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>850</width>
-    <height>950</height>
+    <width>0</width>
+    <height>0</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -200,7 +200,7 @@
        <x>10</x>
        <y>10</y>
        <width>831</width>
-       <height>691</height>
+       <height>521</height>
       </rect>
      </property>
     </widget>
@@ -215,15 +215,15 @@
        <x>10</x>
        <y>10</y>
        <width>821</width>
-       <height>691</height>
+       <height>481</height>
       </rect>
      </property>
     </widget>
     <widget class="QPushButton" name="refreshButton">
      <property name="geometry">
       <rect>
-       <x>799</x>
-       <y>710</y>
+       <x>790</x>
+       <y>500</y>
        <width>31</width>
        <height>31</height>
       </rect>
@@ -252,8 +252,8 @@
     <widget class="QPushButton" name="deleteButton">
      <property name="geometry">
       <rect>
-       <x>760</x>
-       <y>710</y>
+       <x>750</x>
+       <y>500</y>
        <width>31</width>
        <height>31</height>
       </rect>
@@ -274,8 +274,8 @@
     <widget class="QPushButton" name="sendButton">
      <property name="geometry">
       <rect>
-       <x>570</x>
-       <y>710</y>
+       <x>560</x>
+       <y>510</y>
        <width>101</width>
        <height>31</height>
       </rect>
@@ -349,8 +349,8 @@
     <widget class="QPushButton" name="clearButton">
      <property name="geometry">
       <rect>
-       <x>730</x>
-       <y>710</y>
+       <x>720</x>
+       <y>510</y>
        <width>101</width>
        <height>31</height>
       </rect>
@@ -365,7 +365,7 @@
        <x>410</x>
        <y>60</y>
        <width>421</width>
-       <height>641</height>
+       <height>431</height>
       </rect>
      </property>
     </widget>
@@ -398,8 +398,8 @@
     <widget class="QPushButton" name="loadButton">
      <property name="geometry">
       <rect>
-       <x>410</x>
-       <y>710</y>
+       <x>400</x>
+       <y>510</y>
        <width>101</width>
        <height>31</height>
       </rect>
@@ -408,24 +408,11 @@
       <string>Load</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_21">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>720</y>
-       <width>171</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://openeo.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;https://openeo.org/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-    </widget>
     <widget class="Line" name="line_2">
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>340</y>
+       <y>230</y>
        <width>401</width>
        <height>20</height>
       </rect>
@@ -438,7 +425,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>360</y>
+       <y>250</y>
        <width>161</width>
        <height>20</height>
       </rect>
@@ -454,7 +441,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>380</y>
+       <y>270</y>
        <width>381</width>
        <height>31</height>
       </rect>
@@ -466,7 +453,7 @@
        <x>10</x>
        <y>160</y>
        <width>381</width>
-       <height>171</height>
+       <height>71</height>
       </rect>
      </property>
     </widget>
@@ -474,7 +461,7 @@
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>650</y>
+       <y>470</y>
        <width>281</width>
        <height>31</height>
       </rect>
@@ -487,7 +474,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>630</y>
+       <y>450</y>
        <width>161</width>
        <height>20</height>
       </rect>
@@ -503,7 +490,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>610</y>
+       <y>430</y>
        <width>401</width>
        <height>20</height>
       </rect>
@@ -516,9 +503,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>460</y>
+       <y>350</y>
        <width>381</width>
-       <height>141</height>
+       <height>71</height>
       </rect>
      </property>
     </widget>
@@ -526,7 +513,7 @@
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>690</y>
+       <y>510</y>
        <width>131</width>
        <height>33</height>
       </rect>
@@ -542,7 +529,7 @@
      <property name="geometry">
       <rect>
        <x>200</x>
-       <y>690</y>
+       <y>510</y>
        <width>131</width>
        <height>33</height>
       </rect>
@@ -597,7 +584,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>420</y>
+       <y>310</y>
        <width>231</width>
        <height>31</height>
       </rect>
@@ -607,7 +594,7 @@
      <property name="geometry">
       <rect>
        <x>250</x>
-       <y>420</y>
+       <y>310</y>
        <width>101</width>
        <height>31</height>
       </rect>
@@ -620,7 +607,7 @@
      <property name="geometry">
       <rect>
        <x>250</x>
-       <y>420</y>
+       <y>310</y>
        <width>101</width>
        <height>31</height>
       </rect>
@@ -633,7 +620,7 @@
      <property name="geometry">
       <rect>
        <x>360</x>
-       <y>420</y>
+       <y>310</y>
        <width>31</width>
        <height>31</height>
       </rect>
@@ -705,7 +692,6 @@
     <zorder>label_4</zorder>
     <zorder>line</zorder>
     <zorder>loadButton</zorder>
-    <zorder>label_21</zorder>
     <zorder>line_2</zorder>
     <zorder>label_8</zorder>
     <zorder>extentBox</zorder>

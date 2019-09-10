@@ -768,6 +768,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         rlayer = QgsRasterLayer(urlWithParams, 'OpenEO-{}'.format(id), 'wms')
 
+        #rlayer = QgsRasterLayer("type=xyz&url=http://c.tile.openstreetmap.org/{z}/{x}/{y}.png", "OSM", "wms")
+
+
         if rlayer.isValid():
             QgsProject.instance().addMapLayer(rlayer)
         else:

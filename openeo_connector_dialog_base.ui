@@ -188,8 +188,23 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>2</number>
    </property>
+   <widget class="QWidget" name="tab">
+    <attribute name="title">
+     <string>Services</string>
+    </attribute>
+    <widget class="QTableWidget" name="servicesTableWidget">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>831</width>
+       <height>691</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
    <widget class="QWidget" name="tab_4">
     <attribute name="title">
      <string>Jobs</string>

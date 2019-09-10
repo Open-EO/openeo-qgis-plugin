@@ -92,6 +92,22 @@ class Connection:
 
         return []
 
+    def user_services(self) -> dict:
+        """
+        Loads all jobs of the current user.
+        :return: jobs: Dict All jobs of the user
+        """
+        services = self.get('/services', auth=True)
+
+        if services:
+            services = self.parse_json_response(services)
+
+            if "services" in services:
+                services = services["services"]
+            return services
+
+        return services
+
     def job_start(self, job_id):
         """
         Starts the execution of a job at the backend.

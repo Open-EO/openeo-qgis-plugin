@@ -176,6 +176,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         #self.set_font()
         # Jobs Tab
         self.init_jobs()
+        self.init_services()
 
     #def set_font(self):
     #    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
@@ -510,6 +511,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 self.processBox.addItem(pr['id'])
 
         self.refresh_jobs()
+        self.refresh_services()
 
         if len(collection_result) == 0 and len(process_result) == 0:
             warning(self.iface, "Backend URL does not have collections or processes defined, or is not valid!")
@@ -613,6 +615,23 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
         #header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
 
+    def init_services(self):
+        """
+        Initializes the services table
+        """
+        self.servicesTableWidget.clear()
+        self.servicesTableWidget.setColumnCount(5)
+        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Id', 'Description/Error', 'Submission Date', 'Type',
+                                                        'Display'])#, 'Display'])
+        header = self.servicesTableWidget.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+        #header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+        #header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
+
     def refresh_jobs(self):
         """
         Refreshes the job table, so fetches all jobs of the user from the backend and lists them in the table.
@@ -620,6 +639,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
 
         jobs = self.connection.user_jobs()
+
+        if not isinstance(jobs, list):
+            jobs = []
 
         self.init_jobs()
         self.jobsTableWidget.setRowCount(len(jobs))
@@ -678,6 +700,78 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
            # self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info())
 
             row += 1
+
+    def refresh_services(self):
+        """
+        Refreshes the job table, so fetches all jobs of the user from the backend and lists them in the table.
+        This method also generates the "Execute" and "Display" buttons.
+        """
+
+        services = self.connection.user_services()
+
+        if not isinstance(services, list):
+            services = []
+
+        self.init_services()
+        self.servicesTableWidget.setRowCount(len(services))
+        row = 0
+
+        for val in services:
+            #self.processgraphEdit.setText(val)
+            if "id" in val:
+                qitem = QTableWidgetItem(val["id"])
+                qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+                self.servicesTableWidget.setItem(row, 0, qitem)
+
+            if "error" in val:
+                if val["error"]:
+                    if "message" in val["error"]:
+                        qitem = QTableWidgetItem(val["error"]["message"])
+                        qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+                        self.servicesTableWidget.setItem(row, 1, qitem)
+            elif "description" in val:
+                qitem = QTableWidgetItem(val["description"])
+                qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+                self.servicesTableWidget.setItem(row, 1, qitem)
+
+            if "title" in val:
+                qitem = QTableWidgetItem(val["title"])
+                qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+                self.servicesTableWidget.setItem(row, 2, qitem)
+
+            execBtn = QPushButton('Display', self.servicesTableWidget)
+
+            if "type" in val:
+                qitem = QTableWidgetItem(val["type"])
+                qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+                self.servicesTableWidget.setItem(row, 3, qitem)
+
+            self.servicesTableWidget.setCellWidget(row, 4, execBtn)
+            execBtn.clicked.connect(lambda *args, row=row: self.service_execute(val["url"], val["id"]))
+
+            #self.infoBtn3 = QPushButton(self.jobsTableWidget)
+            #self.infoBtn3.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
+           # self.jobsTableWidget.setCellWidget(row, 6, self.infoBtn3)
+           # self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info())
+
+            row += 1
+
+    def service_execute(self, url, id):
+        """
+        Executes the job of the given row of the job table.
+        This method is called after the "Execute" button is clicked at the job table.
+        :param row: Integer number of the row the button is clicked.
+        """
+        from qgis.core import QgsRasterLayer, QgsProject
+
+        urlWithParams = 'type=xyz&url={}'.format(url)
+
+        rlayer = QgsRasterLayer(urlWithParams, 'OpenEO-{}'.format(id), 'wms')
+
+        if rlayer.isValid():
+            QgsProject.instance().addMapLayer(rlayer)
+        else:
+            print('invalid layer')
 
     def job_execute(self, row):
         """

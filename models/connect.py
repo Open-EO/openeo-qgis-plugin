@@ -101,6 +101,28 @@ class Connection:
         request = self.post("/jobs/{}/results".format(job_id), postdata=None)
         return request.status_code
 
+    def job_info(self, job_id):
+        """
+        Returns information about a created job.
+        """
+        requested_info = "/jobs/{}".format(job_id)
+        get_info = self.get(requested_info, stream=True)
+        json = get_info.json()
+
+        title = json['title']
+        description = json['description']
+        data = json['process_graph'] # id
+        #processes = json['process_graph'] # ?
+        #temporalExtent = json['temporal_extent'] # temporal extent
+        #spatialExtent = json['spatial_extent'] # spatial extent
+        cost = json['costs']
+        # progress = json['progress']
+        
+        job_info = "Title: {} \nDescription: {}. \nData: {} \nProcess(es): \nSpatial Extent: \nTemporal Extent: \nProgress: \nCost: {}".\
+            format(title, description, data, cost)
+
+        return job_info
+
     def job_result_url(self, job_id):
         """
         Get the url of the job result.

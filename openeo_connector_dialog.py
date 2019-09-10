@@ -555,7 +555,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     self.infoWindow2.show()
                     #self.processgraphEdit.setText(str(pr_info['id']) + ": " + str(pr_info['description']))
 
-    def job_info(self):
+    def job_info(self, row):
         """
         Returns detailed information about a submitted batch job in a PopUp-Window, such as:
         - Start time
@@ -563,18 +563,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         - Process Graph
         - Progress
         - Cost
+        :param row: Integer number of the row the button is clicked.
         """
 
-#        job_id = self.jobsTableWidget.item(row, 0).text()
-
-        startTime = "abc"
-        description ="abc"
-        processGraph = "abc"
-        progress ="abc"
-        cost ="abc"
-
-        job_info = "Start time: {} , \nDescription: {}, \nProcess Graph: {}, \nProgress: {}, \nCost: {}".format(startTime, description, processGraph, progress, cost)
-
+        job_id = self.jobsTableWidget.item(row, 0).text()
+        job_info = self.connection.job_info(job_id)
         self.infoWindow3 = QWidget()
         self.hbox3 = QHBoxLayout()
         self.infoBox3 = QTextEdit()
@@ -665,7 +658,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.infoBtn3 = QPushButton(self.jobsTableWidget)
             self.infoBtn3.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
             self.jobsTableWidget.setCellWidget(row, 6, self.infoBtn3)
-            self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info())
+            self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info(row))
 
             row += 1
 

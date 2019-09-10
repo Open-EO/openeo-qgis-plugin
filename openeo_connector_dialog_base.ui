@@ -188,7 +188,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab_4">
     <attribute name="title">
@@ -225,7 +225,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>760</y>
+       <y>770</y>
        <width>171</width>
        <height>31</height>
       </rect>
@@ -291,8 +291,8 @@
       <rect>
        <x>10</x>
        <y>70</y>
-       <width>351</width>
-       <height>21</height>
+       <width>341</width>
+       <height>31</height>
       </rect>
      </property>
     </widget>
@@ -300,19 +300,19 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>140</y>
+       <y>150</y>
        <width>261</width>
-       <height>21</height>
+       <height>31</height>
       </rect>
      </property>
     </widget>
     <widget class="QPushButton" name="addButton">
      <property name="geometry">
       <rect>
-       <x>310</x>
-       <y>140</y>
-       <width>80</width>
-       <height>21</height>
+       <x>319</x>
+       <y>150</y>
+       <width>71</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="text">
@@ -336,7 +336,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>110</y>
+       <y>120</y>
        <width>101</width>
        <height>20</height>
       </rect>
@@ -388,7 +388,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>90</y>
+       <y>100</y>
        <width>401</width>
        <height>20</height>
       </rect>
@@ -414,7 +414,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>760</y>
+       <y>770</y>
        <width>171</width>
        <height>31</height>
       </rect>
@@ -427,7 +427,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>340</y>
+       <y>360</y>
        <width>401</width>
        <height>20</height>
       </rect>
@@ -440,7 +440,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>360</y>
+       <y>380</y>
        <width>161</width>
        <height>20</height>
       </rect>
@@ -456,7 +456,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>390</y>
+       <y>410</y>
        <width>381</width>
        <height>31</height>
       </rect>
@@ -466,7 +466,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>170</y>
+       <y>190</y>
        <width>381</width>
        <height>171</height>
       </rect>
@@ -476,7 +476,7 @@
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>590</y>
+       <y>610</y>
        <width>281</width>
        <height>31</height>
       </rect>
@@ -489,7 +489,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>560</y>
+       <y>580</y>
        <width>161</width>
        <height>20</height>
       </rect>
@@ -505,7 +505,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>540</y>
+       <y>560</y>
        <width>401</width>
        <height>20</height>
       </rect>
@@ -518,7 +518,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>470</y>
+       <y>490</y>
        <width>381</width>
        <height>71</height>
       </rect>
@@ -528,7 +528,7 @@
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>630</y>
+       <y>650</y>
        <width>131</width>
        <height>33</height>
       </rect>
@@ -544,7 +544,7 @@
      <property name="geometry">
       <rect>
        <x>200</x>
-       <y>630</y>
+       <y>650</y>
        <width>131</width>
        <height>33</height>
       </rect>
@@ -599,7 +599,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>430</y>
+       <y>450</y>
        <width>231</width>
        <height>31</height>
       </rect>
@@ -609,7 +609,7 @@
      <property name="geometry">
       <rect>
        <x>250</x>
-       <y>430</y>
+       <y>450</y>
        <width>101</width>
        <height>31</height>
       </rect>
@@ -622,7 +622,7 @@
      <property name="geometry">
       <rect>
        <x>250</x>
-       <y>430</y>
+       <y>450</y>
        <width>101</width>
        <height>31</height>
       </rect>
@@ -635,7 +635,7 @@
      <property name="geometry">
       <rect>
        <x>360</x>
-       <y>430</y>
+       <y>450</y>
        <width>31</width>
        <height>31</height>
       </rect>
@@ -654,10 +654,10 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>370</x>
+       <x>360</x>
        <y>70</y>
-       <width>21</width>
-       <height>21</height>
+       <width>31</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="text">
@@ -665,8 +665,8 @@
      </property>
      <property name="iconSize">
       <size>
-       <width>21</width>
-       <height>21</height>
+       <width>25</width>
+       <height>25</height>
       </size>
      </property>
      <property name="autoDefault">
@@ -680,9 +680,9 @@
      <property name="geometry">
       <rect>
        <x>280</x>
-       <y>140</y>
-       <width>21</width>
-       <height>21</height>
+       <y>150</y>
+       <width>31</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="text">
@@ -690,8 +690,8 @@
      </property>
      <property name="iconSize">
       <size>
-       <width>21</width>
-       <height>21</height>
+       <width>25</width>
+       <height>25</height>
       </size>
      </property>
     </widget>
@@ -699,7 +699,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>660</y>
+       <y>680</y>
        <width>401</width>
        <height>20</height>
       </rect>
@@ -712,7 +712,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>680</y>
+       <y>700</y>
        <width>161</width>
        <height>20</height>
       </rect>
@@ -724,17 +724,14 @@
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QPushButton" name="bandButton">
+    <widget class="QComboBox" name="bandBox">
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>710</y>
+       <y>730</y>
        <width>281</width>
        <height>31</height>
       </rect>
-     </property>
-     <property name="text">
-      <string>Select Bands</string>
      </property>
     </widget>
     <zorder>moveButton</zorder>
@@ -769,7 +766,7 @@
     <zorder>infoBtn2</zorder>
     <zorder>line_4</zorder>
     <zorder>label_11</zorder>
-    <zorder>bandButton</zorder>
+    <zorder>bandBox</zorder>
    </widget>
   </widget>
   <widget class="QLabel" name="statusLabel">

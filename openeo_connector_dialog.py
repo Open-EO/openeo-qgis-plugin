@@ -118,6 +118,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.addButton.hide()
 
         self.processBox.currentTextChanged.connect(self.process_selected)
+        self.bandBox.currentTextChanged.connect(self.bands_selected)
         # self.collectionBox.currentTextChanged.connect(self.collection_selected)
         self.refreshButton.clicked.connect(self.refresh_jobs)
         self.clearButton.clicked.connect(self.clear) # Clear Button
@@ -158,9 +159,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-bottom: 10px transparent;
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
-        self.infoBtn2.setGeometry(370, 130, 21, 21)
         self.infoBtn.clicked.connect(self.col_info)
-        self.collectionBox.setGeometry(10, 60, 381, 21)
+        self.collectionBox.setGeometry(10, 70, 381, 31)
         self.infoBtn2.setStyleSheet('''   
                                  border-image: url("./info_icon.png") 10 10 0 0;
                                  border-top: 10px transparent;
@@ -168,9 +168,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
         self.infoBtn2.clicked.connect(self.pr_info)
-        self.processBox.setGeometry(10, 130, 381, 21) # when add Button visible, set 381 to 291
+        self.processBox.setGeometry(10, 150, 381, 31) # when add Button visible, set 381 to 291
+        self.infoBtn2.setGeometry(360, 70, 31, 31)
         self.infoBtn.setVisible(False)
-        self.infoBtn2.setGeometry(370, 130, 21, 21) # remove, when add Button is visible
+        self.infoBtn2.setGeometry(360, 150, 31, 31) # remove, when add Button is visible
         self.infoBtn2.setVisible(False)
 
         #self.set_font()
@@ -449,7 +450,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             eD= End.toString("yyyy-MM-dd")
             return eD
 
-    def bands(self):
+    def bands_selected(self):
+
+
         bands = ["None"]  # e.g. "bands": ["B08", "B04", "B02"]
         return bands
 
@@ -507,9 +510,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processes = process_result
 
         self.infoBtn.setVisible(True)
-        self.collectionBox.setGeometry(10, 60, 351, 21)
+        self.collectionBox.setGeometry(10, 70, 341, 31)
         self.infoBtn2.setVisible(True)
-        self.processBox.setGeometry(10, 130, 351, 21) # when add Button is visible - set 351 to 261
+        self.processBox.setGeometry(10, 150, 341, 31)  # when add Button is visible - set 351 to 261
 
         self.collectionBox.clear()
         self.processBox.clear()
@@ -746,7 +749,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         texE = self.show_end()
         if texE < texS:
             self.iface.messageBar().pushMessage("Start Date must be before End Date", duration=5)
-        B = self.bands()
+        B = self.bands_selected()
 
         arguments = OrderedDict({
             "id": col,

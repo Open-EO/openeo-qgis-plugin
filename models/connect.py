@@ -117,7 +117,7 @@ class Connection:
         #spatialExtent = json['spatial_extent'] # spatial extent
         cost = json['costs']
         # progress = json['progress']
-        
+
         job_info = "Title: {} \nDescription: {}. \nData: {} \nProcess(es): \nSpatial Extent: \nTemporal Extent: \nProgress: \nCost: {}".\
             format(title, description, data, cost)
 

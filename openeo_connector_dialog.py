@@ -157,6 +157,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-bottom: 10px transparent;
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
+        self.infoBtn2.setGeometry(370, 130, 21, 21)
         self.infoBtn.clicked.connect(self.col_info)
         self.collectionBox.setGeometry(10, 60, 381, 21)
         self.infoBtn2.setStyleSheet('''   
@@ -194,7 +195,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             spatial_extent["north"] = north
             spatial_extent["south"] = south
             spatial_extent["crs"] = crs
-            self.processgraphSpatialExtent.setText(str(spatial_extent)) # Improvement: Change ' in json to "
+            str_format = str(spatial_extent).replace("'", '"')
+            self.processgraphSpatialExtent.setText(str_format)
         elif not iface.activeLayer():
             self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
@@ -234,7 +236,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             else:
                 return "Error: Draw a new rectangle"
             spatial_extent["crs"] = crs
-            self.processgraphSpatialExtent.setText(str(spatial_extent))
+            str_format = str(spatial_extent).replace("'", '"')
+            self.processgraphSpatialExtent.setText(str_format)
             QMainWindow.show(self)
 
         elif not iface.activeLayer():
@@ -286,7 +289,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             spatial_extent["north"] = lat_max
             spatial_extent["south"] = lat_min
             spatial_extent["crs"] = crs
-            self.processgraphSpatialExtent.setText(str(spatial_extent))
+            str_format = str(spatial_extent).replace("'", '"')
+            self.processgraphSpatialExtent.setText(str_format)
             QMainWindow.show(self)
 
         elif not iface.activeLayer():
@@ -318,7 +322,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 spatial_extent["north"] = north
                 spatial_extent["south"] = south
                 spatial_extent["crs"] = crs
-                self.processgraphSpatialExtent.setText(str(spatial_extent))
+                str_format = str(spatial_extent).replace("'", '"')
+                self.processgraphSpatialExtent.setText(str_format)
 
     def refresh_layers(self):
         self.layersBox.clear()
@@ -350,7 +355,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             spatial_extent["north"] = north
             spatial_extent["south"] = south
             spatial_extent["crs"] = crs
-            self.processgraphSpatialExtent.setText(str(spatial_extent))
+            str_format = str(spatial_extent).replace("'", '"')
+            self.processgraphSpatialExtent.setText(str_format)
         else:
             return "Layer failed to load!"
 

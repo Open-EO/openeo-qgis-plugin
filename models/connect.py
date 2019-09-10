@@ -4,7 +4,6 @@ import tempfile
 import json
 
 class Connection:
-
     def connect(self, url, username=None, password=None) -> bool:
         """
         Authenticates a user to the backend using auth class.
@@ -111,15 +110,20 @@ class Connection:
 
         title = json['title']
         description = json['description']
-        data = json['process_graph'] # id
-        #processes = json['process_graph'] # ?
-        #temporalExtent = json['temporal_extent'] # temporal extent
-        #spatialExtent = json['spatial_extent'] # spatial extent
         cost = json['costs']
-        # progress = json['progress']
+        # Data & Extents
+        for key in json['process_graph'].keys():
+            if "load_collection" in key:
+                data_set = json['process_graph'][key]['arguments']['id']
+                temporal_extent = json['process_graph'][key]['arguments']['spatial_extent']
+                spatial_extent = json['process_graph'][key]['arguments']['temporal_extent']
+        # Processes
+        processes = []
+        for process in json['process_graph'].keys():
+            processes.append(process)
 
-        job_info = "Title: {} \nDescription: {}. \nData: {} \nProcess(es): \nSpatial Extent: \nTemporal Extent: \nProgress: \nCost: {}".\
-            format(title, description, data, cost)
+        job_info = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}. \nTemporal Extent: {}. \nCost: {} €.".\
+            format(title, description, data_set, processes, spatial_extent, temporal_extent, cost).replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")  # not sure if € os always the case
 
         return job_info
 

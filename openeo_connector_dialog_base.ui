@@ -188,7 +188,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tab_4">
     <attribute name="title">
@@ -207,7 +207,7 @@
     <widget class="QPushButton" name="refreshButton">
      <property name="geometry">
       <rect>
-       <x>799</x>
+       <x>760</x>
        <y>760</y>
        <width>31</width>
        <height>31</height>
@@ -237,7 +237,7 @@
     <widget class="QPushButton" name="deleteButton">
      <property name="geometry">
       <rect>
-       <x>760</x>
+       <x>720</x>
        <y>760</y>
        <width>31</width>
        <height>31</height>
@@ -249,6 +249,23 @@
      <property name="icon">
       <iconset>
        <normaloff>delete_job.png</normaloff>delete_job.png</iconset>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="deleteFinalButton">
+     <property name="geometry">
+      <rect>
+       <x>800</x>
+       <y>760</y>
+       <width>31</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>deleteFinalBtn.png</normaloff>deleteFinalBtn.png</iconset>
      </property>
     </widget>
    </widget>

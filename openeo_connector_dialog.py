@@ -621,7 +621,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         self.servicesTableWidget.clear()
         self.servicesTableWidget.setColumnCount(5)
-        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Id', 'Description/Error', 'Submission Date', 'Type',
+        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Id', 'Title/Error', 'Submission Date', 'Type',
                                                         'Display'])#, 'Display'])
         header = self.servicesTableWidget.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
@@ -729,13 +729,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                         qitem = QTableWidgetItem(val["error"]["message"])
                         qitem.setFlags(QtCore.Qt.ItemIsEnabled)
                         self.servicesTableWidget.setItem(row, 1, qitem)
-            elif "description" in val:
-                qitem = QTableWidgetItem(val["description"])
+            elif "title" in val:
+                qitem = QTableWidgetItem(val["title"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
                 self.servicesTableWidget.setItem(row, 1, qitem)
 
-            if "title" in val:
-                qitem = QTableWidgetItem(val["title"])
+            if "submitted" in val:
+                qitem = QTableWidgetItem(val["submitted"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
                 self.servicesTableWidget.setItem(row, 2, qitem)
 
@@ -765,6 +765,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         from qgis.core import QgsRasterLayer, QgsProject
 
         urlWithParams = 'type=xyz&url={}'.format(url)
+        #urlWithParams = 'type=xyz&url={}&zmax=19&zmin=0&crs=EPSG3857'.format(url)
 
         rlayer = QgsRasterLayer(urlWithParams, 'OpenEO-{}'.format(id), 'wms')
 

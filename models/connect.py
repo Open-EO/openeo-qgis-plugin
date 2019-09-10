@@ -103,6 +103,8 @@ class Connection:
     def job_info(self, job_id):
         """
         Returns information about a created job.
+        :param: job_id: Identifier of the job
+        :return: jobs: Strings containing details about the created jobs.
         """
         requested_info = "/jobs/{}".format(job_id)
         get_info = self.get(requested_info, stream=True)
@@ -122,8 +124,8 @@ class Connection:
         for process in json['process_graph'].keys():
             processes.append(process)
 
-        job_info = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}. \nTemporal Extent: {}. \nCost: {} €.".\
-            format(title, description, data_set, processes, spatial_extent, temporal_extent, cost).replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")  # not sure if € os always the case
+        job_info = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}. \nTemporal Extent: {}. \nCost: {}.".\
+            format(title, description, data_set, processes, spatial_extent, temporal_extent, cost).replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
 
         return job_info
 

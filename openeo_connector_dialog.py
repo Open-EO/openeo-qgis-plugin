@@ -202,16 +202,24 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def draw(self):
         if str(self.extentBox.currentText()) == "Draw Rectangle":
-            QMainWindow.hide(self)
-            self.drawRectangle = DrawRectangle(iface.mapCanvas(), self)
-            iface.mapCanvas().setMapTool(self.drawRectangle)
+            if iface.activeLayer():
+                QMainWindow.hide(self)
+                self.drawRectangle = DrawRectangle(iface.mapCanvas(), self)
+                iface.mapCanvas().setMapTool(self.drawRectangle)
+            else:
+                iface.actionPan().trigger()
+                QMainWindow.show(self)
+                self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
         elif str(self.extentBox.currentText()) == "Draw Polygon":
-            self.drawBtn.setVisible(True)
-            QMainWindow.hide(self)
-            self.drawPolygon = DrawPolygon(iface.mapCanvas(), self)
-            iface.mapCanvas().setMapTool(self.drawPolygon)
-        else:
-            self.iface.messageBar().pushMessage("Draw Extent Option is not enabled for you choice of extent", duration=5)
+            if iface.activeLayer():
+                self.drawBtn.setVisible(True)
+                QMainWindow.hide(self)
+                self.drawPolygon = DrawPolygon(iface.mapCanvas(), self)
+                iface.mapCanvas().setMapTool(self.drawPolygon)
+            else:
+                iface.actionPan().trigger()
+                QMainWindow.show(self)
+                self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
     def draw_rect(self, x1, y1, x2, y2):
         if iface.activeLayer():
@@ -305,7 +313,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def use_active_layer(self):
         iface.actionPan().trigger()
-
         layers = iface.mapCanvas().layers()
         self.chosenLayer = str(self.layersBox.currentText())
         for layer in layers:
@@ -324,6 +331,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 spatial_extent["crs"] = crs
                 str_format = str(spatial_extent).replace("'", '"')
                 self.processgraphSpatialExtent.setText(str_format)
+
+        if not iface.activeLayer():
+            self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
     def refresh_layers(self):
         self.layersBox.clear()

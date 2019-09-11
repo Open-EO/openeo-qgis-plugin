@@ -750,25 +750,12 @@
       <rect>
        <x>20</x>
        <y>730</y>
-       <width>90</width>
+       <width>121</width>
        <height>23</height>
       </rect>
      </property>
      <property name="text">
-      <string>CheckBox</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="bandButton">
-     <property name="geometry">
-      <rect>
-       <x>280</x>
-       <y>710</y>
-       <width>90</width>
-       <height>35</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Bands</string>
+      <string/>
      </property>
     </widget>
     <zorder>moveButton</zorder>
@@ -804,7 +791,6 @@
     <zorder>line_4</zorder>
     <zorder>label_11</zorder>
     <zorder>checkBox1</zorder>
-    <zorder>bandButton</zorder>
    </widget>
   </widget>
   <widget class="QLabel" name="statusLabel">

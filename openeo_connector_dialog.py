@@ -43,6 +43,7 @@ from PyQt5.QtCore import QDate
 from PyQt5 import QtGui
 from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import QCalendarWidget
+from tkinter import Variable
 
 from .models.result import Result
 from .models.connect import Connection
@@ -118,7 +119,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.addButton.hide()
 
         self.processBox.currentTextChanged.connect(self.process_selected)
-        # self.collectionBox.currentTextChanged.connect(self.collection_selected)
+        self.collectionBox.currentTextChanged.connect(self.bands_selected)
         self.refreshButton.clicked.connect(self.refresh_jobs)
         self.clearButton.clicked.connect(self.clear) # Clear Button
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
@@ -173,7 +174,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.infoBtn2.setGeometry(360, 150, 31, 31) # remove, when add Button is visible
         self.infoBtn2.setVisible(False)
 
-        self.bandButton.clicked.connect(self.bands_selected)
+        self.checkBox1.hide()
 
         #self.set_font()
         # Jobs Tab
@@ -491,8 +492,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     for each_band in bands:
                         all_bands.append(each_band)
                         self.processgraphEdit.setText(str(all_bands)) # returns all bands per data set
-
-
+                        if len(bands) == 1:
+                            self.checkBox1.setText(each_band)
+                            self.checkBox1.show()
+                        else:
+                            for band in range(len(bands)):
+                                
+                                self.checkBox1.setText("No Solution for this problem yet")
+                                self.checkBox1.show()
+                            #button_i = QCheckBox(text=each_band)
 
     def web_view(self):
 
@@ -577,6 +585,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.statusLabel.setFont(boldFont)
         if user:
             self.statusLabel.setText("Connected to {} as {}".format(url, user))
+            self.bands_selected()
         else:
             self.statusLabel.setText("Connected to {} without user".format(url))
 
@@ -788,13 +797,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.iface.messageBar().pushMessage("Start Date must be before End Date", duration=5)
 
         if self.checkBox1.isChecked():
-            B = self.bands_selected()
+            band = self.checkBox1.text()
+        if not self.checkBox1.isChecked():
+            band = "null"
 
         arguments = OrderedDict({
             "id": col,
             "spatial_extent": ex,
             "temporal_extent": [texS, texE],
-            "bands": B,
+            "bands": band,
         })
 
         self.processgraph.load_collection(arguments)

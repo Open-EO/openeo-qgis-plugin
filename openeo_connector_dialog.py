@@ -37,13 +37,12 @@ from qgis.core import QgsVectorLayer
 from qgis.utils import iface
 
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit, QCheckBox
+from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit, QListWidget, QListWidgetItem
 from PyQt5 import QtCore
 from PyQt5.QtCore import QDate
 from PyQt5 import QtGui
 from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import QCalendarWidget
-from tkinter import Variable
 
 from .models.result import Result
 from .models.connect import Connection
@@ -175,6 +174,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.infoBtn2.setVisible(False)
 
         self.checkBox1.hide()
+        self.checkBox2.hide()
+        self.checkBox3.hide()
 
         #self.set_font()
         # Jobs Tab
@@ -481,6 +482,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def bands_selected(self):
         collection_result = self.connection.list_collections()
         selected_process = str(self.collectionBox.currentText())
+        window = QWidget()
+        layout = QtWidgets.QVBoxLayout(window)
+        list_widget = QListWidget()
         for col in collection_result:
             if str(col['id']) == selected_process:
                 data = self.connection.get('/collections/{}'.format(col['id']), auth=False)
@@ -492,15 +496,26 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     for each_band in bands:
                         all_bands.append(each_band)
                         self.processgraphEdit.setText(str(all_bands)) # returns all bands per data set
-                        if len(bands) == 1:
-                            self.checkBox1.setText(each_band)
+                        if len(all_bands) <= 1:
+                            self.checkBox1.setText(all_bands[0])
                             self.checkBox1.show()
+                        elif len(bands) <= 2:
+                            self.checkBox1.setText(all_bands[0])
+                            self.checkBox1.show()
+                            self.checkBox2.setText(all_bands[1])
+                            self.checkBox2.show()
+                        elif len(bands) <= 3:
+                            self.checkBox1.setText(all_bands[0])
+                            self.checkBox1.show()
+                            self.checkBox2.setText(all_bands[1])
+                            self.checkBox2.show()
+                            self.checkBox3.setText(all_bands[2])
+                            self.checkBox3.show()
                         else:
                             for band in range(len(bands)):
-                                
-                                self.checkBox1.setText("No Solution for this problem yet")
-                                self.checkBox1.show()
-                            #button_i = QCheckBox(text=each_band)
+                                list_widget.addItem(str(band))
+                                layout.addWidget(list_widget)
+                                window.show()
 
     def web_view(self):
 

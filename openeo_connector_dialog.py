@@ -37,7 +37,7 @@ from qgis.core import QgsVectorLayer
 from qgis.utils import iface
 
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit
+from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit, QCheckBox
 from PyQt5 import QtCore
 from PyQt5.QtCore import QDate
 from PyQt5 import QtGui
@@ -118,7 +118,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.addButton.hide()
 
         self.processBox.currentTextChanged.connect(self.process_selected)
-        self.bandBox.currentTextChanged.connect(self.bands_selected)
         # self.collectionBox.currentTextChanged.connect(self.collection_selected)
         self.refreshButton.clicked.connect(self.refresh_jobs)
         self.clearButton.clicked.connect(self.clear) # Clear Button
@@ -173,6 +172,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.infoBtn.setVisible(False)
         self.infoBtn2.setGeometry(360, 150, 31, 31) # remove, when add Button is visible
         self.infoBtn2.setVisible(False)
+
+        self.bandButton.clicked.connect(self.bands_selected)
 
         #self.set_font()
         # Jobs Tab
@@ -413,8 +414,34 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.dateWindow.setWindowTitle('Calendar')
         self.dateWindow.show()
 
-        #self.start_calendar.setMaximumDate(QDate(2017-06-29))
-        #self.end_calendar.setMinimumDate(QDate(2017-06-29))
+        # Get min and max date from collection
+        collection_result = self.connection.list_collections()
+        selected_process = str(self.collectionBox.currentText())
+        for col in collection_result:
+            if str(col['id']) == selected_process:
+                if "extent" in col:
+                    # in case nothing is listed:
+                    if col['extent']['temporal'] == "[]":
+                        self.end_calendar.setMaximumDate(QDate.currentDate())
+                    else:
+                        # set minimum date
+                        min_date = col['extent']['temporal'][0]
+                        min_year = min_date[0:4]
+                        min_month = min_date[5:7]
+                        min_day = min_date[8:10]
+                        self.start_calendar.setMinimumDate(QDate(int(min_year), int(min_month), int(min_day)))
+                        self.processgraphSpatialExtent.setText(str(min_month))
+
+                        # set maximum date
+                        #max_date = col['extent']['temporal'][1]
+                        #self.processgraphSpatialExtent.setText(str(max_day))
+
+                        #if max_date == "null":
+                        #    self.end_calendar.setMaximumDate(QDate.currentDate())
+                        #    max_year = max_date[0:4]
+                        #    max_month = max_date[6:7]
+                        #    max_day = max_date[9:10]
+                        #    self.end_calendar.setMaximumDate(QDate(int(max_year), int(max_month), int(max_day)))
 
     def pick_start(self):
         if self.selectDate.clicked:
@@ -451,10 +478,21 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             return eD
 
     def bands_selected(self):
+        collection_result = self.connection.list_collections()
+        selected_process = str(self.collectionBox.currentText())
+        for col in collection_result:
+            if str(col['id']) == selected_process:
+                data = self.connection.get('/collections/{}'.format(col['id']), auth=False)
+                if data.status_code == 200:
+                    band_info = data.json()
+                    bands = band_info['properties']['cube:dimensions']['bands']['values']
+
+                    all_bands = []
+                    for each_band in bands:
+                        all_bands.append(each_band)
+                        self.processgraphEdit.setText(str(all_bands)) # returns all bands per data set
 
 
-        bands = ["None"]  # e.g. "bands": ["B08", "B04", "B02"]
-        return bands
 
     def web_view(self):
 
@@ -558,7 +596,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     self.infoWindow.setGeometry(400, 400, 600, 450)
                     self.infoWindow.setWindowTitle('Collection Information')
                     self.infoWindow.show()
-                    #self.processgraphEdit.setText(str(col_info['id']) + ": " +  str(col_info['description']))
 
     def pr_info(self):
         process_info_result = self.connection.list_processes()
@@ -749,7 +786,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         texE = self.show_end()
         if texE < texS:
             self.iface.messageBar().pushMessage("Start Date must be before End Date", duration=5)
-        B = self.bands_selected()
+
+        if self.checkBox1.isChecked():
+            B = self.bands_selected()
 
         arguments = OrderedDict({
             "id": col,

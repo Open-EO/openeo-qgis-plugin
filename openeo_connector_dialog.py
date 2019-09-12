@@ -169,10 +169,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
         self.infoBtn2.clicked.connect(self.pr_info)
-        self.processBox.setGeometry(10, 150, 381, 31) # when add Button visible, set 381 to 291
+        self.processBox.setGeometry(10, 200, 381, 31) # when add Button visible, set 381 to 291
         self.infoBtn2.setGeometry(360, 70, 31, 31)
         self.infoBtn.setVisible(False)
-        self.infoBtn2.setGeometry(360, 150, 31, 31) # remove, when add Button is visible
+        self.infoBtn2.setGeometry(360, 200, 31, 31) # remove, when add Button is visible
         self.infoBtn2.setVisible(False)
 
         self.checkBox1.hide()
@@ -602,7 +602,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.infoBtn.setVisible(True)
         self.collectionBox.setGeometry(10, 70, 341, 31)
         self.infoBtn2.setVisible(True)
-        self.processBox.setGeometry(10, 150, 341, 31)  # when add Button is visible - set 351 to 261
+        self.processBox.setGeometry(10, 200, 341, 31)  # when add Button is visible - set 351 to 261
 
         self.collectionBox.clear()
         self.processBox.clear()
@@ -825,8 +825,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.chosenRow = self.jobsTableWidget.currentRow()
         self.jobsTableWidget.removeRow(self.chosenRow)
 
-    def delete_job_final(self, row):
+    def delete_job_final(self):
         self.chosenRow = self.jobsTableWidget.currentRow()
+
         self.jobsTableWidget.removeRow(self.chosenRow)
 
     def load_collection(self):

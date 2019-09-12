@@ -559,9 +559,14 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.hbox4.addWidget(self.bandBox)
         self.band_window.setLayout(self.hbox4)
         self.band_window.setGeometry(400, 400, 600, 450)
-        self.band_window.setWindowTitle('Select multiple bands')
+        self.band_window.setWindowTitle('Select Multiple Bands')
+        self.takeBandsButton = QPushButton('Save Choice of Bands', self.band_window)
+        self.takeBandsButton.setGeometry(420, 25, 150, 31)
         self.band_window.show()
+        self.takeBandsButton.clicked.connect(self.save_band_choice)
 
+    def save_band_choice(self):
+        self.processgraphBands.setText(str(self.bandBox.selectedItems()))
 
     def web_view(self):
         webbrowser.open("https://open-eo.github.io/openeo-web-editor/demo/")

@@ -120,6 +120,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processBox.currentTextChanged.connect(self.process_selected)
         self.collectionBox.currentTextChanged.connect(self.bands_selected)
         self.collectionBox.currentTextChanged.connect(self.date_limits)
+        self.collectionBox.currentTextChanged.connect(self.spatial_limits)
         self.refreshButton.clicked.connect(self.refresh_jobs)
         self.clearButton.clicked.connect(self.clear) # Clear Button
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
@@ -191,20 +192,35 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if iface.activeLayer():
             crs = iface.activeLayer().crs().authid()
             extent = iface.mapCanvas().extent()
-            east = round(extent.xMaximum(), 1)
-            north = round(extent.yMaximum(), 1)
-            west = round(extent.xMinimum(), 1)
-            south = round(extent.yMinimum(), 1)
+            self.east = round(extent.xMaximum(), 2)
+            self.north = round(extent.yMaximum(), 2)
+            self.west = round(extent.xMinimum(), 2)
+            self.south = round(extent.yMinimum(), 2)
             spatial_extent = {}
-            spatial_extent["west"] = west
-            spatial_extent["east"] = east
-            spatial_extent["north"] = north
-            spatial_extent["south"] = south
+            spatial_extent["west"] = self.west
+            spatial_extent["east"] = self.east
+            spatial_extent["north"] = self.north
+            spatial_extent["south"] = self.south
             spatial_extent["crs"] = crs
             str_format = str(spatial_extent).replace("'", '"')
             self.processgraphSpatialExtent.setText(str_format)
+            self.check_spatial_cover()
         elif not iface.activeLayer():
             self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
+
+    def check_spatial_cover(self):
+        west = self.west
+        east = self.east
+        north = self.north
+        south = self.south
+        if west < self.limit_west:
+            self.iface.messageBar().pushMessage("Your Choice of extent is not covered by the data provider.", duration=5)
+        if east > self.limit_east:
+            self.iface.messageBar().pushMessage("Your Choice of extent is not covered by the data provider.", duration=5)
+        if south < self.limit_south:
+            self.iface.messageBar().pushMessage("Your Choice of extent is not covered by the data provider.", duration=5)
+        if north > self.limit_north:
+            self.iface.messageBar().pushMessage("Your Choice of extent is not covered by the data provider.", duration=5)
 
     def draw(self):
         if str(self.extentBox.currentText()) == "Draw Rectangle":
@@ -249,6 +265,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 spatial_extent["south"] = round(y2, 1)
             else:
                 return "Error: Draw a new rectangle"
+
             spatial_extent["crs"] = crs
             str_format = str(spatial_extent).replace("'", '"')
             self.processgraphSpatialExtent.setText(str_format)
@@ -381,28 +398,35 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             DisplayedExtent = self.processgraphSpatialExtent.toPlainText()
             self.called = True
             return str(DisplayedExtent)
-#        else:
-#            warning(self.iface, "Extent can be added only once!")
 
     def display_before_load(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
             self.set_canvas()
-            #self.called = False
         elif str(self.extentBox.currentText()) == "Draw Polygon":
             self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent", duration=5)
         elif str(self.extentBox.currentText()) == "Draw Rectangle":
             self.iface.messageBar().pushMessage("Get Extent Option is not enabled for you choice of extent", duration=5)
         elif str(self.extentBox.currentText()) == "Use Active Layer Extent":
             self.use_active_layer()
-            #self.called = False
         elif str(self.extentBox.currentText()) == "Insert Shapefile":
             self.insert_shape()
-            #self.called = False
         else:
             return 999
 
-    def add_temporal(self):
+    def spatial_limits(self):
+        collection_result = self.connection.list_collections()
+        selected_process = str(self.collectionBox.currentText())
+        for col in collection_result:
+            if str(col['id']) == selected_process:
+                if "extent" in col:
+                    # in case nothing is listed:
+                    self.limit_west = col['extent']['spatial'][0]
+                    self.limit_south = col['extent']['spatial'][1]
+                    self.limit_east = col['extent']['spatial'][2]
+                    self.limit_north = col['extent']['spatial'][3]
+                    #self.processgraphSpatialExtent.setText(str(self.limit_west) + " " + str(self.limit_east) + " " + str(self.limit_south) + " " + str(self.limit_north))
 
+    def add_temporal(self):
         QMainWindow.show(self)
         self.dateWindow = QWidget()
         self.start_calendar = QCalendarWidget(self)

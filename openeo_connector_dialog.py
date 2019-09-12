@@ -119,6 +119,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.processBox.currentTextChanged.connect(self.process_selected)
         self.collectionBox.currentTextChanged.connect(self.bands_selected)
+        self.collectionBox.currentTextChanged.connect(self.date_limits)
         self.refreshButton.clicked.connect(self.refresh_jobs)
         self.clearButton.clicked.connect(self.clear) # Clear Button
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
@@ -405,7 +406,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         QMainWindow.show(self)
         self.dateWindow = QWidget()
         self.start_calendar = QCalendarWidget(self)
+        self.start_calendar.setMinimumDate(QDate(int(self.min_year), int(self.min_month), int(self.min_day)))
         self.end_calendar = QCalendarWidget(self)
+        if self.max_date == None:
+            self.end_calendar.setMaximumDate(QDate.currentDate())
+        else:
+            self.end_calendar.setMaximumDate(QDate(int(self.max_year), int(self.max_month), int(self.max_day)))
         self.start_calendar.clicked[QDate].connect(self.pick_start)
         self.end_calendar.clicked[QDate].connect(self.pick_end)
         self.hbox = QHBoxLayout()
@@ -416,7 +422,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.dateWindow.setWindowTitle('Calendar')
         self.dateWindow.show()
 
-        # Get min and max date from collection
+    def date_limits(self):
+        # Get min and max date from each collection
         collection_result = self.connection.list_collections()
         selected_process = str(self.collectionBox.currentText())
         for col in collection_result:
@@ -428,22 +435,20 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     else:
                         # set minimum date
                         min_date = col['extent']['temporal'][0]
-                        min_year = min_date[0:4]
-                        min_month = min_date[5:7]
-                        min_day = min_date[8:10]
-                        self.start_calendar.setMinimumDate(QDate(int(min_year), int(min_month), int(min_day)))
-                        self.processgraphSpatialExtent.setText(str(min_month))
+                        self.min_year = min_date[0:4]
+                        self.min_month = min_date[5:7]
+                        self.min_day = min_date[8:10]
 
                         # set maximum date
-                        #max_date = col['extent']['temporal'][1]
-                        #self.processgraphSpatialExtent.setText(str(max_day))
+                        self.max_date = col['extent']['temporal'][1]
+                        self.processgraphSpatialExtent.setText(str(self.max_date))  # can be None, can be a date, ...
+                        if self.max_date == None:
+                            self.max_date = None
+                        else:
+                            self.max_year = self.max_date[0:4]
+                            self.max_month = self.max_date[5:7]
+                            self.max_day = self.max_date[8:10]
 
-                        #if max_date == "null":
-                        #    self.end_calendar.setMaximumDate(QDate.currentDate())
-                        #    max_year = max_date[0:4]
-                        #    max_month = max_date[6:7]
-                        #    max_day = max_date[9:10]
-                        #    self.end_calendar.setMaximumDate(QDate(int(max_year), int(max_month), int(max_day)))
 
     def pick_start(self):
         if self.selectDate.clicked:
@@ -496,26 +501,26 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     for each_band in bands:
                         all_bands.append(each_band)
                         self.processgraphEdit.setText(str(all_bands)) # returns all bands per data set
-                        if len(all_bands) <= 1:
-                            self.checkBox1.setText(all_bands[0])
-                            self.checkBox1.show()
-                        elif len(bands) <= 2:
-                            self.checkBox1.setText(all_bands[0])
-                            self.checkBox1.show()
-                            self.checkBox2.setText(all_bands[1])
-                            self.checkBox2.show()
-                        elif len(bands) <= 3:
-                            self.checkBox1.setText(all_bands[0])
-                            self.checkBox1.show()
-                            self.checkBox2.setText(all_bands[1])
-                            self.checkBox2.show()
-                            self.checkBox3.setText(all_bands[2])
-                            self.checkBox3.show()
-                        else:
-                            for band in range(len(bands)):
-                                list_widget.addItem(str(band))
-                                layout.addWidget(list_widget)
-                                window.show()
+                        #if len(all_bands) <= 1:
+                        #    self.checkBox1.setText(all_bands[0])
+                        #    self.checkBox1.show()
+                        #elif len(bands) <= 2:
+                        #    self.checkBox1.setText(all_bands[0])
+                        #    self.checkBox1.show()
+                        #    self.checkBox2.setText(all_bands[1])
+                        #    self.checkBox2.show()
+                        #elif len(bands) <= 3:
+                        #    self.checkBox1.setText(all_bands[0])
+                        #    self.checkBox1.show()
+                       #     self.checkBox2.setText(all_bands[1])
+                       #     self.checkBox2.show()
+                       #     self.checkBox3.setText(all_bands[2])
+                       #     self.checkBox3.show()
+                        #else:
+                        #    for band in range(len(bands)):
+                        #        list_widget.addItem(str(band))
+                        #        layout.addWidget(list_widget)
+                        #        window.show()
 
     def web_view(self):
 

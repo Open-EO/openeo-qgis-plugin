@@ -441,7 +441,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
                         # set maximum date
                         self.max_date = col['extent']['temporal'][1]
-                        self.processgraphSpatialExtent.setText(str(self.max_date))  # can be None, can be a date, ...
+                        #self.processgraphSpatialExtent.setText(str(self.max_date))  # can be None, can be a date, ...
                         if self.max_date == None:
                             self.max_date = None
                         else:

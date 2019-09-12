@@ -38,8 +38,7 @@ from qgis.core import QgsVectorLayer
 from qgis.utils import iface
 
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit, QListWidget, \
-    QDialog, QVBoxLayout, QListWidgetItem, QLabel
+from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit, QListWidget, QListWidgetItem, QApplication
 from PyQt5 import QtCore
 from PyQt5.QtCore import QDate, Qt
 from PyQt5 import QtGui
@@ -181,7 +180,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.multipleBandBtn.hide()
         self.multipleBandBtn.clicked.connect(self.multiple_bands)
         self.allBandBtn.hide()
-#        self.allBandBtn.clicked.connect()
 
         #self.set_font()
         # Jobs Tab
@@ -551,14 +549,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.bandBox = QListWidget()
 
         for band in self.all_bands:
-            self.bandBox.insertItem(0, str(band))
-            self.bandBox.sortItems()
+            # Set Checkbox before band
+            self.item = QListWidgetItem(self.bandBox)
+            self.item.setFlags(self.item.flags() | QtCore.Qt.ItemIsUserCheckable)
+            self.item.setCheckState(Qt.Unchecked)
+            self.item.setText(str(band))
 
+        self.bandBox.sortItems()
         self.hbox4.addWidget(self.bandBox)
         self.band_window.setLayout(self.hbox4)
         self.band_window.setGeometry(400, 400, 600, 450)
         self.band_window.setWindowTitle('Select multiple bands')
         self.band_window.show()
+
 
     def web_view(self):
         webbrowser.open("https://open-eo.github.io/openeo-web-editor/demo/")

@@ -41,7 +41,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit, QListWidget, \
     QDialog, QVBoxLayout, QListWidgetItem, QLabel
 from PyQt5 import QtCore
-from PyQt5.QtCore import QDate
+from PyQt5.QtCore import QDate, Qt
 from PyQt5 import QtGui
 from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import QCalendarWidget
@@ -163,7 +163,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
         self.infoBtn.clicked.connect(self.col_info)
-        self.collectionBox.setGeometry(10, 80, 381, 31)
+        self.collectionBox.setGeometry(10, 80, 401, 31)
         self.infoBtn2.setStyleSheet('''   
                                  border-image: url("./info_icon.png") 10 10 0 0;
                                  border-top: 10px transparent;
@@ -171,10 +171,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
         self.infoBtn2.clicked.connect(self.pr_info)
-        self.processBox.setGeometry(10, 200, 381, 31) # when add Button visible, set 381 to 291
-        self.infoBtn2.setGeometry(360, 70, 31, 31)
+        self.processBox.setGeometry(10, 200, 401, 31) # when add Button visible, set 381 to 291
         self.infoBtn.setVisible(False)
-        self.infoBtn2.setGeometry(360, 200, 31, 31) # remove, when add Button is visible
+        self.infoBtn2.setGeometry(380, 200, 31, 31) # remove, when add Button is visible
         self.infoBtn2.setVisible(False)
 
         self.checkBox1.hide()
@@ -546,14 +545,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Produces a checkable QListWidget
         :return: Of all bands, only the selected bands are returned.
         """
+        self.processgraphBands.clear()
         self.band_window = QWidget()
         self.hbox4 = QHBoxLayout()
         self.bandBox = QListWidget()
-        self.bandBox.insertItem(1, QListWidgetItem(str(self.all_bands)))
+
+        for band in self.all_bands:
+            self.bandBox.insertItem(0, str(band))
+            self.bandBox.sortItems()
+
         self.hbox4.addWidget(self.bandBox)
         self.band_window.setLayout(self.hbox4)
         self.band_window.setGeometry(400, 400, 600, 450)
-        self.band_window.setWindowTitle('Collection Information')
+        self.band_window.setWindowTitle('Select multiple bands')
         self.band_window.show()
 
     def web_view(self):
@@ -594,9 +598,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processes = process_result
 
         self.infoBtn.setVisible(True)
-        self.collectionBox.setGeometry(10, 80, 341, 31)
+        self.collectionBox.setGeometry(10, 80, 361, 31)
         self.infoBtn2.setVisible(True)
-        self.processBox.setGeometry(10, 200, 341, 31)  # when add Button is visible - set 351 to 261
+        self.processBox.setGeometry(10, 200, 361, 31)  # when add Button is visible - set 351 to 261
 
         self.collectionBox.clear()
         self.processBox.clear()

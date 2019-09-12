@@ -145,7 +145,7 @@
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>icon_new.png</pixmap>
+     <pixmap>../../../../../../../../../../../../../../../../.designer/backup/icon_new.png</pixmap>
     </property>
     <property name="scaledContents">
      <bool>true</bool>
@@ -239,7 +239,7 @@
      </property>
      <property name="icon">
       <iconset>
-       <normaloff>reload_icon.png</normaloff>reload_icon.png</iconset>
+       <normaloff>../../../../../../../../../../../../../../../../.designer/backup/reload_icon.png</normaloff>../../../../../../../../../../../../../../../../.designer/backup/reload_icon.png</iconset>
      </property>
     </widget>
     <widget class="QLabel" name="label_22">
@@ -269,7 +269,7 @@
      </property>
      <property name="icon">
       <iconset>
-       <normaloff>delete_job.png</normaloff>delete_job.png</iconset>
+       <normaloff>../../../../../../../../../../../../../../../../.designer/backup/delete_job.png</normaloff>../../../../../../../../../../../../../../../../.designer/backup/delete_job.png</iconset>
      </property>
     </widget>
     <widget class="QPushButton" name="deleteFinalButton">
@@ -286,7 +286,7 @@
      </property>
      <property name="icon">
       <iconset>
-       <normaloff>deleteFinalBtn.png</normaloff>deleteFinalBtn.png</iconset>
+       <normaloff>../../../../../../../../../../../../../../../../.designer/backup/deleteFinalBtn.png</normaloff>../../../../../../../../../../../../../../../../.designer/backup/deleteFinalBtn.png</iconset>
      </property>
     </widget>
    </widget>
@@ -604,7 +604,7 @@
      </property>
      <property name="icon">
       <iconset>
-       <normaloff>reload_icon.png</normaloff>reload_icon.png</iconset>
+       <normaloff>../../../../../../../../../../../../../../../../.designer/backup/reload_icon.png</normaloff>../../../../../../../../../../../../../../../../.designer/backup/reload_icon.png</iconset>
      </property>
     </widget>
     <widget class="QPushButton" name="infoBtn">
@@ -686,7 +686,7 @@
     <widget class="QCheckBox" name="checkBox1">
      <property name="geometry">
       <rect>
-       <x>20</x>
+       <x>10</x>
        <y>470</y>
        <width>371</width>
        <height>23</height>
@@ -696,32 +696,44 @@
       <string/>
      </property>
     </widget>
-    <widget class="QCheckBox" name="checkBox2">
+    <widget class="QTextEdit" name="processgraphBands">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>490</y>
-       <width>371</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
-    <widget class="QCheckBox" name="checkBox3">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
+       <x>10</x>
        <y>510</y>
-       <width>371</width>
-       <height>23</height>
+       <width>381</width>
+       <height>31</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="multipleBandBtn">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>470</y>
+       <width>171</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string/>
+      <string>Choose multiple bands</string>
      </property>
     </widget>
+    <widget class="QPushButton" name="allBandBtn">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>470</y>
+       <width>171</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Select all bands</string>
+     </property>
+    </widget>
+    <zorder>processgraphBands</zorder>
+    <zorder>multipleBandBtn</zorder>
     <zorder>moveButton</zorder>
     <zorder>collectionBox</zorder>
     <zorder>processBox</zorder>
@@ -750,8 +762,7 @@
     <zorder>line_4</zorder>
     <zorder>label_11</zorder>
     <zorder>checkBox1</zorder>
-    <zorder>checkBox2</zorder>
-    <zorder>checkBox3</zorder>
+    <zorder>allBandBtn</zorder>
    </widget>
    <widget class="QWidget" name="tab_2">
     <attribute name="title">

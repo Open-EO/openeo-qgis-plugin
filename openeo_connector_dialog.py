@@ -31,13 +31,15 @@ from collections import OrderedDict
 import webbrowser
 
 from qgis.PyQt import uic, QtGui, QtWidgets
-from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, QApplication, QAction, QMainWindow, QFileDialog
+from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, \
+    QApplication, QAction, QMainWindow, QFileDialog
 import qgis.PyQt.QtCore as QtCore
 from qgis.core import QgsVectorLayer
 from qgis.utils import iface
 
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit, QListWidget, QListWidgetItem
+from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit, QListWidget, \
+    QDialog, QVBoxLayout, QListWidgetItem, QLabel
 from PyQt5 import QtCore
 from PyQt5.QtCore import QDate
 from PyQt5 import QtGui
@@ -161,7 +163,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
         self.infoBtn.clicked.connect(self.col_info)
-        self.collectionBox.setGeometry(10, 70, 381, 31)
+        self.collectionBox.setGeometry(10, 80, 381, 31)
         self.infoBtn2.setStyleSheet('''   
                                  border-image: url("./info_icon.png") 10 10 0 0;
                                  border-top: 10px transparent;
@@ -176,8 +178,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.infoBtn2.setVisible(False)
 
         self.checkBox1.hide()
-        self.checkBox2.hide()
-        self.checkBox3.hide()
+        self.processgraphBands.hide()
+        self.multipleBandBtn.hide()
+        self.multipleBandBtn.clicked.connect(self.multiple_bands)
+        self.allBandBtn.hide()
+#        self.allBandBtn.clicked.connect()
 
         #self.set_font()
         # Jobs Tab
@@ -511,9 +516,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def bands_selected(self):
         collection_result = self.connection.list_collections()
         selected_process = str(self.collectionBox.currentText())
-        window = QWidget()
-        layout = QtWidgets.QVBoxLayout(window)
-        list_widget = QListWidget()
+
         for col in collection_result:
             if str(col['id']) == selected_process:
                 data = self.connection.get('/collections/{}'.format(col['id']), auth=False)
@@ -521,50 +524,41 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     band_info = data.json()
                     bands = band_info['properties']['cube:dimensions']['bands']['values']
 
-                    all_bands = []
+                    self.all_bands = []
                     for each_band in bands:
-                        all_bands.append(each_band)
-                        self.processgraphEdit.setText(str(all_bands)) # returns all bands per data set
-                        #if len(all_bands) <= 1:
-                        #    self.checkBox1.setText(all_bands[0])
-                        #    self.checkBox1.show()
-                        #elif len(bands) <= 2:
-                        #    self.checkBox1.setText(all_bands[0])
-                        #    self.checkBox1.show()
-                        #    self.checkBox2.setText(all_bands[1])
-                        #    self.checkBox2.show()
-                        #elif len(bands) <= 3:
-                        #    self.checkBox1.setText(all_bands[0])
-                        #    self.checkBox1.show()
-                       #     self.checkBox2.setText(all_bands[1])
-                       #     self.checkBox2.show()
-                       #     self.checkBox3.setText(all_bands[2])
-                       #     self.checkBox3.show()
-                        #else:
-                        #    for band in range(len(bands)):
-                        #        list_widget.addItem(str(band))
-                        #        layout.addWidget(list_widget)
-                        #        window.show()
+                        self.all_bands.append(each_band)
+
+                        if len(self.all_bands) == 1:
+                            self.checkBox1.setText(self.all_bands[0])
+                            self.checkBox1.show()
+                            self.processgraphBands.hide()
+                            self.multipleBandBtn.hide()
+                            self.allBandBtn.hide()
+                        else:
+                            self.checkBox1.hide()
+                            self.multipleBandBtn.show()
+                            self.allBandBtn.show()
+                            self.processgraphBands.setText(str(self.all_bands).replace("'", '"'))
+                            self.processgraphBands.show()
+
+    def multiple_bands(self):
+        """
+        Produces a checkable QListWidget
+        :return: Of all bands, only the selected bands are returned.
+        """
+        self.band_window = QWidget()
+        self.hbox4 = QHBoxLayout()
+        self.bandBox = QListWidget()
+        self.bandBox.insertItem(1, QListWidgetItem(str(self.all_bands)))
+        self.hbox4.addWidget(self.bandBox)
+        self.band_window.setLayout(self.hbox4)
+        self.band_window.setGeometry(400, 400, 600, 450)
+        self.band_window.setWindowTitle('Collection Information')
+        self.band_window.show()
 
     def web_view(self):
-
         webbrowser.open("https://open-eo.github.io/openeo-web-editor/demo/")
-
-        ### Old approach, which opens Webeditor Demoversion directly in QGIS
-        #self.webWindow = QWidget()
-        #self.web = QWebView(self)
-        #self.web.load(QUrl("https://mliang8.github.io/SoilWaterCube/")) #"https://open-eo.github.io/"))  # both work
-        # web.load(QUrl("https://open-eo.github.io/openeo-web-editor/demo/")) # Error: Sorry, the openEO Web Editor requires a modern browsers.
-        # Please update your browser or use Google Chrome or Mozilla Firefox as alternative.
-        #self.button = QPushButton('Close Web Editor', self)
-        #self.button.clicked.connect(self.web_view_close)
-        #self.hbox = QHBoxLayout()
-        #self.hbox.addWidget(self.web)
-        #self.hbox.addWidget(self.button)
-        #self.webWindow.setLayout(self.hbox)
-        #self.webWindow.setGeometry(550, 420, 800, 600)
-        #self.webWindow.setWindowTitle('Web Editor')
-        #self.webWindow.show()
+        # QWebEngineView, QWebView...
 
     def web_view_close(self):
         self.webWindow.close()
@@ -600,7 +594,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processes = process_result
 
         self.infoBtn.setVisible(True)
-        self.collectionBox.setGeometry(10, 70, 341, 31)
+        self.collectionBox.setGeometry(10, 80, 341, 31)
         self.infoBtn2.setVisible(True)
         self.processBox.setGeometry(10, 200, 341, 31)  # when add Button is visible - set 351 to 261
 
@@ -841,10 +835,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if texE < texS:
             self.iface.messageBar().pushMessage("Start Date must be before End Date", duration=5)
 
-        if self.checkBox1.isChecked():
-            band = self.checkBox1.text()
-        if not self.checkBox1.isChecked():
-            band = "null"
+        if len(self.all_bands) == 1:
+            if self.checkBox1.isChecked():
+                band = str('["') + self.checkBox1.text() + str('"]')
+            if not self.checkBox1.isChecked():
+                band = "null"
+        else:
+            band = self.processgraphBands.toPlainText()
 
         arguments = OrderedDict({
             "id": col,

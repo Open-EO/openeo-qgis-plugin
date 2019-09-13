@@ -180,6 +180,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.multipleBandBtn.hide()
         self.multipleBandBtn.clicked.connect(self.multiple_bands)
         self.allBandBtn.hide()
+        self.allBandBtn.clicked.connect(self.save_band_choice1)
 
         #self.set_font()
         # Jobs Tab
@@ -543,6 +544,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Produces a checkable QListWidget
         :return: Of all bands, only the selected bands are returned.
         """
+        self.allBandBtn.setStyleSheet("background-color: white")
+        if self.multipleBandBtn.clicked:
+            self.multipleBandBtn.setStyleSheet("background-color: grey")
+
         self.processgraphBands.clear()
         self.band_window = QWidget()
         self.hbox4 = QHBoxLayout()
@@ -563,10 +568,20 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.takeBandsButton = QPushButton('Save Choice of Bands', self.band_window)
         self.takeBandsButton.setGeometry(420, 25, 150, 31)
         self.band_window.show()
-        self.takeBandsButton.clicked.connect(self.save_band_choice)
+        self.takeBandsButton.clicked.connect(self.save_band_choice2)
 
-    def save_band_choice(self):
+    def save_band_choice1(self):
+        self.allBandBtn.setStyleSheet("background-color: grey")
+        self.multipleBandBtn.setStyleSheet("background-color: white")
+        self.processgraphBands.setText(str(self.all_bands))
+
+    def save_band_choice2(self):
+        #band_wish = []
+        #for item in self.bandBox.itemClicked(self.item):
+        #    band_wish.append(item.text())
         self.processgraphBands.setText(str(self.bandBox.selectedItems()))
+            #for item in self.bandBox.selectedItems():
+            #    band_wish.append(str(item.text()))
 
     def web_view(self):
         webbrowser.open("https://open-eo.github.io/openeo-web-editor/demo/")

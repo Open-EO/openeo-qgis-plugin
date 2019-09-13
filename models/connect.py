@@ -235,7 +235,12 @@ class Connection:
         :param path: URL of the request (without root URL e.g. "/data")
         :return: response: Response
         """
+        auth_header = self.get_header()
+        auth = self.get_auth()
+        return requests.delete(self._url+path, headers=auth_header, auth=auth)
 
+    def delete_job(self, job_id):
+        path = "/jobs/{}".format(job_id)
         auth_header = self.get_header()
         auth = self.get_auth()
         return requests.delete(self._url+path, headers=auth_header, auth=auth)

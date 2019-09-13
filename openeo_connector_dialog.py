@@ -940,7 +940,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.chosenRow = self.jobsTableWidget.currentRow()
         self.jobsTableWidget.removeRow(self.chosenRow)
 
-    def delete_job_final(self):
+    def delete_job_final(self, row):
         job_id = self.jobsTableWidget.item(row, 0).text()
         self.connection.delete_job(job_id)
         self.refresh_jobs()

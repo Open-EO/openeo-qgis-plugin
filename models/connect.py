@@ -4,7 +4,6 @@ import tempfile
 import json
 
 class Connection:
-
     def connect(self, url, username=None, password=None) -> bool:
         """
         Authenticates a user to the backend using auth class.
@@ -116,6 +115,35 @@ class Connection:
         """
         request = self.post("/jobs/{}/results".format(job_id), postdata=None)
         return request.status_code
+
+    def job_info(self, job_id):
+        """
+        Returns information about a created job.
+        :param: job_id: Identifier of the job
+        :return: jobs: Strings containing details about the created jobs.
+        """
+        requested_info = "/jobs/{}".format(job_id)
+        get_info = self.get(requested_info, stream=True)
+        json = get_info.json()
+
+        title = json['title']
+        description = json['description']
+        cost = json['costs']
+        # Data & Extents
+        for key in json['process_graph'].keys():
+            if "load_collection" in key:
+                data_set = json['process_graph'][key]['arguments']['id']
+                temporal_extent = json['process_graph'][key]['arguments']['spatial_extent']
+                spatial_extent = json['process_graph'][key]['arguments']['temporal_extent']
+        # Processes
+        processes = []
+        for process in json['process_graph'].keys():
+            processes.append(process)
+
+        job_info = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}. \nTemporal Extent: {}. \nCost: {}.".\
+            format(title, description, data_set, processes, spatial_extent, temporal_extent, cost).replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
+
+        return job_info
 
     def job_result_url(self, job_id):
         """

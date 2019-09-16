@@ -436,16 +436,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.dateWindow = QWidget()
 
         self.start_calendar = QCalendarWidget(self)
-        self.start_calendar.setMinimumDate(QDate(int(self.min_year), int(self.min_month), int(self.min_day)))
-        self.StartDateEdit.setMinimumDate(QDate(int(self.min_year), int(self.min_month), int(self.min_day)))
+        self.start_calendar.setMinimumDate(self.minimum_date)
+        self.StartDateEdit.setMinimumDate(self.minimum_date)
 
         self.end_calendar = QCalendarWidget(self)
         if self.max_date == None:
             self.end_calendar.setMaximumDate(QDate.currentDate())
             self.EndDateEdit.setMaximumDate(QDate.currentDate())
         else:
-            self.end_calendar.setMaximumDate(QDate(int(self.max_year), int(self.max_month), int(self.max_day)))
-            self.EndDateEdit.setMaximumDate(QDate(int(self.max_year), int(self.max_month), int(self.max_day)))
+            self.end_calendar.setMaximumDate(self.maximum_date)
+            self.EndDateEdit.setMaximumDate(self.maximum_date)
 
         self.start_calendar.clicked[QDate].connect(self.pick_start)
         self.end_calendar.clicked[QDate].connect(self.pick_end)
@@ -474,7 +474,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                         self.min_year = self.min_date[0:4]
                         self.min_month = self.min_date[5:7]
                         self.min_day = self.min_date[8:10]
-                        self.StartDateEdit.setDate(QDate(int(self.min_year), int(self.min_month), int(self.min_day)))
+                        self.minimum_date = QDate(int(self.min_year), int(self.min_month), int(self.min_day))
+                        self.StartDateEdit.setDate(self.minimum_date)
 
                         # set maximum date
                         self.max_date = col['extent']['temporal'][1]
@@ -485,7 +486,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                             self.max_year = self.max_date[0:4]
                             self.max_month = self.max_date[5:7]
                             self.max_day = self.max_date[8:10]
-                            self.EndDateEdit.setDate(QDate(int(self.max_year), int(self.max_month), int(self.max_day)))
+                            self.maximum_date = QDate(int(self.max_year), int(self.max_month), int(self.max_day))
+                            self.EndDateEdit.setDate(self.maximum_date)
 
     def pick_start(self):
         if self.selectDate.clicked:
@@ -984,19 +986,27 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         Loads the collection form the GUI and starts a new process graph in doing so.
         """
+        # Collections
         col = str(self.collectionBox.currentText())
+
+        # Spatial Extent
         ex = self.processgraphSpatialExtent.toPlainText()
+
+        # Temporal Extent
         texS = self.show_start()
         texE = self.show_end()
         if texE < texS:
             self.iface.messageBar().pushMessage("Start Date must be before End Date", duration=5)
         if self.min_date:
-            if texS < QDate(int(self.min_year), int(self.min_month), int(self.min_day)).toString():
-                self.iface.messageBar().pushMessage("This sensor was not active at your desired start date", duration=5)
+            if texS < self.minimum_date.toString("yyyy-MM-dd"):
+                self.iface.messageBar().pushMessage("This sensor was not active at your desired start date. The start date was set to the earliest possible start date.", duration=5)
+                texS = self.minimum_date.toString("yyyy-MM-dd")
         if self.max_date:
-            if texE > QDate(int(self.max_year), int(self.max_month), int(self.max_day)).toString():
-                self.iface.messageBar().pushMessage("This sensor was not active at your desired end date", duration=5)
+            if texE > self.maximum_date.toString("yyyy-MM-dd"):
+                self.iface.messageBar().pushMessage("This sensor was not active at your desired end date. The end date was set to the latest possible end date.", duration=5)
+                texE = self.maximum_date.toString("yyyy-MM-dd")
 
+        # Bands
         if len(self.all_bands) == 1:
             if self.checkBox1.isChecked():
                 band = str('["') + self.checkBox1.text() + str('"]')
@@ -1005,6 +1015,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             band = self.processgraphBands.toPlainText()
 
+        # Arguments
         arguments = OrderedDict({
             "id": col,
             "spatial_extent": ex,

@@ -579,11 +579,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.multipleBandBtn.setStyleSheet("background-color: white")
         self.processgraphBands.setText(str(self.all_bands))
 
+        self.allBandBtn.setStyleSheet("background-color: grey")
+        self.multipleBandBtn.setStyleSheet("background-color: white")
+
     def save_band_choice2(self):
         checked_items = []
         for index in range(self.bandBox.count()):
             if self.bandBox.item(index).checkState() == Qt.Checked:
                 checked_items.append(self.bandBox.item(index).text())
+                self.processgraphBands.setText(str(checked_items))
+
+        self.allBandBtn.setStyleSheet("background-color: white")
+        self.multipleBandBtn.setStyleSheet("background-color: grey")
 
     def web_view(self):
         webbrowser.open("https://open-eo.github.io/openeo-web-editor/demo/")

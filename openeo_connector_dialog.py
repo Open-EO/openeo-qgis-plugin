@@ -151,8 +151,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Temporal Extent
         self.selectDate.clicked.connect(self.add_temporal)
-        self.StartDateEdit.setDate(QDate.currentDate())
-        self.EndDateEdit.setDate(QDate.currentDate())
 
         # Link to the Web Editor Demo Version:
         self.moveButton.clicked.connect(self.web_view)
@@ -436,13 +434,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def add_temporal(self):
         QMainWindow.show(self)
         self.dateWindow = QWidget()
+
         self.start_calendar = QCalendarWidget(self)
         self.start_calendar.setMinimumDate(QDate(int(self.min_year), int(self.min_month), int(self.min_day)))
+        self.StartDateEdit.setMinimumDate(QDate(int(self.min_year), int(self.min_month), int(self.min_day)))
+
         self.end_calendar = QCalendarWidget(self)
         if self.max_date == None:
             self.end_calendar.setMaximumDate(QDate.currentDate())
+            self.EndDateEdit.setMaximumDate(QDate.currentDate())
         else:
             self.end_calendar.setMaximumDate(QDate(int(self.max_year), int(self.max_month), int(self.max_day)))
+            self.EndDateEdit.setMaximumDate(QDate(int(self.max_year), int(self.max_month), int(self.max_day)))
+
         self.start_calendar.clicked[QDate].connect(self.pick_start)
         self.end_calendar.clicked[QDate].connect(self.pick_end)
         self.hbox = QHBoxLayout()
@@ -463,23 +467,25 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     # in case nothing is listed:
                     if col['extent']['temporal'] == "[]":
                         self.end_calendar.setMaximumDate(QDate.currentDate())
+                        self.EndDateEdit.setMaximumDate(QDate.currentDate())
                     else:
                         # set minimum date
                         min_date = col['extent']['temporal'][0]
                         self.min_year = min_date[0:4]
                         self.min_month = min_date[5:7]
                         self.min_day = min_date[8:10]
+                        self.StartDateEdit.setDate(QDate(int(self.min_year), int(self.min_month), int(self.min_day)))
 
                         # set maximum date
                         self.max_date = col['extent']['temporal'][1]
-                        #self.processgraphSpatialExtent.setText(str(self.max_date))  # can be None, can be a date, ...
                         if self.max_date == None:
                             self.max_date = None
+                            self.EndDateEdit.setDate(QDate.currentDate())
                         else:
                             self.max_year = self.max_date[0:4]
                             self.max_month = self.max_date[5:7]
                             self.max_day = self.max_date[8:10]
-
+                            self.EndDateEdit.setDate(QDate(int(self.max_year), int(self.max_month), int(self.max_day)))
 
     def pick_start(self):
         if self.selectDate.clicked:
@@ -531,7 +537,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                         self.all_bands.append(each_band)
 
                         if len(self.all_bands) == 1:
-                            self.checkBox1.setText(self.all_bands[0])
+                            self.checkBox1.setText(str(self.all_bands[0]))
                             self.checkBox1.show()
                             self.processgraphBands.hide()
                             self.multipleBandBtn.hide()

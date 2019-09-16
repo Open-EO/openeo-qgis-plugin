@@ -128,22 +128,21 @@ class Connection:
 
         title = json['title']
         description = json['description']
+        process_graph = json['process_graph']
         cost = json['costs']
-        # Data & Extents
+        processes = []
+        # Data & Extents & Processes
         for key in json['process_graph'].keys():
             if "load_collection" in key:
                 data_set = json['process_graph'][key]['arguments']['id']
                 temporal_extent = json['process_graph'][key]['arguments']['spatial_extent']
                 spatial_extent = json['process_graph'][key]['arguments']['temporal_extent']
-        # Processes
-        processes = []
-        for process in json['process_graph'].keys():
-            processes.append(process)
+                processes.append(key)
 
-        job_info = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}. \nTemporal Extent: {}. \nCost: {}.".\
-            format(title, description, data_set, processes, spatial_extent, temporal_extent, cost).replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
+                job_info = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}. \nTemporal Extent: {}. \nCost: {}.".\
+                    format(title, description, data_set, processes, spatial_extent, temporal_extent, cost).replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
 
-        return job_info
+                return job_info, process_graph
 
     def job_result_url(self, job_id):
         """
@@ -235,7 +234,12 @@ class Connection:
         :param path: URL of the request (without root URL e.g. "/data")
         :return: response: Response
         """
+        auth_header = self.get_header()
+        auth = self.get_auth()
+        return requests.delete(self._url+path, headers=auth_header, auth=auth)
 
+    def delete_job(self, job_id):
+        path = "/jobs/{}".format(job_id)
         auth_header = self.get_header()
         auth = self.get_auth()
         return requests.delete(self._url+path, headers=auth_header, auth=auth)

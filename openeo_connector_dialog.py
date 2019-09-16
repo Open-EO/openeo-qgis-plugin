@@ -580,13 +580,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processgraphBands.setText(str(self.all_bands))
 
     def save_band_choice2(self):
-        band_wish = []
-        if self.item.checkState == Qt.Checked:
-            #for item in self.bandBox:
-            #    band_wish.append(item)
-            self.processgraphBands.setText(str(self.item.text()))
-        elif not self.item.checkState == Qt.Checked:
-            self.processgraphBands.setText(str(self.item.text())) # None should be returned
+        checked_items = []
+        for index in range(self.bandBox.count()):
+            if self.bandBox.item(index).checkState() == Qt.Checked:
+                checked_items.append(self.bandBox.item(index).text())
 
     def web_view(self):
         webbrowser.open("https://open-eo.github.io/openeo-web-editor/demo/")

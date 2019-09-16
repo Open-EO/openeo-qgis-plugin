@@ -470,10 +470,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                         self.EndDateEdit.setMaximumDate(QDate.currentDate())
                     else:
                         # set minimum date
-                        min_date = col['extent']['temporal'][0]
-                        self.min_year = min_date[0:4]
-                        self.min_month = min_date[5:7]
-                        self.min_day = min_date[8:10]
+                        self.min_date = col['extent']['temporal'][0]
+                        self.min_year = self.min_date[0:4]
+                        self.min_month = self.min_date[5:7]
+                        self.min_day = self.min_date[8:10]
                         self.StartDateEdit.setDate(QDate(int(self.min_year), int(self.min_month), int(self.min_day)))
 
                         # set maximum date
@@ -990,6 +990,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         texE = self.show_end()
         if texE < texS:
             self.iface.messageBar().pushMessage("Start Date must be before End Date", duration=5)
+        if self.min_date:
+            if texS < QDate(int(self.min_year), int(self.min_month), int(self.min_day)).toString():
+                self.iface.messageBar().pushMessage("This sensor was not active at your desired start date", duration=5)
+        if self.max_date:
+            if texE > QDate(int(self.max_year), int(self.max_month), int(self.max_day)).toString():
+                self.iface.messageBar().pushMessage("This sensor was not active at your desired end date", duration=5)
 
         if len(self.all_bands) == 1:
             if self.checkBox1.isChecked():

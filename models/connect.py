@@ -24,6 +24,7 @@ class Connection:
                 self.token = token.json()["access_token"]
             else:
                 return False
+
         return True
 
     def get_header(self):

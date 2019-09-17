@@ -116,6 +116,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.backendEdit.addItems(backends) # or Backends
 
         self.connectButton.clicked.connect(self.connect)
+        self.disconnectButton.hide()
+        self.disconnectButton.clicked.connect(self.disconnect)
+
         self.addButton.clicked.connect(self.add_process)
         # Until it works properly:
         self.addButton.hide()
@@ -707,6 +710,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.bands_selected()
         else:
             self.statusLabel.setText("Connected to {} without user".format(url))
+
+        self.connectButton.hide()
+        self.disconnectButton.show()
+
+    def disconnect(self):
+        self.statusLabel.setText("Disconnected")
+        self.usernameEdit.clear()
+        self.passwordEdit.clear()
+        self.connectButton.show()
+        self.disconnectButton.hide()
 
     def col_info(self):
         collection_info_result = self.connection.list_collections()

@@ -154,9 +154,9 @@
    <widget class="QPushButton" name="connectButton">
     <property name="geometry">
      <rect>
-      <x>700</x>
+      <x>690</x>
       <y>100</y>
-      <width>81</width>
+      <width>101</width>
       <height>21</height>
      </rect>
     </property>
@@ -177,6 +177,21 @@
      <bool>true</bool>
     </property>
    </widget>
+   <widget class="QPushButton" name="disconnectButton">
+    <property name="geometry">
+     <rect>
+      <x>690</x>
+      <y>100</y>
+      <width>101</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Disconnect</string>
+    </property>
+   </widget>
+   <zorder>connectButton</zorder>
+   <zorder>disconnectButton</zorder>
    <zorder>backendEdit</zorder>
    <zorder>label</zorder>
    <zorder>label_2</zorder>
@@ -185,7 +200,6 @@
    <zorder>passwordEdit</zorder>
    <zorder>label_18</zorder>
    <zorder>label_20</zorder>
-   <zorder>connectButton</zorder>
   </widget>
   <widget class="QTabWidget" name="tabWidget">
    <property name="geometry">

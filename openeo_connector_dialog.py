@@ -612,23 +612,22 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         example_jobs_URL = requests.get('http://hub.openeo.org/api/process_graphs')
         self.examples_job_list = example_jobs_URL.json()
 
-        # Get names of all available processes (7)
-        self.example_jobs = []
+        # Get names and process graphs of all available processes (7)
+        self.example_jobs_t = []
+        self.example_jobs_pg = []
         for item in self.examples_job_list:
-            self.example_jobs.append("{}".format(item['title']))
-            self.example_jobs.append("{}".format(item['process_graph']))  # returns ALL process Graphs
-
-        self.processgraphEdit.setText(str(self.example_jobs))
+            self.example_jobs_t.append("{}".format(item['title']))
+            self.example_jobs_pg.append("{}".format(item['process_graph']))  # returns ALL process Graphs
 
         # Open a window, where desired job can be selected
         self.example_jobs_window = QWidget()
         self.hbox6 = QHBoxLayout()
         self.exampleJobBox = QListWidget()
-        for job in self.example_jobs:
+        for job in self.example_jobs_t:
             self.job_item = QListWidgetItem(self.exampleJobBox)
             self.job_item.setFlags(self.job_item.flags() | QtCore.Qt.ItemIsSelectable) # only one item can be selected this time
             self.job_item.setSelected(False)
-            self.job_item.setText(job)
+            self.job_item.setText(job) # add Titles as QListWidgetItems
 
         self.closeWindowBtn = QPushButton('Show process graph \n and close window')
         self.hbox6.addWidget(self.exampleJobBox)
@@ -640,9 +639,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.example_jobs_window.show()
 
     def pick_job_from_hub(self):
-        selected_job = self.exampleJobBox.currentItem()
-        self.processgraphEdit.setText(str(selected_job.text()))
-        self.example_jobs_window.close()
+        selected_job = self.exampleJobBox.currentRow()
+        id_selected_job = int(selected_job)
+        self.processgraphEdit.setText(self.example_jobs_pg[id_selected_job])
 
     def connect(self):
         """

@@ -289,24 +289,25 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 1)  # this returns only the 4 desired points, rounded
             polygons_boundingBox_json = json.loads(polygons_boundingBox_json_string)
             values = []
-            items = []
+#            items = []
 
-            for value in polygons_boundingBox_json.values():   # keys = ['type', 'coordinates'] , values
-                values.append(value)
-            for item in value:
-                items.append(item)
-            point1 = items[0][0]  # longitude first position, latitude second position
+            for points in polygons_boundingBox_json['coordinates']:   # keys = ['type', 'coordinates'] , values
+                values.append(points)
+
+            point1 = values[0][0]  # longitude first position, latitude second position
             point1_long = point1[0]
             point1_lat = point1[1]
-            point2 = items[0][1]
+            point2 = values[0][1]
             point2_long = point2[0]
             point2_lat = point2[1]
-            point3 = items[0][2]
+            point3 = values[0][2]
             point3_long = point3[0]
             point3_lat = point3[1]
-            point4 = items[0][3]
+            point4 = values[0][3]
             point4_long = point4[0]
             point4_lat = point4[1]
+
+            self.processgraphSpatialExtent.setText(str(values))
 
             long = []
             lat = []
@@ -585,7 +586,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def save_band_choice1(self):
         self.allBandBtn.setStyleSheet("background-color: grey")
         self.multipleBandBtn.setStyleSheet("background-color: white")
-        self.processgraphBands.setText(str(self.all_bands))
+        self.processgraphBands.setText(str(self.all_bands).replace("'", '"'))
 
         self.allBandBtn.setStyleSheet("background-color: grey")
         self.multipleBandBtn.setStyleSheet("background-color: white")
@@ -595,7 +596,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         for index in range(self.bandBox.count()):
             if self.bandBox.item(index).checkState() == Qt.Checked:
                 checked_items.append(self.bandBox.item(index).text())
-                self.processgraphBands.setText(str(checked_items))
+                self.processgraphBands.setText(str(checked_items).replace("'", '"'))
 
         self.allBandBtn.setStyleSheet("background-color: white")
         self.multipleBandBtn.setStyleSheet("background-color: grey")
@@ -1009,21 +1010,24 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         # Bands
         if len(self.all_bands) == 1:
             if self.checkBox1.isChecked():
-                band = str('["') + self.checkBox1.text() + str('"]')
+                band3 = self.checkBox1.text()
             if not self.checkBox1.isChecked():
-                band = "null"
+                band3 = None
         else:
-            band = self.processgraphBands.toPlainText()
+            band = (self.processgraphBands.toPlainText()) # replace() and json.dumps do not work
+            band1 = band.replace("\\", "")
+            band2 = band1.replace('"[', "")
+            band3 = band2.replace(']"', "")
 
         # Arguments
-        arguments = OrderedDict({
+        self.arguments = OrderedDict({
             "id": col,
             "spatial_extent": ex,
             "temporal_extent": [texS, texE],
-            "bands": band,
+            "bands": [band3],
         })
 
-        self.processgraph.load_collection(arguments)
+        self.processgraph.load_collection(self.arguments)
         # Refresh process graph in GUI
         self.reload_processgraph_view()
 

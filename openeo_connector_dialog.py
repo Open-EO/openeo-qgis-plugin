@@ -130,7 +130,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
         self.deleteButton.clicked.connect(self.del_job)
         self.deleteFinalButton.clicked.connect(self.delete_job_final)
-
+        self.loadHubBtn.clicked.connect(self.load_job_from_hub)
 
         extentBoxItems = OrderedDict(
             {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.draw_rect,
@@ -289,7 +289,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 1)  # this returns only the 4 desired points, rounded
             polygons_boundingBox_json = json.loads(polygons_boundingBox_json_string)
             values = []
-#            items = []
 
             for points in polygons_boundingBox_json['coordinates']:   # keys = ['type', 'coordinates'] , values
                 values.append(points)
@@ -608,6 +607,42 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def web_view_close(self):
         self.webWindow.close()
         return
+
+    def load_job_from_hub(self):
+        example_jobs_URL = requests.get('http://hub.openeo.org/api/process_graphs')
+        self.examples_job_list = example_jobs_URL.json()
+
+        # Get names of all available processes (7)
+        self.example_jobs = []
+        for item in self.examples_job_list:
+            self.example_jobs.append("{}".format(item['title']))
+            self.example_jobs.append("{}".format(item['process_graph']))  # returns ALL process Graphs
+
+        self.processgraphEdit.setText(str(self.example_jobs))
+
+        # Open a window, where desired job can be selected
+        self.example_jobs_window = QWidget()
+        self.hbox6 = QHBoxLayout()
+        self.exampleJobBox = QListWidget()
+        for job in self.example_jobs:
+            self.job_item = QListWidgetItem(self.exampleJobBox)
+            self.job_item.setFlags(self.job_item.flags() | QtCore.Qt.ItemIsSelectable) # only one item can be selected this time
+            self.job_item.setSelected(False)
+            self.job_item.setText(job)
+
+        self.closeWindowBtn = QPushButton('Show process graph \n and close window')
+        self.hbox6.addWidget(self.exampleJobBox)
+        self.hbox6.addWidget(self.closeWindowBtn)
+        self.closeWindowBtn.clicked.connect(self.pick_job_from_hub)
+        self.example_jobs_window.setLayout(self.hbox6)
+        self.example_jobs_window.setGeometry(400, 400, 600, 200)
+        self.example_jobs_window.setWindowTitle('Select a Job')
+        self.example_jobs_window.show()
+
+    def pick_job_from_hub(self):
+        selected_job = self.exampleJobBox.currentItem()
+        self.processgraphEdit.setText(str(selected_job.text()))
+        self.example_jobs_window.close()
 
     def connect(self):
         """

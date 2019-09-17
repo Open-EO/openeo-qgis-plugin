@@ -642,6 +642,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         selected_job = self.exampleJobBox.currentRow()
         id_selected_job = int(selected_job)
         self.processgraphEdit.setText(self.example_jobs_pg[id_selected_job])
+        self.example_jobs_window.close()
 
     def connect(self):
         """

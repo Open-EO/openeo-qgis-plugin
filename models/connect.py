@@ -143,7 +143,9 @@ class Connection:
                 job_info = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}. \nTemporal Extent: {}. \nCost: {}.".\
                     format(title, description, data_set, processes, spatial_extent, temporal_extent, cost).replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
 
-                return job_info, process_graph
+                info_combined = "[{}], [{}]".format(job_info, process_graph)
+
+                return info_combined
 
     def job_result_url(self, job_id):
         """

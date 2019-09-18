@@ -1032,14 +1032,24 @@
   <widget class="QPushButton" name="operationManualBtn">
    <property name="geometry">
     <rect>
-     <x>650</x>
+     <x>790</x>
      <y>150</y>
-     <width>171</width>
-     <height>31</height>
+     <width>45</width>
+     <height>41</height>
     </rect>
    </property>
    <property name="text">
-    <string>Operation Manual</string>
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>user_manual_icon.png</normaloff>user_manual_icon.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>40</width>
+     <height>40</height>
+    </size>
    </property>
   </widget>
  </widget>

@@ -148,6 +148,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
         self.loadButton.setEnabled(False)
+        self.insertChangeBtn.clicked.connect(self.insertChange)
         self.deleteButton.clicked.connect(self.del_job)
         self.deleteFinalButton.clicked.connect(self.delete_job_final)
         self.loadHubBtn.clicked.connect(self.load_job_from_hub)
@@ -988,7 +989,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.infoWindow3.setWindowTitle('Job Information')
             self.infoWindow3.show()
 
-        elif self.processGraphBtn.clicked:
+        if self.processGraphBtn.clicked:
             self.infoWindow4 = QWidget()
             self.hbox5 = QHBoxLayout()
             self.infoBox4 = QTextEdit()
@@ -1220,6 +1221,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             warning(self.iface, "Not able to created new job, Response: {}".format(str(response.json())))
 
         self.refresh_jobs()
+
+    def insertChange(self):
+        self.processgraphEdit.currentText()
 
     def del_job(self):
         self.chosenRow = self.jobsTableWidget.currentRow()

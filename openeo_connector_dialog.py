@@ -82,7 +82,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.connection = Connection()
         self.processgraph = Processgraph()
         self.called = False
-
         self.processes = None
 
         self.setupUi(self)
@@ -120,7 +119,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.connectButton.clicked.connect(self.connect)
         self.disconnectButton.hide()
         self.disconnectButton.clicked.connect(self.disconnect)
-
+        self.operationManualBtn.clicked.connect(self.user_manual)
         self.addButton.clicked.connect(self.add_process)
         # Does not work properly yet!
         self.addButton.setVisible(False)
@@ -689,6 +688,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         id_selected_job = int(selected_job)
         self.processgraphEdit.setText(self.example_jobs_pg[id_selected_job])
         self.example_jobs_window.close()
+
+    def user_manual(self):
+        self.umWindow = QWidget()
+        self.hbox7 = QHBoxLayout()
+        self.umBox = QTextEdit()
+        self.umBox.setText(str("Write a text about how this works ..."))
+        self.umBox.setReadOnly(True)
+        self.hbox7.addWidget(self.umBox)
+        self.umWindow.setLayout(self.hbox7)
+        self.umWindow.setGeometry(400, 400, 600, 450)
+        self.umWindow.setWindowTitle('User Manual')
+        self.umWindow.show()
 
     def connect(self):
         """

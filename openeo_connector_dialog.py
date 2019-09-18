@@ -199,10 +199,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
         self.infoBtn2.clicked.connect(self.pr_info)
-        self.processBox.setGeometry(10, 200, 401, 31)  # when add Button visible, set 381 to 291
+        self.processBox.setGeometry(10, 170, 401, 31)  # when add Button visible, set 381 to 291
         self.infoBtn.setVisible(False)
         self.infoBtn.setEnabled(False)
-        self.infoBtn2.setGeometry(300, 200, 31, 31)  # remove, when add Button is visible
+        self.infoBtn2.setGeometry(300, 170, 31, 31)  # remove, when add Button is visible
         self.infoBtn2.setVisible(False)
         self.infoBtn2.setEnabled(False)
 
@@ -598,6 +598,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         :return: Of all bands, only the selected bands are returned.
         """
         self.allBandBtn.setStyleSheet("background-color: white")
+        self.multipleBandBtn.setStyleSheet("background-color: white")
         if self.multipleBandBtn.clicked:
             self.multipleBandBtn.setStyleSheet("background-color: grey")
 
@@ -719,7 +720,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.collectionBox.setGeometry(10, 80, 361, 31)
         self.infoBtn2.setVisible(True)
         self.addButton.setVisible(True)
-        self.processBox.setGeometry(10, 200, 281, 31)  # when add Button is visible - set 351 to 261
+        self.processBox.setGeometry(10, 170, 281, 31)  # when add Button is visible - set 351 to 261
 
         self.collectionBox.clear()
         self.processBox.clear()
@@ -766,7 +767,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if self.collectionBox.currentText() == "Choose one of the data sets listed below":
             self.collectionBox.setGeometry(10, 80, 401, 31)
             self.infoBtn.hide()
-            self.processBox.setGeometry(10, 200, 401, 31)
+            self.processBox.setGeometry(10, 170, 401, 31)
             self.infoBtn2.hide()
             self.addButton.hide()
             self.processBox.setEnabled(False)
@@ -789,7 +790,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.infoBtn2.setEnabled(True)
 
             if self.processBox.currentText() == "Select one or many jobs":
-                self.processBox.setGeometry(10, 200, 401, 31)
+                self.processBox.setGeometry(10, 170, 401, 31)
                 self.infoBtn2.hide()
                 self.addButton.hide()
                 self.processgraphBands.setEnabled(False)
@@ -799,7 +800,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 self.label_11.setEnabled(False)
                 self.processTableWidget.clear()
             elif self.processBox.currentTextChanged:
-                self.processBox.setGeometry(10, 200, 281, 31)
+                self.processBox.setGeometry(10, 170, 281, 31)
                 self.infoBtn2.show()
                 self.addButton.show()
                 self.processgraphBands.setEnabled(True)

@@ -686,7 +686,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def pick_job_from_hub(self):
         selected_job = self.exampleJobBox.currentRow()
         id_selected_job = int(selected_job)
-        self.processgraphEdit.setText(self.example_jobs_pg[id_selected_job])
+        self.processgraphEdit_2.setText(self.example_jobs_pg[id_selected_job])
         self.example_jobs_window.close()
 
     def user_manual(self):
@@ -1234,7 +1234,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.refresh_jobs()
 
     def insertChange(self):
-        self.processgraphEdit.currentText()
+        example_json = self.processgraphEdit.toPlainText()
 
     def del_job(self):
         self.chosenRow = self.jobsTableWidget.currentRow()

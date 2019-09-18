@@ -127,7 +127,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.addButton.setEnabled(False)
         self.nextButton.setEnabled(False)
         self.previousButton.setEnabled(False)
-        self.nextButton.clicked.connect(self.start_wizard0)
         self.label_10.setEnabled(False)  # 1. Create New Job in QGis Plugin
 
         self.collectionBox.currentTextChanged.connect(self.bands_selected)
@@ -148,6 +147,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.clearButton.clicked.connect(self.clear)  # Clear Button
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
+        self.loadButton.setEnabled(False)
         self.deleteButton.clicked.connect(self.del_job)
         self.deleteFinalButton.clicked.connect(self.delete_job_final)
         self.loadHubBtn.clicked.connect(self.load_job_from_hub)
@@ -174,6 +174,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         # Set initial button visibility correctly
         self.drawBtn.clicked.connect(self.draw)
         self.drawBtn.setVisible(False)
+        self.drawBtn.setEnabled(False)
         self.getBtn.clicked.connect(self.display_before_load)
         self.getBtn.setVisible(True)
         self.getBtn.setEnabled(False)
@@ -631,8 +632,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.allBandBtn.setStyleSheet("background-color: grey")
         self.multipleBandBtn.setStyleSheet("background-color: white")
         self.processgraphBands.setText(str(self.all_bands).replace("'", '"'))
-        self.allBandBtn.setStyleSheet("background-color: grey")
-        self.multipleBandBtn.setStyleSheet("background-color: white")
 
     def save_band_choice2(self):
         checked_items = []
@@ -640,8 +639,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             if self.bandBox.item(index).checkState() == Qt.Checked:
                 checked_items.append(self.bandBox.item(index).text())
                 self.processgraphBands.setText(str(checked_items).replace("'", '"'))
-        if self.takeBandsButton.clicked:
-            self.band_window.close()
+                if self.takeBandsButton.clicked:
+                    self.band_window.close()
         self.allBandBtn.setStyleSheet("background-color: white")
         self.multipleBandBtn.setStyleSheet("background-color: grey")
 
@@ -798,6 +797,23 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.label_7.setEnabled(True)  # 1.2 Add Process
         self.addButton.setEnabled(True)
         self.infoBtn2.setEnabled(True)
+
+        self.processgraphBands.setEnabled(False)
+        self.checkBox1.setEnabled(False)
+        self.multipleBandBtn.setEnabled(False)
+        self.allBandBtn.setEnabled(False)
+        self.label_11.setEnabled(False)
+        self.label_9.setEnabled(False)
+        self.selectDate.setEnabled(False)
+        self.StartDateEdit.setEnabled(False)
+        self.EndDateEdit.setEnabled(False)
+        self.label_8.setEnabled(False)
+        self.extentBox.setEnabled(False)
+        self.layersBox.setEnabled(False)
+        self.getBtn.setEnabled(False)
+        self.drawBtn.setEnabled(False)
+        self.processgraphSpatialExtent.setEnabled(False)
+
         if self.collectionBox.currentTextChanged:
             self.nextButton.clicked.connect(self.start_wizard0)
         if self.processBox.currentText() == "Select a job":
@@ -812,15 +828,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.processBox.setGeometry(10, 170, 281, 31)
             self.infoBtn2.show()
             self.addButton.show()
-
-            self.processgraphBands.setEnabled(False)
-            self.checkBox1.setEnabled(False)
-            self.multipleBandBtn.setEnabled(False)
-            self.allBandBtn.setEnabled(False)
-            self.label_11.setEnabled(False)
-
             self.nextButton.setEnabled(True)
             self.nextButton.clicked.connect(self.start_wizard2)
+
         self.previousButton.setEnabled(True)
         self.previousButton.clicked.connect(self.start_wizard0)
 
@@ -835,11 +845,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.multipleBandBtn.setEnabled(True)
         self.allBandBtn.setEnabled(True)
         self.label_11.setEnabled(True)
+
+        self.label_9.setEnabled(False)
+        self.selectDate.setEnabled(False)
+        self.StartDateEdit.setEnabled(False)
+        self.EndDateEdit.setEnabled(False)
+
         self.nextButton.clicked.connect(self.start_wizard3)
         self.previousButton.setEnabled(True)
         self.previousButton.clicked.connect(self.start_wizard1)
-        if self.collectionBox.currentTextChanged:
-            self.nextButton.clicked.connect(self.start_wizard0)
 
     def start_wizard3(self):
         self.label_12.setText("Step 4 / 5")
@@ -849,11 +863,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.selectDate.setEnabled(True)
         self.StartDateEdit.setEnabled(True)
         self.EndDateEdit.setEnabled(True)
+        self.processgraphBands.setEnabled(True)
+        self.checkBox1.setEnabled(True)
+        self.multipleBandBtn.setEnabled(True)
+        self.allBandBtn.setEnabled(True)
+        self.label_11.setEnabled(True)
+        self.reloadBtn.setEnabled(False)
         self.nextButton.clicked.connect(self.start_wizard4)
         self.previousButton.setEnabled(True)
         self.previousButton.clicked.connect(self.start_wizard2)
-        if self.collectionBox.currentTextChanged:
-            self.nextButton.clicked.connect(self.start_wizard0)
 
     def start_wizard4(self):
         self.label_12.setText("Step 5 / 5")
@@ -862,16 +880,17 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.extentBox.setEnabled(True)
         self.layersBox.setEnabled(True)
         self.getBtn.setEnabled(True)
+        self.drawBtn.setEnabled(True)
+        self.reloadBtn.setEnabled(True)
         self.processgraphSpatialExtent.setEnabled(True)
+        self.label_9.setEnabled(True)
+        self.selectDate.setEnabled(True)
+        self.StartDateEdit.setEnabled(True)
+        self.EndDateEdit.setEnabled(True)
         self.previousButton.setEnabled(True)
         self.previousButton.clicked.connect(self.start_wizard3)
-        if self.collectionBox.currentTextChanged:
-            self.nextButton.clicked.connect(self.start_wizard0)
-        self.nextButton.setEnabled(True)
-        self.nextButton.clicked.connect(self.load_job_Button_highlight)
-
-    def load_job_Button_highlight(self):
-        return 1
+        self.nextButton.setEnabled(False)
+        self.loadButton.setEnabled(True)
 
     def disconnect(self):
         self.statusLabel.setText("Disconnected")

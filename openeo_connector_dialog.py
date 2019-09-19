@@ -787,6 +787,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.multipleBandBtn.setEnabled(True)
         self.allBandBtn.setEnabled(True)
         self.label_11.setEnabled(True)
+        self.processgraphSpatialExtent.clear()
+        self.label_8.setEnabled(False)
+        self.extentBox.setEnabled(False)
+        self.layersBox.setEnabled(False)
+        self.getBtn.setEnabled(False)
+        self.drawBtn.setEnabled(False)
+        self.processgraphSpatialExtent.setEnabled(False)
 
         # id should be the same as in example
 
@@ -1418,8 +1425,33 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.tabWidget.setCurrentIndex(2)
 
     def load_collection2(self):
+        self.tabWidget.setCurrentIndex(2)
         example_job = self.processgraphEdit_2.toPlainText()
         self.processgraphEdit.setText(str(example_job))
+
+        # Settings
+        self.label_9.setEnabled(False)
+        self.selectDate.setEnabled(False)
+        self.StartDateEdit.setEnabled(False)
+        self.EndDateEdit.setEnabled(False)
+        self.processgraphBands.setEnabled(True)
+        self.checkBox1.setEnabled(False)
+        self.multipleBandBtn.setEnabled(False)
+        self.allBandBtn.setEnabled(False)
+        self.label_11.setEnabled(False)
+        self.processgraphSpatialExtent.clear()
+        self.label_8.setEnabled(False)
+        self.extentBox.setEnabled(False)
+        self.layersBox.setEnabled(False)
+        self.getBtn.setEnabled(False)
+        self.drawBtn.setEnabled(False)
+        self.adaptButton.hide()
+
+        self.collectionBox.setEnabled(True)
+        self.label_10.setEnabled(True)
+        self.label_6.setEnabled(True)
+        self.infoBtn.setEnabled(True)
+        self.start_wizard0()
 
     def load_extent(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":

@@ -238,9 +238,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn_2.clicked.connect(self.adapt_spatial)
         self.insertChangeBtn_3.clicked.connect(self.adapt_bands)
         self.adaptButton.hide()
-        self.adaptButton.clicked.connect(self.insert_temporal_Change)
-        self.adaptButton.clicked.connect(self.insert_spatial_Change)
-        self.adaptButton.clicked.connect(self.insert_bands_Change)
+        self.adaptButton.clicked.connect(self.insert_Change)
         self.insertChangeBtn.setEnabled(False)
         self.insertChangeBtn_2.setEnabled(False)
         self.insertChangeBtn_3.setEnabled(False)
@@ -797,21 +795,17 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         # id should be the same as in example
 
-    def insert_temporal_Change(self):
+    def insert_Change(self):
         self.tabWidget.setCurrentIndex(1)
         if self.StartDateEdit.dateChanged or self.EndDateEdit.dateChanged:
             start_date = self.show_start()
             end_date = self.show_end()
             self.processgraphEdit_2.setText(str(start_date) + " " + str(end_date))
 
-    def insert_spatial_Change(self):
-        self.tabWidget.setCurrentIndex(1)
-        #if self.processgraphSpatialExtent.textChanged:
-        self.processgraphEdit_2.setText(self.processgraphSpatialExtent.toPlainText())
+        if self.processgraphSpatialExtent.textChanged:
+            self.processgraphEdit_2.setText(self.processgraphSpatialExtent.toPlainText())
 
-    def insert_bands_Change(self):
-        self.tabWidget.setCurrentIndex(1)
-        # add Band
+       # add Band
 
     def user_manual(self):
         self.umWindow = QWidget()
@@ -1446,11 +1440,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.getBtn.setEnabled(False)
         self.drawBtn.setEnabled(False)
         self.adaptButton.hide()
-
+        self.insertChangeBtn.setEnabled(False)
+        self.insertChangeBtn_2.setEnabled(False)
+        self.insertChangeBtn_3.setEnabled(False)
+        self.loadButton2.setEnabled(False)
+        self.processgraphEdit_2.clear()
         self.collectionBox.setEnabled(True)
         self.label_10.setEnabled(True)
         self.label_6.setEnabled(True)
         self.infoBtn.setEnabled(True)
+        self.label_12.show()
+        self.previousButton.show()
+        self.nextButton.show()
+        self.loadButton.show()
         self.start_wizard0()
 
     def load_extent(self):

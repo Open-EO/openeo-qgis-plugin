@@ -274,6 +274,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         elif not iface.activeLayer():
             self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
+
+
     def check_spatial_cover(self):
         west = self.west
         east = self.east

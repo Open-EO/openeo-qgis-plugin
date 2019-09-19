@@ -25,6 +25,7 @@ from qgis.PyQt.QtGui import QIcon, QPixmap
 from qgis.PyQt.QtWidgets import QAction
 from PyQt5.QtGui import QIcon
 from qgis.PyQt import QtWidgets
+from PyQt5.QtCore import Qt
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -183,6 +184,8 @@ class OpenEO:
             self.dlg.deleteButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'delete_job.png')))
             self.dlg.deleteFinalButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'deleteFinalBtn.png')))
             self.dlg.operationManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'user_manual_icon.png')))
+
+            self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         # show the dialog
         self.dlg.show()

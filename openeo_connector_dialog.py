@@ -238,7 +238,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn_2.clicked.connect(self.adapt_spatial)
         self.insertChangeBtn_3.clicked.connect(self.adapt_bands)
         self.adaptButton.hide()
-        self.adaptButton.clicked.connect(self.insertChange)
+        self.adaptButton.clicked.connect(self.insert_temporal_Change)
+        self.adaptButton.clicked.connect(self.insert_spatial_Change)
+        self.adaptButton.clicked.connect(self.insert_bands_Change)
         self.insertChangeBtn.setEnabled(False)
         self.insertChangeBtn_2.setEnabled(False)
         self.insertChangeBtn_3.setEnabled(False)
@@ -737,7 +739,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.drawBtn.setEnabled(False)
         self.processgraphSpatialExtent.setEnabled(False)
 
-        #example_job = json.dumps(self.processgraphEdit_2.toPlainText())
+        self.example_job = json.dumps(self.processgraphEdit_2.toPlainText())
         #test = example_job.find('\"temporal_extent\":', 0, len(example_job))
 
 
@@ -788,11 +790,21 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         # id should be the same as in example
 
-    def insertChange(self):
+    def insert_temporal_Change(self):
         self.tabWidget.setCurrentIndex(1)
-        start_date = self.show_start()
-        end_date = self.show_end()
-        self.processgraphEdit_2.setText(str(start_date) + str(end_date))
+        if self.StartDateEdit.dateChanged or self.EndDateEdit.dateChanged:
+            start_date = self.show_start()
+            end_date = self.show_end()
+            self.processgraphEdit_2.setText(str(start_date) + " " + str(end_date))
+
+    def insert_spatial_Change(self):
+        self.tabWidget.setCurrentIndex(1)
+        #if self.processgraphSpatialExtent.textChanged:
+        self.processgraphEdit_2.setText(self.processgraphSpatialExtent.toPlainText())
+
+    def insert_bands_Change(self):
+        self.tabWidget.setCurrentIndex(1)
+        # add Band
 
     def user_manual(self):
         self.umWindow = QWidget()

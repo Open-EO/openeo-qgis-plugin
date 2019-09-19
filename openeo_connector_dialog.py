@@ -127,6 +127,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.nextButton.setEnabled(False)
         self.previousButton.setEnabled(False)
         self.label_10.setEnabled(False)  # 1. Create New Job in QGis Plugin
+        self.label_10.setStyleSheet("color: white")
+        self.label_15.setStyleSheet("color: white")
+        self.label_13.setStyleSheet("background-color: grey")
+        self.label_14.setStyleSheet("background-color: grey")
 
         self.collectionBox.currentTextChanged.connect(self.bands_selected)
         self.collectionBox.currentTextChanged.connect(self.date_limits)
@@ -199,7 +203,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
         self.infoBtn.clicked.connect(self.col_info)
-        self.collectionBox.setGeometry(10, 80, 401, 31)
+        self.collectionBox.setGeometry(10, 90, 401, 31)
         self.infoBtn2.setStyleSheet('''   
                                  border-image: url("./info_icon.png") 10 10 0 0;
                                  border-top: 10px transparent;
@@ -207,10 +211,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                  border-right: 0px transparent;
                                  border-left: 0px transparent''')
         self.infoBtn2.clicked.connect(self.pr_info)
-        self.processBox.setGeometry(10, 170, 401, 31)  # when add Button visible, set 381 to 291
+        self.processBox.setGeometry(10, 180, 401, 31)  # when add Button visible, set 381 to 291
         self.infoBtn.setVisible(False)
         self.infoBtn.setEnabled(False)
-        self.infoBtn2.setGeometry(300, 170, 31, 31)  # remove, when add Button is visible
+        self.infoBtn2.setGeometry(300, 180, 31, 31)  # remove, when add Button is visible
         self.infoBtn2.setVisible(False)
         self.infoBtn2.setEnabled(False)
 
@@ -235,6 +239,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn_3.clicked.connect(self.adapt_bands)
         self.adaptButton.hide()
         self.adaptButton.clicked.connect(self.insertChange)
+        self.insertChangeBtn.setEnabled(False)
+        self.insertChangeBtn_2.setEnabled(False)
+        self.insertChangeBtn_3.setEnabled(False)
+        self.loadButton2.setEnabled(False)
 
         # self.set_font()
         # Jobs Tab
@@ -616,7 +624,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.allBandBtn.setStyleSheet("background-color: white")
         self.multipleBandBtn.setStyleSheet("background-color: white")
         if self.multipleBandBtn.clicked:
-            self.multipleBandBtn.setStyleSheet("background-color: grey")
+            self.multipleBandBtn.setStyleSheet("background-color: lightgray")
 
         self.processgraphBands.clear()
         self.band_window = QWidget()
@@ -641,7 +649,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.takeBandsButton.clicked.connect(self.save_band_choice2)
 
     def save_band_choice1(self):
-        self.allBandBtn.setStyleSheet("background-color: grey")
+        self.allBandBtn.setStyleSheet("background-color: lightgray")
         self.multipleBandBtn.setStyleSheet("background-color: white")
         self.processgraphBands.setText(str(self.all_bands).replace("'", '"'))
 
@@ -654,7 +662,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 if self.takeBandsButton.clicked:
                     self.band_window.close()
         self.allBandBtn.setStyleSheet("background-color: white")
-        self.multipleBandBtn.setStyleSheet("background-color: grey")
+        self.multipleBandBtn.setStyleSheet("background-color: lightgray")
 
     def web_view(self):
         webbrowser.open("https://open-eo.github.io/openeo-web-editor/demo/")
@@ -696,13 +704,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.example_jobs_window.show()
 
     def pick_job_from_hub(self):
+        self.insertChangeBtn.setEnabled(True)
+        self.insertChangeBtn_2.setEnabled(True)
+        self.insertChangeBtn_3.setEnabled(True)
+        self.loadButton2.setEnabled(True)
+
         selected_job = self.exampleJobBox.currentRow()
         id_selected_job = int(selected_job)
         self.processgraphEdit_2.setText(self.example_jobs_pg[id_selected_job])
         self.example_jobs_window.close()
 
     def adapt_temporal(self):
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
         # Settings
         self.adaptButton.show()
         self.loadButton.hide()
@@ -724,12 +737,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.drawBtn.setEnabled(False)
         self.processgraphSpatialExtent.setEnabled(False)
 
-        #example_job = self.processgraphEdit_2.toPlainText()
+        #example_job = json.dumps(self.processgraphEdit_2.toPlainText())
         #test = example_job.find('\"temporal_extent\":', 0, len(example_job))
-        #self.processgraphEdit_2.setText(str(test))
+
 
     def adapt_spatial(self):
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
         # Settings
         self.adaptButton.show()
         self.loadButton.hide()
@@ -752,7 +765,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processgraphSpatialExtent.setEnabled(True)
 
     def adapt_bands(self):
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
         # Settings
         self.adaptButton.show()
         self.loadButton.hide()
@@ -776,7 +789,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         # id should be the same as in example
 
     def insertChange(self):
-        self.tabWidget.setCurrentIndex(3)
+        self.tabWidget.setCurrentIndex(1)
+        start_date = self.show_start()
+        end_date = self.show_end()
+        self.processgraphEdit_2.setText(str(start_date) + str(end_date))
 
     def user_manual(self):
         self.umWindow = QWidget()
@@ -820,10 +836,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processes = process_result
 
         self.infoBtn.setVisible(True)
-        self.collectionBox.setGeometry(10, 80, 361, 31)
+        self.collectionBox.setGeometry(10, 90, 361, 31)
         self.infoBtn2.setVisible(True)
         self.addButton.setVisible(True)
-        self.processBox.setGeometry(10, 170, 281, 31)  # when add Button is visible - set 351 to 261
+        self.processBox.setGeometry(10, 180, 281, 31)  # when add Button is visible - set 351 to 261
 
         self.collectionBox.clear()
         self.processBox.clear()
@@ -868,11 +884,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def start_wizard0(self):
         if self.collectionBox.currentText() == "Choose one of the data sets listed below":
-            self.collectionBox.setGeometry(10, 80, 401, 31)
+            self.collectionBox.setGeometry(10, 90, 401, 31)
             self.infoBtn.hide()
             self.label_12.setText("Step 1 / 5")
             self.label_12.show()
-            self.processBox.setGeometry(10, 170, 401, 31)
+            self.processBox.setGeometry(10, 180, 401, 31)
             self.infoBtn2.hide()
             self.addButton.hide()
             self.processBox.setEnabled(False)
@@ -884,7 +900,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.label_12.setText("Step 1 / 5")
             self.previousButton.setEnabled(False)
             self.nextButton.setEnabled(True)
-            self.collectionBox.setGeometry(10, 80, 361, 31)
+            self.collectionBox.setGeometry(10, 90, 361, 31)
             self.infoBtn.show()
             self.loadButton.setEnabled(False)
             self.processBox.setEnabled(False)
@@ -938,13 +954,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if self.processBox.currentText() == "Select a job":
             self.label_12.setText("Step 2 / 5")
             self.label_12.show()
-            self.processBox.setGeometry(10, 170, 401, 31)
+            self.processBox.setGeometry(10, 180, 401, 31)
             self.infoBtn2.hide()
             self.addButton.hide()
             self.nextButton.setEnabled(False)
         elif self.processBox.currentTextChanged:
             self.label_12.setText("Step 2 / 5")
-            self.processBox.setGeometry(10, 170, 281, 31)
+            self.processBox.setGeometry(10, 180, 281, 31)
             self.infoBtn2.show()
             self.addButton.show()
             self.nextButton.setEnabled(True)
@@ -964,6 +980,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.multipleBandBtn.setEnabled(True)
         self.allBandBtn.setEnabled(True)
         self.label_11.setEnabled(True)
+        self.infoBtn2.setEnabled(True)
+        self.addButton.setEnabled(True)
 
         self.label_9.setEnabled(False)
         self.selectDate.setEnabled(False)
@@ -1385,6 +1403,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processgraph.load_collection(self.arguments)
         # Refresh process graph in GUI
         self.reload_processgraph_view()
+        self.tabWidget.setCurrentIndex(2)
 
     def load_collection2(self):
         example_job = self.processgraphEdit_2.toPlainText()

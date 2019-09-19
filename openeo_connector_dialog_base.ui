@@ -758,6 +758,20 @@
       <string/>
      </property>
     </widget>
+    <widget class="QComboBox" name="collectionBox_individual_job">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>90</y>
+       <width>361</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="currentText" stdset="0">
+      <string/>
+     </property>
+    </widget>
+    <zorder>collectionBox_individual_job</zorder>
     <zorder>label_13</zorder>
     <zorder>adaptButton</zorder>
     <zorder>processgraphBands</zorder>

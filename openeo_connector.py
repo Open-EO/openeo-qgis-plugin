@@ -184,7 +184,6 @@ class OpenEO:
             self.dlg.deleteButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'delete_job.png')))
             self.dlg.deleteFinalButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'deleteFinalBtn.png')))
             self.dlg.operationManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'user_manual_icon.png')))
-
             self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         # show the dialog

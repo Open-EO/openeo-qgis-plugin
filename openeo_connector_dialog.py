@@ -39,11 +39,11 @@ from qgis.utils import iface
 
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit, QListWidget, QListWidgetItem, QApplication, \
-    QWidget
+    QWidget, QLabel, QGridLayout
 from PyQt5 import QtCore
 from PyQt5.QtCore import QDate, Qt
 from PyQt5 import QtGui
-from PyQt5.QtGui import QColor, QIcon
+from PyQt5.QtGui import QColor, QIcon, QPixmap
 from PyQt5.QtWidgets import QCalendarWidget
 
 from .models.result import Result
@@ -243,6 +243,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn_2.setEnabled(False)
         self.insertChangeBtn_3.setEnabled(False)
         self.loadButton2.setEnabled(False)
+        self.collectionBox_individual_job.hide()
 
         # self.set_font()
         # Jobs Tab
@@ -795,7 +796,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.drawBtn.setEnabled(False)
         self.processgraphSpatialExtent.setEnabled(False)
 
-        # id should be the same as in example
+        # id has to be the exact same as in the example
+        self.collectionBox.hide()
+        self.collectionBox_individual_job.show()
+
 
     def insert_Change(self):
         self.tabWidget.setCurrentIndex(1)
@@ -811,15 +815,40 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def user_manual(self):
         self.umWindow = QWidget()
-        self.hbox7 = QHBoxLayout()
-        self.umBox = QTextEdit()
-        self.umBox.setText(str("Write a text about how this works ..."))
-        self.umBox.setReadOnly(True)
-        self.hbox7.addWidget(self.umBox)
-        self.umWindow.setLayout(self.hbox7)
+        self.grid = QGridLayout()
+
+        # User Manual Text
+        self.text = QLabel()
+        user_manual_text = open(os.path.join(os.path.dirname(__file__), './user_manual_text.txt')).read()
+        self.text.setText(str(user_manual_text))
+        # Title
+        self.title = QLabel()
+        self.title.setText("User Manual \n ")
+        self.startText = QLabel()
+        self.startText.setText("1. At first, please focus on the upper part (header) of the openEO Plugin. "
+                               "There, you can choose a back-end and enter your login credentials. By clicking \n"
+                               "the “Connect”-Button, you will be connected with the chosen back-end. \n")
+        # openEO Header Image
+        self.image = QLabel()
+        self.image.setPixmap(QPixmap('openEO_plugin_header.png'))
+
+        self.grid.setSpacing(4)
+        self.grid.addWidget(self.title, 0, 0)
+        self.grid.addWidget(self.startText, 1, 0)
+        self.grid.addWidget(self.image, 2, 0)
+        self.grid.addWidget(self.text, 4, 0)
+        self.umWindow.setLayout(self.grid)
         self.umWindow.setGeometry(400, 400, 600, 450)
         self.umWindow.setWindowTitle('User Manual')
         self.umWindow.show()
+
+        self.jobsTableWidget.setColumnCount(7)
+        self.jobsTableWidget.setHorizontalHeaderLabels(['Job Id', 'Description/Error', 'Submission Date', 'Status',
+                                                        'Execute', 'Display', 'Information'])
+        header = self.jobsTableWidget.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
 
     def connect(self):
         """
@@ -1455,7 +1484,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.previousButton.show()
         self.nextButton.show()
         self.loadButton.show()
+        self.moveButton.setEnabled(True)
         self.start_wizard0()
+        self.collectionBox.show()
+        self.collectionBox_individual_job.hide()
 
     def load_extent(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":

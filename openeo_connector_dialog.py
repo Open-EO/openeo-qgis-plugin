@@ -133,24 +133,23 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.collectionBox.currentTextChanged.connect(self.spatial_limits)
         self.collectionBox.currentTextChanged.connect(self.start_wizard0)
         self.collectionBox.setEnabled(False)
-        self.label_6.setEnabled(False)  # 1.1 Load Collection
+        self.label_6.setEnabled(False)  # Load Collection
         self.label_12.hide()
 
         self.processBox.currentTextChanged.connect(self.process_selected)
         self.processBox.currentTextChanged.connect(self.start_wizard1)
         self.processBox.setEnabled(False)
         self.processTableWidget.setEnabled(False)
-        self.label_7.setEnabled(False)  # 1.2 Add Process
+        self.label_7.setEnabled(False)  # Add Process
 
         self.refreshButton.clicked.connect(self.refresh_jobs)
         self.clearButton.clicked.connect(self.clear)  # Clear Button
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
+        self.loadButton2.clicked.connect(self.load_collection2)
         self.loadButton.setEnabled(False)
-        self.insertChangeBtn.clicked.connect(self.insertChange)
         self.deleteButton.clicked.connect(self.del_job)
         self.deleteFinalButton.clicked.connect(self.delete_job_final)
-        self.loadHubBtn.clicked.connect(self.load_job_from_hub)
 
         # Temporal Extent
         self.selectDate.clicked.connect(self.add_temporal)
@@ -159,7 +158,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.max_date = None
         self.StartDateEdit.setEnabled(False)
         self.EndDateEdit.setEnabled(False)
-        self.label_9.setEnabled(False)  # 1.4 Add Temporal Extent
+        self.label_9.setEnabled(False)  # Add Temporal Extent
+        self.minimum_date = QDate()
 
         extentBoxItems = OrderedDict(
             {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.draw_rect,
@@ -182,7 +182,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.reloadBtn.setVisible(False)
         self.layersBox.setVisible(False)
         self.all_bands = []
-        self.label_8.setEnabled(False)  # 1.5 Add Spatial Extent
+        self.label_8.setEnabled(False)  # Add Spatial Extent
+        self.limit_west = -100000000000000000
+        self.limit_east = 100000000000000000
+        self.limit_north = 100000000000000000
+        self.limit_south = -100000000000000000
 
         # Link to the Web Editor Demo Version:
         self.moveButton.clicked.connect(self.web_view)
@@ -222,7 +226,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.multipleBandBtn.setEnabled(False)
         self.processgraphBands.setEnabled(False)
         self.checkBox1.setEnabled(False)
-        self.label_11.setEnabled(False)  # 1.3 Add Bands
+        self.label_11.setEnabled(False)  # Add Bands
+
+        # Adapt Job from Hub
+        self.loadHubBtn.clicked.connect(self.load_job_from_hub)
+        self.insertChangeBtn.clicked.connect(self.adapt_temporal)
+        self.insertChangeBtn_2.clicked.connect(self.adapt_spatial)
+        self.insertChangeBtn_3.clicked.connect(self.adapt_bands)
+        self.adaptButton.hide()
+        self.adaptButton.clicked.connect(self.insertChange)
 
         # self.set_font()
         # Jobs Tab
@@ -688,6 +700,83 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         id_selected_job = int(selected_job)
         self.processgraphEdit_2.setText(self.example_jobs_pg[id_selected_job])
         self.example_jobs_window.close()
+
+    def adapt_temporal(self):
+        self.tabWidget.setCurrentIndex(2)
+        # Settings
+        self.adaptButton.show()
+        self.loadButton.hide()
+        self.collectionBox.setEnabled(False)
+        self.label_10.setEnabled(False)
+        self.label_6.setEnabled(False)
+        self.label_12.hide()
+        self.previousButton.hide()
+        self.nextButton.hide()
+        self.moveButton.setEnabled(False)
+        self.label_9.setEnabled(True)
+        self.selectDate.setEnabled(True)
+        self.StartDateEdit.setEnabled(True)
+        self.EndDateEdit.setEnabled(True)
+        self.label_8.setEnabled(False)
+        self.extentBox.setEnabled(False)
+        self.layersBox.setEnabled(False)
+        self.getBtn.setEnabled(False)
+        self.drawBtn.setEnabled(False)
+        self.processgraphSpatialExtent.setEnabled(False)
+
+        #example_job = self.processgraphEdit_2.toPlainText()
+        #test = example_job.find('\"temporal_extent\":', 0, len(example_job))
+        #self.processgraphEdit_2.setText(str(test))
+
+    def adapt_spatial(self):
+        self.tabWidget.setCurrentIndex(2)
+        # Settings
+        self.adaptButton.show()
+        self.loadButton.hide()
+        self.collectionBox.setEnabled(False)
+        self.label_10.setEnabled(False)
+        self.label_6.setEnabled(False)
+        self.label_12.hide()
+        self.previousButton.hide()
+        self.nextButton.hide()
+        self.moveButton.setEnabled(False)
+        self.label_9.setEnabled(False)
+        self.selectDate.setEnabled(False)
+        self.StartDateEdit.setEnabled(False)
+        self.EndDateEdit.setEnabled(False)
+        self.label_8.setEnabled(True)
+        self.extentBox.setEnabled(True)
+        self.layersBox.setEnabled(True)
+        self.getBtn.setEnabled(True)
+        self.drawBtn.setEnabled(True)
+        self.processgraphSpatialExtent.setEnabled(True)
+
+    def adapt_bands(self):
+        self.tabWidget.setCurrentIndex(2)
+        # Settings
+        self.adaptButton.show()
+        self.loadButton.hide()
+        self.collectionBox.setEnabled(False)
+        self.label_10.setEnabled(False)
+        self.label_6.setEnabled(False)
+        self.label_12.hide()
+        self.previousButton.hide()
+        self.nextButton.hide()
+        self.moveButton.setEnabled(False)
+        self.label_9.setEnabled(False)
+        self.selectDate.setEnabled(False)
+        self.StartDateEdit.setEnabled(False)
+        self.EndDateEdit.setEnabled(False)
+        self.processgraphBands.setEnabled(True)
+        self.checkBox1.setEnabled(True)
+        self.multipleBandBtn.setEnabled(True)
+        self.allBandBtn.setEnabled(True)
+        self.label_11.setEnabled(True)
+
+        # id should be the same as in example
+
+    def insertChange(self):
+        self.tabWidget.setCurrentIndex(3)
 
     def user_manual(self):
         self.umWindow = QWidget()
@@ -1233,9 +1322,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.refresh_jobs()
 
-    def insertChange(self):
-        example_json = self.processgraphEdit.toPlainText()
-
     def del_job(self):
         self.chosenRow = self.jobsTableWidget.currentRow()
         self.jobsTableWidget.removeRow(self.chosenRow)
@@ -1299,6 +1385,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processgraph.load_collection(self.arguments)
         # Refresh process graph in GUI
         self.reload_processgraph_view()
+
+    def load_collection2(self):
+        example_job = self.processgraphEdit_2.toPlainText()
+        self.processgraphEdit.setText(str(example_job))
 
     def load_extent(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":

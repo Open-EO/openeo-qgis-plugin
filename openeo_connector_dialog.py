@@ -803,7 +803,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.multipleBandBtn.setEnabled(True)
         self.allBandBtn.setEnabled(True)
         self.label_11.setEnabled(True)
-        self.processgraphSpatialExtent.clear()
         self.label_8.setEnabled(False)
         self.extentBox.setEnabled(False)
         self.layersBox.setEnabled(False)
@@ -853,16 +852,39 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.adaptButton.clicked.connect(self.insert_Change_bands)
 
     def insert_Change_temporal(self):
-            self.tabWidget.setCurrentIndex(1)
-            self.processgraphEdit_2.setText(str(self.show_start()) + " " + str(self.show_end()))
+        self.tabWidget.setCurrentIndex(1)
+        new_start_date = self.show_start()
+        new_end_date = self.show_end()
+        #self.processgraphEdit_2.setText(str(self.show_start()) + " " + str(self.show_end()))
+        dates = []
+        dates.append(new_start_date)
+        dates.append(new_end_date)
+
+        self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
+        for key, _ in self.example_job.items():
+            if self.example_job[key]["process_id"] == "load_collection":
+                self.example_job[key]["arguments"]["temporal_extent"] = dates
+                self.processgraphEdit_2.setText(json.dumps(self.example_job))
 
     def insert_Change_spatial(self):
-            self.tabWidget.setCurrentIndex(1)
-            self.processgraphEdit_2.setText(str(self.processgraphSpatialExtent.toPlainText()))
+        self.tabWidget.setCurrentIndex(1)
+        #self.processgraphEdit_2.setText(str(self.processgraphSpatialExtent.toPlainText()))
+
+        self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
+        for key, _ in self.example_job.items():
+            if self.example_job[key]['process_id'] == "load_collection":
+                self.example_job[key]['arguments']['spatial_extent'] = self.processgraphSpatialExtent.toPlainText()
+                self.processgraphEdit_2.setText(json.dumps(self.example_job))
 
     def insert_Change_bands(self):
-            self.tabWidget.setCurrentIndex(1)
-            self.processgraphEdit_2.setText(str(self.processgraphBands.toPlainText()))
+        self.tabWidget.setCurrentIndex(1)
+        #self.processgraphEdit_2.setText(str(self.processgraphBands.toPlainText()))
+
+        self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
+        for key, _ in self.example_job.items():
+            if self.example_job[key]['process_id'] == "load_collection":
+                self.example_job[key]['arguments']['bands'] = self.processgraphBands.toPlainText()
+                self.processgraphEdit_2.setText(json.dumps(self.example_job))
 
     def user_manual(self):
         self.umWindow = QWidget()

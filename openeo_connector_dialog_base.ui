@@ -627,19 +627,6 @@
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QCheckBox" name="checkBox1">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>440</y>
-       <width>371</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
     <widget class="QTextEdit" name="processgraphBands">
      <property name="geometry">
       <rect>
@@ -771,6 +758,19 @@
       <string/>
      </property>
     </widget>
+    <widget class="QLabel" name="label_16">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>440</y>
+       <width>401</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
     <zorder>collectionBox_individual_job</zorder>
     <zorder>label_13</zorder>
     <zorder>adaptButton</zorder>
@@ -803,12 +803,12 @@
     <zorder>infoBtn2</zorder>
     <zorder>line_4</zorder>
     <zorder>label_11</zorder>
-    <zorder>checkBox1</zorder>
     <zorder>allBandBtn</zorder>
     <zorder>label_12</zorder>
     <zorder>nextButton</zorder>
     <zorder>previousButton</zorder>
     <zorder>loadButton</zorder>
+    <zorder>label_16</zorder>
    </widget>
    <widget class="QWidget" name="tab_1">
     <attribute name="title">

@@ -224,7 +224,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         # Bands
         self.multipleBandBtn.clicked.connect(self.multiple_bands)
         self.allBandBtn.clicked.connect(self.save_band_choice1)
-        self.checkBox1.hide()
+        self.label_16.hide()
         self.processgraphBands.hide()
         self.multipleBandBtn.hide()
         self.allBandBtn.hide()
@@ -232,7 +232,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.allBandBtn.setEnabled(False)
         self.multipleBandBtn.setEnabled(False)
         self.processgraphBands.setEnabled(False)
-        self.checkBox1.setEnabled(False)
+        self.label_16.setEnabled(False)
         self.label_11.setEnabled(False)  # Add Bands
 
         # Adapt Job from Hub
@@ -609,13 +609,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                         self.all_bands.append(each_band)
 
                         if len(self.all_bands) == 1:
-                            self.checkBox1.setText(str(self.all_bands[0]))
-                            self.checkBox1.show()
+                            self.label_16.setText(str(self.all_bands[0]))
+                            self.label_16.show()
                             self.processgraphBands.hide()
                             self.multipleBandBtn.hide()
                             self.allBandBtn.hide()
                         else:
-                            self.checkBox1.hide()
+                            self.label_16.hide()
                             self.multipleBandBtn.show()
                             self.allBandBtn.show()
                             self.processgraphBands.setText(str(self.all_bands).replace("'", '"'))
@@ -743,7 +743,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.drawBtn.setEnabled(False)
         self.processgraphSpatialExtent.setEnabled(False)
         self.processgraphBands.setEnabled(False)
-        self.checkBox1.setEnabled(False)
+        self.label_16.setEnabled(False)
         self.multipleBandBtn.setEnabled(False)
         self.allBandBtn.setEnabled(False)
         self.label_11.setEnabled(False)
@@ -774,7 +774,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.drawBtn.setEnabled(True)
         self.processgraphSpatialExtent.setEnabled(True)
         self.processgraphBands.setEnabled(False)
-        self.checkBox1.setEnabled(False)
+        self.label_16.setEnabled(False)
         self.multipleBandBtn.setEnabled(False)
         self.allBandBtn.setEnabled(False)
         self.label_11.setEnabled(False)
@@ -799,7 +799,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.StartDateEdit.setEnabled(False)
         self.EndDateEdit.setEnabled(False)
         self.processgraphBands.setEnabled(True)
-        self.checkBox1.setEnabled(True)
+        self.label_16.setEnabled(True)
         self.multipleBandBtn.setEnabled(True)
         self.allBandBtn.setEnabled(True)
         self.label_11.setEnabled(True)
@@ -837,13 +837,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                         self.all_bands.append(each_band)
 
                         if len(self.all_bands) == 1:
-                            self.checkBox1.setText(str(self.all_bands[0]))
-                            self.checkBox1.show()
+                            self.label_16.setText(str(self.all_bands[0]))
+                            self.label_16.show()
                             self.processgraphBands.hide()
                             self.multipleBandBtn.hide()
                             self.allBandBtn.hide()
                         else:
-                            self.checkBox1.hide()
+                            self.label_16.hide()
                             self.multipleBandBtn.show()
                             self.allBandBtn.show()
                             self.processgraphBands.setText(str(self.all_bands).replace("'", '"'))
@@ -1025,7 +1025,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.infoBtn2.setEnabled(False)
             self.label_7.setEnabled(False)
             self.processgraphBands.setEnabled(False)
-            self.checkBox1.setEnabled(False)
+            self.label_16.setEnabled(False)
             self.multipleBandBtn.setEnabled(False)
             self.allBandBtn.setEnabled(False)
             self.label_11.setEnabled(False)
@@ -1050,7 +1050,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.infoBtn2.setEnabled(True)
 
         self.processgraphBands.setEnabled(False)
-        self.checkBox1.setEnabled(False)
+        self.label_16.setEnabled(False)
         self.multipleBandBtn.setEnabled(False)
         self.allBandBtn.setEnabled(False)
         self.label_11.setEnabled(False)
@@ -1092,7 +1092,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processTableWidget.setEnabled(True)
         self.label_7.setEnabled(True)  # 1.2 Add Process
         self.processgraphBands.setEnabled(True)
-        self.checkBox1.setEnabled(True)
+        self.label_16.setEnabled(True)
         self.multipleBandBtn.setEnabled(True)
         self.allBandBtn.setEnabled(True)
         self.label_11.setEnabled(True)
@@ -1117,7 +1117,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.StartDateEdit.setEnabled(True)
         self.EndDateEdit.setEnabled(True)
         self.processgraphBands.setEnabled(True)
-        self.checkBox1.setEnabled(True)
+        self.label_16.setEnabled(True)
         self.multipleBandBtn.setEnabled(True)
         self.allBandBtn.setEnabled(True)
         self.label_11.setEnabled(True)
@@ -1497,33 +1497,42 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 texE = self.maximum_date.toString("yyyy-MM-dd")
 
         # Bands
-        if len(self.all_bands) == 1:
-            if self.checkBox1.isChecked():
-                band3 = self.checkBox1.text()
-            if not self.checkBox1.isChecked():
-                band3 = None
+        if len(self.all_bands) == 1 or self.all_bands == None:
+            self.arguments = OrderedDict({
+                "id": col,
+                "spatial_extent": ex,
+                "temporal_extent": [texS, texE]
+            })
         else:
             band = (self.processgraphBands.toPlainText())  # replace() and json.dumps do not work
             band1 = band.replace("\\", "")
             band2 = band1.replace('"[', "")
             band3 = band2.replace(']"', "")
 
-        # Arguments
-        self.arguments = OrderedDict({
-            "id": col,
-            "spatial_extent": ex,
-            "temporal_extent": [texS, texE],
-            "bands": band3,
-        })
+            # Arguments
+            self.arguments = OrderedDict({
+                "id": col,
+                "spatial_extent": ex,
+                "temporal_extent": [texS, texE],
+                "bands": band3,
+            })
 
         self.processgraph.load_collection(self.arguments)
         # Refresh process graph in GUI
         self.reload_processgraph_view()
         self.tabWidget.setCurrentIndex(2)
 
-        processgraph_correct_spelling = str(self.processgraphEdit.toPlainText()).replace('"{', '{').replace('}"', '}').replace('\\', '') \
-            .replace('"[', '[').replace(']"', ']')
-        self.processgraphEdit.setText(processgraph_correct_spelling)
+        # result must be true in order to send job successfully:
+        job = json.loads(self.processgraphEdit.toPlainText())
+        for key, _ in job.items():
+            job[key]['result'] = "true"
+            self.processgraphEdit.setText(str(job).replace('"', ""))
+
+        # process graph spelling must be correct in order to send job successfully:
+        processgraph_correct_spelling = str(self.processgraphEdit.toPlainText()).replace("'{", "{").replace("}'", '"}')\
+            .replace('\\', '').replace("'[", '["').replace("]'", '"]').replace("'", '"').replace('west', '"west"')\
+            .replace('east', '"east"').replace('south', '"south"').replace('north', '"north"').replace('crs', '"crs": "')
+        self.processgraphEdit.setText(str(processgraph_correct_spelling))
 
     def load_collection2(self):
         self.tabWidget.setCurrentIndex(2)
@@ -1538,7 +1547,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.StartDateEdit.setEnabled(False)
         self.EndDateEdit.setEnabled(False)
         self.processgraphBands.setEnabled(True)
-        self.checkBox1.setEnabled(False)
+        self.label_16.setEnabled(False)
         self.multipleBandBtn.setEnabled(False)
         self.allBandBtn.setEnabled(False)
         self.label_11.setEnabled(False)

@@ -41,7 +41,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit, QListWidget, QListWidgetItem, QApplication, \
     QWidget, QLabel, QGridLayout
 from PyQt5 import QtCore
-from PyQt5.QtCore import QDate, Qt
+from PyQt5.QtCore import QDate, Qt, QSize
 from PyQt5 import QtGui
 from PyQt5.QtGui import QColor, QIcon, QPixmap
 from PyQt5.QtWidgets import QCalendarWidget
@@ -1244,13 +1244,14 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.jobsTableWidget.setHorizontalHeaderLabels(['Job Title', 'Description/Error', 'Submission Date', 'Status',
                                                         'Execute', 'Display', 'Information'])
         header = self.jobsTableWidget.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents) # before: Stretch
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
+        self.jobsTableWidget.setSortingEnabled(True)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(5, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(6, QtWidgets.QHeaderView.Interactive)
 
     def init_services(self):
         """
@@ -1258,16 +1259,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         self.servicesTableWidget.clear()
         self.servicesTableWidget.setColumnCount(5)
-        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Tile', 'Title/Error', 'Submission Date', 'Type',
+        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Title', 'Title/Error', 'Submission Date', 'Type',
                                                             'Display'])
         header = self.servicesTableWidget.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents) # before: Stretch
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
-        # header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
-        # header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
+        self.servicesTableWidget.setSortingEnabled(True)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Interactive)
 
     def refresh_jobs(self):
         """
@@ -1404,6 +1404,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
             self.servicesTableWidget.setCellWidget(row, 4, execBtn)
             execBtn.clicked.connect(lambda *args, row=row: self.service_execute(val["url"], val["id"]))
+
+            row += 1
 
     def service_execute(self, url, id):
         """

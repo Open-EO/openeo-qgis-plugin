@@ -45,6 +45,7 @@ from PyQt5.QtCore import QDate, Qt
 from PyQt5 import QtGui
 from PyQt5.QtGui import QColor, QIcon, QPixmap
 from PyQt5.QtWidgets import QCalendarWidget
+import ast
 
 from .models.result import Result
 from .models.connect import Connection
@@ -133,6 +134,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.label_14.setStyleSheet("background-color: grey")
 
         self.collectionBox.currentTextChanged.connect(self.bands_selected)
+        self.collectionBox_individual_job.currentTextChanged.connect(self.bands_selected)
         self.collectionBox.currentTextChanged.connect(self.date_limits)
         self.collectionBox.currentTextChanged.connect(self.spatial_limits)
         self.collectionBox.currentTextChanged.connect(self.start_wizard0)
@@ -244,6 +246,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn_3.setEnabled(False)
         self.loadButton2.setEnabled(False)
         self.collectionBox_individual_job.hide()
+        self.new_spatial_extent = None
+        self.new_start_date = None
+        self.new_end_date = None
 
         # self.set_font()
         # Jobs Tab
@@ -716,6 +721,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         id_selected_job = int(selected_job)
         self.processgraphEdit_2.setText(self.example_jobs_pg[id_selected_job])
         self.example_jobs_window.close()
+        self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
 
     def adapt_temporal(self):
         self.tabWidget.setCurrentIndex(0)
@@ -739,10 +745,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.getBtn.setEnabled(False)
         self.drawBtn.setEnabled(False)
         self.processgraphSpatialExtent.setEnabled(False)
-
-        self.example_job = json.dumps(self.processgraphEdit_2.toPlainText())
-        #test = example_job.find('\"temporal_extent\":', 0, len(example_job))
-
+        self.processgraphBands.setEnabled(False)
+        self.checkBox1.setEnabled(False)
+        self.multipleBandBtn.setEnabled(False)
+        self.allBandBtn.setEnabled(False)
+        self.label_11.setEnabled(False)
 
     def adapt_spatial(self):
         self.tabWidget.setCurrentIndex(0)
@@ -766,6 +773,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.getBtn.setEnabled(True)
         self.drawBtn.setEnabled(True)
         self.processgraphSpatialExtent.setEnabled(True)
+        self.processgraphSpatialExtent.setEnabled(False)
+        self.processgraphBands.setEnabled(False)
+        self.checkBox1.setEnabled(False)
+        self.multipleBandBtn.setEnabled(False)
+        self.allBandBtn.setEnabled(False)
+        self.label_11.setEnabled(False)
 
     def adapt_bands(self):
         self.tabWidget.setCurrentIndex(0)
@@ -800,16 +813,48 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.collectionBox.hide()
         self.collectionBox_individual_job.show()
 
+        data_collection = self.connection.list_collections()
+        for key, _ in self.example_job.items():
+            if self.example_job[key]['process_id'] == "load_collection":
+                self.collectionBox_individual_job.addItem(self.example_job[key]['arguments']['id'])
+
+        selected_process = str(self.collectionBox_individual_job.currentText())
+
+        for col in data_collection:
+            if str(col['id']) == selected_process:
+                data = self.connection.get('/collections/{}'.format(col['id']), auth=False)
+                if data.status_code == 200:
+                    band_info = data.json()
+                    bands = band_info['properties']['cube:dimensions']['bands']['values']
+
+                    self.all_bands = []
+                    for each_band in bands:
+                        self.all_bands.append(each_band)
+
+                        if len(self.all_bands) == 1:
+                            self.checkBox1.setText(str(self.all_bands[0]))
+                            self.checkBox1.show()
+                            self.processgraphBands.hide()
+                            self.multipleBandBtn.hide()
+                            self.allBandBtn.hide()
+                        else:
+                            self.checkBox1.hide()
+                            self.multipleBandBtn.show()
+                            self.allBandBtn.show()
+                            self.processgraphBands.setText(str(self.all_bands).replace("'", '"'))
+                            self.processgraphBands.show()
+
 
     def insert_Change(self):
         self.tabWidget.setCurrentIndex(1)
-        if self.StartDateEdit.dateChanged or self.EndDateEdit.dateChanged:
-            start_date = self.show_start()
-            end_date = self.show_end()
-            self.processgraphEdit_2.setText(str(start_date) + " " + str(end_date))
-
         if self.processgraphSpatialExtent.textChanged:
-            self.processgraphEdit_2.setText(self.processgraphSpatialExtent.toPlainText())
+            self.new_spatial_extent = self.processgraphSpatialExtent.toPlainText()
+
+        if self.StartDateEdit.dateChanged or self.EndDateEdit.dateChanged:
+            self.new_start_date = self.show_start()
+            self.new_end_date = self.show_end()
+
+        self.processgraphEdit_2.setText(str(self.new_start_date) + " " + str(self.new_end_date) + " " + str(self.new_spatial_extent))
 
        # add Band
 
@@ -1157,8 +1202,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.infoBox4 = QTextEdit()
             self.infoBox4.setText(str(process_graph))
             self.infoBox4.setReadOnly(True)
-            self.hbox4.addWidget(self.infoBox4)
-            self.infoWindow4.setLayout(self.hbox4)
+            self.hbox5.addWidget(self.infoBox4)
+            self.infoWindow4.setLayout(self.hbox5)
             self.infoWindow4.setGeometry(400, 400, 600, 450)
             self.infoWindow4.setWindowTitle('Process Graph')
             self.infoWindow4.show()

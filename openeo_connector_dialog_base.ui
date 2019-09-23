@@ -732,9 +732,9 @@
     <widget class="QPushButton" name="adaptButton">
      <property name="geometry">
       <rect>
-       <x>750</x>
+       <x>660</x>
        <y>10</y>
-       <width>71</width>
+       <width>161</width>
        <height>31</height>
       </rect>
      </property>

@@ -867,23 +867,23 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def insert_Change_spatial(self):
         self.tabWidget.setCurrentIndex(1)
-        self.processgraphEdit_2.setText(str(self.processgraphSpatialExtent.toPlainText()))
+        #self.processgraphEdit_2.setText(self.processgraphSpatialExtent.toPlainText())
 
-        #self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
-        #for key, _ in self.example_job.items():
-        #    if self.example_job[key]['process_id'] == "load_collection":
-        #        self.example_job[key]['arguments']['spatial_extent'] = self.processgraphSpatialExtent.toPlainText()
-        #        self.processgraphEdit_2.setText(json.dumps(self.example_job))
+        self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
+        for key, _ in self.example_job.items():
+            if self.example_job[key]['process_id'] == "load_collection":
+                self.example_job[key]['arguments']['spatial_extent'] = self.processgraphSpatialExtent.toPlainText()
+                self.processgraphEdit_2.setText(json.dumps(self.example_job))
 
     def insert_Change_bands(self):
         self.tabWidget.setCurrentIndex(1)
-        self.processgraphEdit_2.setText(str(self.processgraphBands.toPlainText()))
+        #self.processgraphEdit_2.setText(str(self.processgraphBands.toPlainText()))
 
-        #self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
-        #for key, _ in self.example_job.items():
-        #    if self.example_job[key]['process_id'] == "load_collection":
-        #        self.example_job[key]['arguments']['bands'] = self.processgraphBands.toPlainText()
-        #        self.processgraphEdit_2.setText(json.dumps(self.example_job))
+        self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
+        for key, _ in self.example_job.items():
+            if self.example_job[key]['process_id'] == "load_collection":
+                self.example_job[key]['arguments']['bands'] = self.processgraphBands.toPlainText()
+                self.processgraphEdit_2.setText(json.dumps(self.example_job))
 
     def user_manual(self):
         self.umWindow = QWidget()
@@ -1524,7 +1524,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def load_collection2(self):
         self.tabWidget.setCurrentIndex(2)
         example_job = self.processgraphEdit_2.toPlainText()
-        self.processgraphEdit.setText(str(example_job))
+        example_job_correct_spelling = str(example_job).replace('"{', '{').replace('}"', '}').replace('\\', '').replace('"[', '[').replace(']"', ']')
+
+        self.processgraphEdit.setText(example_job_correct_spelling)
 
         # Settings
         self.label_9.setEnabled(False)

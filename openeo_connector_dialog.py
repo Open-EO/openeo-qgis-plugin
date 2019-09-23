@@ -1241,11 +1241,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         self.jobsTableWidget.clear()
         self.jobsTableWidget.setColumnCount(7)
-        self.jobsTableWidget.setHorizontalHeaderLabels(['Job Id', 'Description/Error', 'Submission Date', 'Status',
+        self.jobsTableWidget.setHorizontalHeaderLabels(['Job Title', 'Description/Error', 'Submission Date', 'Status',
                                                         'Execute', 'Display', 'Information'])
         header = self.jobsTableWidget.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents) # before: Stretch
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
@@ -1258,11 +1258,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         self.servicesTableWidget.clear()
         self.servicesTableWidget.setColumnCount(5)
-        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Id', 'Title/Error', 'Submission Date', 'Type',
+        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Tile', 'Title/Error', 'Submission Date', 'Type',
                                                             'Display'])
         header = self.servicesTableWidget.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents) # before: Stretch
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
@@ -1286,10 +1286,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         for val in jobs:
 
-            if "id" in val:
-                qitem = QTableWidgetItem(val["id"])
-                qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.jobsTableWidget.setItem(row, 0, qitem)
+            if "title" in val:
+                if val['title'] == None:
+                    qitem = QTableWidgetItem("Untitled Job!")
+                    qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+                    self.jobsTableWidget.setItem(row, 0, qitem)
+                else:
+                    qitem = QTableWidgetItem(val["title"])
+                    qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+                    self.jobsTableWidget.setItem(row, 0, qitem)
 
             if "error" in val:
                 if val["error"]:
@@ -1364,10 +1369,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         for val in services:
             # self.processgraphEdit.setText(val)
-            if "id" in val:
-                qitem = QTableWidgetItem(val["id"])
-                qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.servicesTableWidget.setItem(row, 0, qitem)
+            if "title" in val:
+                if val['title'] == None:
+                    qitem = QTableWidgetItem("Untitled Service!")
+                    qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+                    self.servicesTableWidget.setItem(row, 0, qitem)
+                else:
+                    qitem = QTableWidgetItem(val["title"])
+                    qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+                    self.servicesTableWidget.setItem(row, 0, qitem)
 
             if "error" in val:
                 if val["error"]:

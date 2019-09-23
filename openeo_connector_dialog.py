@@ -1513,7 +1513,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             "id": col,
             "spatial_extent": ex,
             "temporal_extent": [texS, texE],
-            "bands": [band3],
+            "bands": band3,
         })
 
         self.processgraph.load_collection(self.arguments)
@@ -1521,11 +1521,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.reload_processgraph_view()
         self.tabWidget.setCurrentIndex(2)
 
+        processgraph_correct_spelling = str(self.processgraphEdit.toPlainText()).replace('"{', '{').replace('}"', '}').replace('\\', '') \
+            .replace('"[', '[').replace(']"', ']')
+        self.processgraphEdit.setText(processgraph_correct_spelling)
+
     def load_collection2(self):
         self.tabWidget.setCurrentIndex(2)
         example_job = self.processgraphEdit_2.toPlainText()
-        example_job_correct_spelling = str(example_job).replace('"{', '{').replace('}"', '}').replace('\\', '').replace('"[', '[').replace(']"', ']')
-
+        example_job_correct_spelling = str(example_job).replace('"{', '{').replace('}"', '}').replace('\\', '')\
+            .replace('"[', '').replace(']"', '')
         self.processgraphEdit.setText(example_job_correct_spelling)
 
         # Settings

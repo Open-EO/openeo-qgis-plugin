@@ -1356,7 +1356,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
                 self.jobsTableWidget.setItem(row, 3, qitem)
 
-            execBtn = QPushButton('Execute', self.jobsTableWidget)
+            execBtn = QPushButton(self.jobsTableWidget)
+            execBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'execute_icon.png')))
+            execBtn.setIconSize(QSize(21, 21))
 
             if "status" in val:
                 qitem = QTableWidgetItem(val["status"])
@@ -1366,8 +1368,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 if val["status"] == "finished":
                     self.jobsTableWidget.item(row, 2).setBackground(QColor(75, 254, 40, 160))
                     dispBtn = QPushButton(self.jobsTableWidget)
-                    dispBtn.setText('Display')
-                    self.jobsTableWidget.setCellWidget(row, 2, dispBtn)
+                    dispBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'display_icon.png')))
+                    dispBtn.setIconSize(QSize(29, 29))
+                    self.jobsTableWidget.setCellWidget(row, 4, dispBtn)
                     dispBtn.clicked.connect(lambda *args, row=row: self.job_display(row))
                     iface.actionZoomIn().trigger()
 
@@ -1383,8 +1386,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
             self.infoBtn3 = QPushButton(self.jobsTableWidget)
             self.infoBtn3.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
+            self.infoBtn3.setIconSize(QSize(25, 25))
             self.processGraphBtn = QPushButton(self.jobsTableWidget)
             self.processGraphBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'processGraph_icon.png')))
+            self.processGraphBtn.setIconSize(QSize(22, 22))
             self.jobsTableWidget.setCellWidget(row, 5, self.infoBtn3)
             self.jobsTableWidget.setCellWidget(row, 6, self.processGraphBtn)
             self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info(row))
@@ -1440,15 +1445,17 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
                 self.servicesTableWidget.setItem(row, 3, qitem)
 
-            execBtn = QPushButton('Display', self.servicesTableWidget)
+            displayBtn = QPushButton(self.servicesTableWidget)
+            displayBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'display_icon.png')))
+            displayBtn.setIconSize(QSize(29, 29))
 
             if "type" in val:
                 qitem = QTableWidgetItem(val["type"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
                 self.servicesTableWidget.setItem(row, 4, qitem)
 
-            self.servicesTableWidget.setCellWidget(row, 5, execBtn)
-            execBtn.clicked.connect(lambda *args, row=row: self.service_execute(val["url"], val["id"]))
+            self.servicesTableWidget.setCellWidget(row, 5, displayBtn)
+            displayBtn.clicked.connect(lambda *args, row=row: self.service_execute(val["url"], val["id"]))
 
             row += 1
 

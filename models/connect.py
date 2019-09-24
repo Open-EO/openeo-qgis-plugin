@@ -2,7 +2,6 @@ import requests
 from requests.auth import HTTPBasicAuth
 import tempfile
 import json
-import http
 
 class Connection:
     def connect(self, url, username=None, password=None) -> bool:
@@ -133,13 +132,12 @@ class Connection:
         """
         requested_info = "/jobs/{}".format(job_id)
         get_info = self.get(requested_info, stream=True)
-        job_info = json.loads(get_info)
+        job_info = get_info.json()
 
-        #title = job_info['title']
-        #description = job_info['description']
-        #process_graph = job_info['process_graph']
-        #cost = job_info['costs']
-        #processes = []
+        title = job_info['title']
+        description = job_info['description']
+        cost = job_info['costs']
+        processes = []
         # Data & Extents & Processes
         for key in job_info['process_graph'].keys():
             if "load_collection" in key:
@@ -148,12 +146,18 @@ class Connection:
                 spatial_extent = job_info['process_graph'][key]['arguments']['temporal_extent']
                 processes.append(key)
 
-                #job_info_id = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}. \nTemporal Extent: {}. \nCost: {}.".\
-                #    format(title, description, data_set, processes, spatial_extent, temporal_extent, cost).replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
+                job_info_id = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}.\nTemporal Extent: {}. \nCost: {}."\
+                    .format(title, description, data_set, processes, spatial_extent, temporal_extent, cost)\
+                    .replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
 
-#                info_combined = "[{}], [{}]".format(job_info_id, process_graph)
+                return job_info_id
 
- #               return info_combined
+    def pg_info(self, job_id):
+        requested_info = "/jobs/{}".format(job_id)
+        get_info = self.get(requested_info, stream=True)
+        job_info = get_info.json()
+        process_graph = job_info['process_graph']
+        return process_graph
 
     def job_result_url(self, job_id):
         """

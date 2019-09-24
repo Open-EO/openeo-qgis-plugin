@@ -1219,66 +1219,87 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Returns detailed information about a submitted batch job in a PopUp-Window, such as:
         - Start time
         - Description
-        - Process Graph
         - Progress
         - Cost
+        - ...
         :param row: Integer number of the row the button is clicked.
         """
 
-        job_id = self.jobsTableWidget.item(row, 0).text()
+        job_id = self.jobsTableWidget.item(row, 1).text()
         job_info = self.connection.job_info(job_id)
-        process_graph = self.connection.job_info(job_id)
+        self.infoWindow3 = QWidget()
+        self.hbox3 = QHBoxLayout()
+        self.infoBox3 = QTextEdit()
+        self.infoBox3.setText(str(job_info))
+        self.infoBox3.setReadOnly(True)
+        self.hbox3.addWidget(self.infoBox3)
+        self.infoWindow3.setLayout(self.hbox3)
+        self.infoWindow3.setGeometry(400, 400, 600, 450)
+        self.infoWindow3.setWindowTitle('Job Information')
+        self.infoWindow3.show()
 
-        if self.infoBtn3.clicked:
-            self.infoWindow3 = QWidget()
-            self.hbox3 = QHBoxLayout()
-            self.infoBox3 = QTextEdit()
-            self.infoBox3.setText(str(job_info))
-            self.infoBox3.setReadOnly(True)
-            self.hbox3.addWidget(self.infoBox3)
-            self.infoWindow3.setLayout(self.hbox3)
-            self.infoWindow3.setGeometry(400, 400, 600, 450)
-            self.infoWindow3.setWindowTitle('Job Information')
-            self.infoWindow3.show()
+    def pg_info(self, row):
+        """
+        Returns detailed information about a the process graph of a batch job in a PopUp-Window:
+        :param row: Integer number of the row the button is clicked.
+        """
+        job_id = self.jobsTableWidget.item(row, 1).text()
+        process_graph = self.connection.pg_info(job_id)
 
-        if self.processGraphBtn.clicked:
-            self.infoWindow4 = QWidget()
-            self.hbox5 = QHBoxLayout()
-            self.infoBox4 = QTextEdit()
-            self.infoBox4.setText(str(process_graph))
-            self.infoBox4.setReadOnly(True)
-            self.hbox5.addWidget(self.infoBox4)
-            self.infoWindow4.setLayout(self.hbox5)
-            self.infoWindow4.setGeometry(400, 400, 600, 450)
-            self.infoWindow4.setWindowTitle('Process Graph')
-            self.infoWindow4.show()
+        self.infoWindow4 = QWidget()
+        self.hbox5 = QHBoxLayout()
+        self.infoBox4 = QTextEdit()
+        self.infoBox4.setText(str(process_graph))
+        self.infoBox4.setReadOnly(True)
+        self.copy_and_adaptBtn = QPushButton('Copy and Adapt Process Graph in QGIS Plugin')
+        self.hbox5.addWidget(self.infoBox4)
+        self.hbox5.addWidget(self.copy_and_adaptBtn)
+        self.infoWindow4.setLayout(self.hbox5)
+        self.infoWindow4.setGeometry(400, 400, 600, 450)
+        self.infoWindow4.setWindowTitle('Process Graph')
+        self.infoWindow4.show()
+        self.copy_and_adaptBtn.clicked.connect(self.copy_and_adapt)
+
+    def copy_and_adapt(self):
+        self.processgraphEdit_2.setText(str(self.infoBox4.toPlainText()).replace("'", '"').replace("None", '"None"'))
+        self.infoWindow4.close()
+        self.tabWidget.setCurrentIndex(1)
+
+        # Enable Buttons
+        self.insertChangeBtn.setEnabled(True)
+        self.insertChangeBtn_2.setEnabled(True)
+        self.insertChangeBtn_3.setEnabled(True)
+        self.loadButton2.setEnabled(True)
 
     def init_jobs(self):
         """
         Initializes the jobs table
         """
         self.jobsTableWidget.clear()
-        self.jobsTableWidget.setColumnCount(7)
-        self.jobsTableWidget.setHorizontalHeaderLabels(['Job Title', 'Description/Error', 'Submission Date', 'Status',
-                                                        'Execute', 'Display', 'Information'])
+        self.jobsTableWidget.setColumnCount(9)
+        self.jobsTableWidget.setHorizontalHeaderLabels(['Job Title', 'Job ID', 'Status', 'Execute', 'Display',
+                                                        'Information', 'Process Graph', 'Description/Error',
+                                                        'Submission Date'])
         header = self.jobsTableWidget.horizontalHeader()
         self.jobsTableWidget.setSortingEnabled(True)
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Interactive)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Interactive)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.Interactive)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.Interactive)
-        header.setSectionResizeMode(5, QtWidgets.QHeaderView.Interactive)
-        header.setSectionResizeMode(6, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(7, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(8, QtWidgets.QHeaderView.Interactive)
 
     def init_services(self):
         """
         Initializes the services table
         """
         self.servicesTableWidget.clear()
-        self.servicesTableWidget.setColumnCount(5)
-        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Title', 'Description/Error', 'Submission Date', 'Type',
-                                                            'Display'])
+        self.servicesTableWidget.setColumnCount(6)
+        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Title', 'Service ID', 'Description/Error',
+                                                            'Submission Date', 'Type', 'Display'])
         header = self.servicesTableWidget.horizontalHeader()
         self.servicesTableWidget.setSortingEnabled(True)
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Interactive)
@@ -1286,6 +1307,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.Interactive)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.Interactive)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
 
     def refresh_jobs(self):
         """
@@ -1303,6 +1325,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         row = 0
 
         for val in jobs:
+            if "id" in val:
+                qitem = QTableWidgetItem(val["id"])
+                qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+                self.jobsTableWidget.setItem(row, 1, qitem)
 
             if "title" in val:
                 if val['title'] == None:
@@ -1319,54 +1345,50 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     if "message" in val["error"]:
                         qitem = QTableWidgetItem(val["error"]["message"])
                         qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                        self.jobsTableWidget.setItem(row, 1, qitem)
+                        self.jobsTableWidget.setItem(row, 7, qitem)
             elif "description" in val:
                 qitem = QTableWidgetItem(val["description"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.jobsTableWidget.setItem(row, 1, qitem)
+                self.jobsTableWidget.setItem(row, 7, qitem)
 
             if "submitted" in val:
                 qitem = QTableWidgetItem(val["submitted"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.jobsTableWidget.setItem(row, 2, qitem)
+                self.jobsTableWidget.setItem(row, 3, qitem)
 
             execBtn = QPushButton('Execute', self.jobsTableWidget)
 
             if "status" in val:
                 qitem = QTableWidgetItem(val["status"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.jobsTableWidget.setItem(row, 3, qitem)
+                self.jobsTableWidget.setItem(row, 2, qitem)
 
                 if val["status"] == "finished":
-                    self.jobsTableWidget.item(row, 3).setBackground(QColor(75, 254, 40, 160))
+                    self.jobsTableWidget.item(row, 2).setBackground(QColor(75, 254, 40, 160))
                     dispBtn = QPushButton(self.jobsTableWidget)
                     dispBtn.setText('Display')
-                    self.jobsTableWidget.setCellWidget(row, 5, dispBtn)
+                    self.jobsTableWidget.setCellWidget(row, 2, dispBtn)
                     dispBtn.clicked.connect(lambda *args, row=row: self.job_display(row))
                     iface.actionZoomIn().trigger()
 
                 elif val["status"] == "submitted":
-                    self.jobsTableWidget.item(row, 3).setBackground(QColor(254, 178, 76, 200))
+                    self.jobsTableWidget.item(row, 2).setBackground(QColor(254, 178, 76, 200))
 
                 elif val["status"] == "error":
-                    self.jobsTableWidget.item(row, 3).setBackground(QColor(254, 100, 100, 200))
+                    self.jobsTableWidget.item(row, 2).setBackground(QColor(254, 100, 100, 200))
 
-            self.jobsTableWidget.setCellWidget(row, 4, execBtn)
+            self.jobsTableWidget.setCellWidget(row, 3, execBtn)
             execBtn.clicked.connect(lambda *args, row=row: self.job_execute(row))
 
-            layout = QHBoxLayout()
+
             self.infoBtn3 = QPushButton(self.jobsTableWidget)
             self.infoBtn3.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
             self.processGraphBtn = QPushButton(self.jobsTableWidget)
             self.processGraphBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'processGraph_icon.png')))
-            layout.addWidget(self.infoBtn3)
-            layout.addWidget(self.processGraphBtn)
-            layout.totalMaximumSize()
-            cell_widget = QWidget()
-            cell_widget.setLayout(layout)
-            self.jobsTableWidget.setCellWidget(row, 6, cell_widget)
+            self.jobsTableWidget.setCellWidget(row, 5, self.infoBtn3)
+            self.jobsTableWidget.setCellWidget(row, 6, self.processGraphBtn)
             self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info(row))
-            self.processGraphBtn.clicked.connect(lambda *args, row=row: self.job_info(row))
+            self.processGraphBtn.clicked.connect(lambda *args, row=row: self.pg_info(row))
 
         row += 1
 
@@ -1397,30 +1419,35 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     qitem.setFlags(QtCore.Qt.ItemIsEnabled)
                     self.servicesTableWidget.setItem(row, 0, qitem)
 
+            if "id" in val:
+                qitem = QTableWidgetItem(val['id'])
+                qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+                self.servicesTableWidget.setItem(row, 1, qitem)
+
             if "error" in val:
                 if val["error"]:
                     if "message" in val["error"]:
                         qitem = QTableWidgetItem(val["error"]["message"])
                         qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                        self.servicesTableWidget.setItem(row, 1, qitem)
+                        self.servicesTableWidget.setItem(row, 2, qitem)
             elif "description" in val:
                 qitem = QTableWidgetItem(val["description"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.servicesTableWidget.setItem(row, 1, qitem)
+                self.servicesTableWidget.setItem(row, 2, qitem)
 
             if "submitted" in val:
                 qitem = QTableWidgetItem(val["submitted"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.servicesTableWidget.setItem(row, 2, qitem)
+                self.servicesTableWidget.setItem(row, 3, qitem)
 
             execBtn = QPushButton('Display', self.servicesTableWidget)
 
             if "type" in val:
                 qitem = QTableWidgetItem(val["type"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.servicesTableWidget.setItem(row, 3, qitem)
+                self.servicesTableWidget.setItem(row, 4, qitem)
 
-            self.servicesTableWidget.setCellWidget(row, 4, execBtn)
+            self.servicesTableWidget.setCellWidget(row, 5, execBtn)
             execBtn.clicked.connect(lambda *args, row=row: self.service_execute(val["url"], val["id"]))
 
             row += 1
@@ -1451,7 +1478,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         This method is called after the "Execute" button is clicked at the job table.
         :param row: Integer number of the row the button is clicked.
         """
-        job_id = self.jobsTableWidget.item(row, 0).text()
+        job_id = self.jobsTableWidget.item(row, 1).text()
         self.connection.job_start(job_id)
         self.refresh_jobs()
 
@@ -1461,7 +1488,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         This method is called after the "Display" button is clicked at the job table.
         :param row: Integer number of the row the button is clicked.
         """
-        job_id = self.jobsTableWidget.item(row, 0).text()
+        job_id = self.jobsTableWidget.item(row, 1).text()
         download_dir = self.connection.job_result_download(job_id)
         if download_dir:
             info(self.iface, "Downloaded to {}".format(download_dir))  # def web_view(self):
@@ -1476,25 +1503,22 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         Sends the current process graph to the backend to create a new job.
         """
-        if self.statusLabel.text == "Disconnected":
-            self.iface.messageBar().pushMessage("You are not connected to a backend.", duration=5)
+        graph = self.processgraphEdit.toPlainText()
+        # info(self.iface, graph)
+        response = self.connection.job_create(json.loads(graph))
+        if response.status_code == 201:
+            info(self.iface, "Successfully created new job, Response: {}".format(response.status_code))
         else:
-            graph = self.processgraphEdit.toPlainText()
-            # info(self.iface, graph)
-            response = self.connection.job_create(json.loads(graph))
-            if response.status_code == 201:
-                info(self.iface, "Successfully created new job, Response: {}".format(response.status_code))
-            else:
-                warning(self.iface, "Not able to created new job, Response: {}".format(str(response.json())))
+            warning(self.iface, "Not able to created new job, Response: {}".format(str(response.json())))
 
-            self.refresh_jobs()
+        self.refresh_jobs()
 
     def del_job(self):
         self.chosenRow = self.jobsTableWidget.currentRow()
         self.jobsTableWidget.removeRow(self.chosenRow)
 
     def delete_job_final(self, row):
-        job_id = self.jobsTableWidget.item(row, 0).text()
+        job_id = self.jobsTableWidget.item(row, 1).text()
         self.connection.delete_job(job_id)
         self.refresh_jobs()
 
@@ -1568,6 +1592,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             .replace('east', '"east"').replace('south', '"south"').replace('north', '"north"').replace('crs', '"crs": "')
         self.processgraphEdit.setText(str(processgraph_correct_spelling))
 
+        #self.iface.messageBar().pushMessage("You are not connected to a backend.", duration=5)
+        #self.sendButton.setEnabled(False)
         self.sendButton.setEnabled(True)
 
     def load_collection2(self):

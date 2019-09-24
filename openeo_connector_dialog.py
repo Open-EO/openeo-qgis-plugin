@@ -903,7 +903,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                "the “Connect”-Button, you will be connected with the chosen back-end. \n")
         # openEO Header Image
         self.image = QLabel()
-        self.image.setPixmap(QPixmap('openEO_plugin_header.png'))
+        self.image.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'openEO_plugin_header.png')))
 
         self.grid.setSpacing(4)
         self.grid.addWidget(self.title, 0, 0)

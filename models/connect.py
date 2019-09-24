@@ -2,6 +2,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 import tempfile
 import json
+import http
 
 class Connection:
     def connect(self, url, username=None, password=None) -> bool:
@@ -25,6 +26,14 @@ class Connection:
             else:
                 return False
 
+        # disconnect
+        elif username and password == None:
+            token_dis = requests.get(self._url)
+            if token_dis.status_code == 200:
+                return False
+            else:
+                return False
+
         return True
 
     def get_header(self):
@@ -32,7 +41,6 @@ class Connection:
         Returns the header (used for a request) with e.g. the authentication token.
         :return: header: Dict
         """
-
         if self.token:
             return {'Authorization': 'Bearer {}'.format(self.token)}
         else:
@@ -125,27 +133,27 @@ class Connection:
         """
         requested_info = "/jobs/{}".format(job_id)
         get_info = self.get(requested_info, stream=True)
-        json = get_info.json()
+        job_info = json.loads(get_info)
 
-        title = json['title']
-        description = json['description']
-        process_graph = json['process_graph']
-        cost = json['costs']
-        processes = []
+        #title = job_info['title']
+        #description = job_info['description']
+        #process_graph = job_info['process_graph']
+        #cost = job_info['costs']
+        #processes = []
         # Data & Extents & Processes
-        for key in json['process_graph'].keys():
+        for key in job_info['process_graph'].keys():
             if "load_collection" in key:
-                data_set = json['process_graph'][key]['arguments']['id']
-                temporal_extent = json['process_graph'][key]['arguments']['spatial_extent']
-                spatial_extent = json['process_graph'][key]['arguments']['temporal_extent']
+                data_set = job_info['process_graph'][key]['arguments']['id']
+                temporal_extent = job_info['process_graph'][key]['arguments']['spatial_extent']
+                spatial_extent = job_info['process_graph'][key]['arguments']['temporal_extent']
                 processes.append(key)
 
-                job_info = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}. \nTemporal Extent: {}. \nCost: {}.".\
-                    format(title, description, data_set, processes, spatial_extent, temporal_extent, cost).replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
+                #job_info_id = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}. \nTemporal Extent: {}. \nCost: {}.".\
+                #    format(title, description, data_set, processes, spatial_extent, temporal_extent, cost).replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
 
-                info_combined = "[{}], [{}]".format(job_info, process_graph)
+#                info_combined = "[{}], [{}]".format(job_info_id, process_graph)
 
-                return info_combined
+ #               return info_combined
 
     def job_result_url(self, job_id):
         """

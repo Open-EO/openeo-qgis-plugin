@@ -152,6 +152,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.refreshButton.clicked.connect(self.refresh_jobs)
         self.clearButton.clicked.connect(self.clear)  # Clear Button
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
+        self.sendButton.setEnabled(False)
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
         self.loadButton2.clicked.connect(self.load_collection2)
         self.loadButton.setEnabled(False)
@@ -996,6 +997,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.label_10.setEnabled(True)
         self.label_6.setEnabled(True)
         self.infoBtn.setEnabled(True)
+        self.sendButton.setEnabled(True)
         self.start_wizard0()
 
     def start_wizard0(self):
@@ -1151,9 +1153,25 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.passwordEdit.clear()
         self.connectButton.show()
         self.disconnectButton.hide()
+        self.collectionBox.clear()
+        self.collectionBox.setEnabled(False)
+        self.infoBtn.setEnabled(False)
+        self.label_6.setEnabled(False)
+        self.nextButton.setEnabled(False)
 
-        s = requests.session()
-        s.close()
+        if self.backendEdit.currentText() == "None of the listed ones match":
+            url = self.backendEdit2.text()
+        else:
+            url = self.backendEdit.currentText()
+        pwd = self.passwordEdit.text()
+        user = self.usernameEdit.text()
+        if user == "":
+            user = None
+        if pwd == "":
+            pwd = None
+
+        self.connection.connect(url, user, pwd) # disconnect
+        self.sendButton.setEnabled(False)
 
     def col_info(self):
         collection_info_result = self.connection.list_collections()
@@ -1259,7 +1277,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         self.servicesTableWidget.clear()
         self.servicesTableWidget.setColumnCount(5)
-        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Title', 'Title/Error', 'Submission Date', 'Type',
+        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Title', 'Description/Error', 'Submission Date', 'Type',
                                                             'Display'])
         header = self.servicesTableWidget.horizontalHeader()
         self.servicesTableWidget.setSortingEnabled(True)
@@ -1385,8 +1403,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                         qitem = QTableWidgetItem(val["error"]["message"])
                         qitem.setFlags(QtCore.Qt.ItemIsEnabled)
                         self.servicesTableWidget.setItem(row, 1, qitem)
-            elif "title" in val:
-                qitem = QTableWidgetItem(val["title"])
+            elif "description" in val:
+                qitem = QTableWidgetItem(val["description"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
                 self.servicesTableWidget.setItem(row, 1, qitem)
 
@@ -1458,15 +1476,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         Sends the current process graph to the backend to create a new job.
         """
-        graph = self.processgraphEdit.toPlainText()
-        # info(self.iface, graph)
-        response = self.connection.job_create(json.loads(graph))
-        if response.status_code == 201:
-            info(self.iface, "Successfully created new job, Response: {}".format(response.status_code))
+        if self.statusLabel.text == "Disconnected":
+            self.iface.messageBar().pushMessage("You are not connected to a backend.", duration=5)
         else:
-            warning(self.iface, "Not able to created new job, Response: {}".format(str(response.json())))
+            graph = self.processgraphEdit.toPlainText()
+            # info(self.iface, graph)
+            response = self.connection.job_create(json.loads(graph))
+            if response.status_code == 201:
+                info(self.iface, "Successfully created new job, Response: {}".format(response.status_code))
+            else:
+                warning(self.iface, "Not able to created new job, Response: {}".format(str(response.json())))
 
-        self.refresh_jobs()
+            self.refresh_jobs()
 
     def del_job(self):
         self.chosenRow = self.jobsTableWidget.currentRow()
@@ -1481,6 +1502,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         Loads the collection form the GUI and starts a new process graph in doing so.
         """
+
         # Collections
         col = str(self.collectionBox.currentText())
         if col == "Choose one of the data sets listed below":
@@ -1546,6 +1568,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             .replace('east', '"east"').replace('south', '"south"').replace('north', '"north"').replace('crs', '"crs": "')
         self.processgraphEdit.setText(str(processgraph_correct_spelling))
 
+        self.sendButton.setEnabled(True)
+
     def load_collection2(self):
         self.tabWidget.setCurrentIndex(2)
         example_job = self.processgraphEdit_2.toPlainText()
@@ -1587,6 +1611,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.start_wizard0()
         self.collectionBox.show()
         self.collectionBox_individual_job.hide()
+        self.sendButton.setEnabled(True)
 
     def load_extent(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
@@ -1632,6 +1657,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def clear(self):
         self.processgraphEdit.clear()
+        self.sendButton.setEnabled(False)
 
     def add_process(self):
         """

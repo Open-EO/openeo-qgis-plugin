@@ -128,7 +128,7 @@ class Connection:
         """
         Returns information about a created job.
         :param: job_id: Identifier of the job
-        :return: jobs: Strings containing details about the created jobs.
+        :return: job_info_id: Strings containing details about the created jobs.
         """
         requested_info = "/jobs/{}".format(job_id)
         get_info = self.get(requested_info, stream=True)
@@ -145,19 +145,50 @@ class Connection:
                 temporal_extent = job_info['process_graph'][key]['arguments']['spatial_extent']
                 spatial_extent = job_info['process_graph'][key]['arguments']['temporal_extent']
                 processes.append(key)
-
                 job_info_id = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}.\nTemporal Extent: {}. \nCost: {}."\
                     .format(title, description, data_set, processes, spatial_extent, temporal_extent, cost)\
                     .replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
-
                 return job_info_id
 
-    def pg_info(self, job_id):
+    def service_info(self, service_id):
+        """
+        Returns information about a created service.
+        :param: service_id: Identifier of the service
+        :return: service_info_id: Strings containing details about the created service.
+        """
+        requested_info = "/services/{}".format(service_id)
+        get_info = self.get(requested_info, stream=True)
+        service_info = get_info.json()
+
+        title = service_info['title']
+        description = service_info['description']
+        cost = service_info['costs']
+        processes = []
+        # Data & Extents & Processes
+        for key in service_info['process_graph'].keys():
+            if "load_collection" in key:
+                data_set = service_info['process_graph'][key]['arguments']['id']
+                temporal_extent = service_info['process_graph'][key]['arguments']['spatial_extent']
+                spatial_extent = service_info['process_graph'][key]['arguments']['temporal_extent']
+                processes.append(key)
+                service_info_id = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}.\nTemporal Extent: {}. \nCost: {}." \
+                    .format(title, description, data_set, processes, spatial_extent, temporal_extent, cost) \
+                    .replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
+                return service_info_id
+
+    def pg_info_job(self, job_id):
         requested_info = "/jobs/{}".format(job_id)
         get_info = self.get(requested_info, stream=True)
         job_info = get_info.json()
-        process_graph = job_info['process_graph']
-        return process_graph
+        process_graph_job = job_info['process_graph']
+        return process_graph_job
+
+    def pg_info_service(self, service_id):
+        requested_info = "/services/{}".format(service_id)
+        get_info = self.get(requested_info, stream=True)
+        service_info = get_info.json()
+        process_graph_service = service_info['process_graph']
+        return process_graph_service
 
     def job_result_url(self, job_id):
         """
@@ -230,6 +261,24 @@ class Connection:
         #    return job_status
 
         return job_status
+
+    def service_create(self, process_graph):
+        """
+        Sends the process graph to the backend and creates a new job.
+        :param: process_graph: Dict, Process Graph of the new job
+        :return: status: String, Status of the job creation
+        """
+        pg = {
+            "process_graph": process_graph
+        }
+        #print(process_graph)
+
+        service_status = self.post("/services", postdata=pg)
+
+        #if job_status.status_code == 201:
+        #    return job_status
+
+        return service_status
 
     def post(self, path, postdata):
         """

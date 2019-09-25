@@ -852,7 +852,8 @@
       </rect>
      </property>
      <property name="text">
-      <string>Load Job</string>
+      <string>Load Job or 
+ Service</string>
      </property>
     </widget>
     <widget class="QPushButton" name="insertChangeBtn_2">
@@ -961,7 +962,7 @@
      <property name="geometry">
       <rect>
        <x>730</x>
-       <y>120</y>
+       <y>190</y>
        <width>111</width>
        <height>51</height>
       </rect>
@@ -1010,7 +1011,7 @@
      <property name="geometry">
       <rect>
        <x>730</x>
-       <y>90</y>
+       <y>160</y>
        <width>111</width>
        <height>20</height>
       </rect>
@@ -1031,6 +1032,26 @@
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
+    <widget class="QPushButton" name="sendButton_service">
+     <property name="geometry">
+      <rect>
+       <x>730</x>
+       <y>100</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Create Service</string>
+     </property>
+    </widget>
+    <zorder>sendButton_service</zorder>
+    <zorder>label_4</zorder>
+    <zorder>clearButton</zorder>
+    <zorder>processgraphEdit</zorder>
+    <zorder>sendButton</zorder>
+    <zorder>label_23</zorder>
+    <zorder>line_5</zorder>
    </widget>
    <widget class="QWidget" name="tab_4">
     <attribute name="title">

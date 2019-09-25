@@ -154,7 +154,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.refreshButton.clicked.connect(self.refresh_jobs)
         self.clearButton.clicked.connect(self.clear)  # Clear Button
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
+        self.sendButton_service.clicked.connect(self.send_service)
         self.sendButton.setEnabled(False)
+        self.sendButton_service.setEnabled(False)
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
         self.loadButton2.clicked.connect(self.load_collection2)
         self.loadButton.setEnabled(False)
@@ -1240,30 +1242,66 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.infoWindow3.setWindowTitle('Job Information')
         self.infoWindow3.show()
 
-    def pg_info(self, row):
+    def service_info(self, row):
+        service_id = self.servicesTableWidget.item(row, 1).text()
+        service_info = self.connection.service_info(service_id)
+        self.infoWindow5 = QWidget()
+        self.hbox7 = QHBoxLayout()
+        self.infoBox2 = QTextEdit()
+        self.infoBox2.setText(str(service_info))
+        self.infoBox2.setReadOnly(True)
+        self.hbox7.addWidget(self.infoBox2)
+        self.infoWindow5.setLayout(self.hbox7)
+        self.infoWindow5.setGeometry(400, 400, 600, 450)
+        self.infoWindow5.setWindowTitle('Service Information')
+        self.infoWindow5.show()
+
+    def pg_info_job(self, row):
         """
         Returns detailed information about a the process graph of a batch job in a PopUp-Window:
         :param row: Integer number of the row the button is clicked.
         """
         job_id = self.jobsTableWidget.item(row, 1).text()
-        process_graph = self.connection.pg_info(job_id)
+        process_graph_job = self.connection.pg_info_job(job_id)
 
         self.infoWindow4 = QWidget()
         self.hbox5 = QHBoxLayout()
         self.infoBox4 = QTextEdit()
-        self.infoBox4.setText(str(process_graph))
+        self.infoBox4.setText(str(process_graph_job))
         self.infoBox4.setReadOnly(True)
-        self.copy_and_adaptBtn = QPushButton('Copy and Adapt Process Graph in QGIS Plugin')
+        self.copy_and_adaptBtn = QPushButton('Copy and Adapt Job Process Graph in QGIS Plugin')
         self.hbox5.addWidget(self.infoBox4)
         self.hbox5.addWidget(self.copy_and_adaptBtn)
         self.infoWindow4.setLayout(self.hbox5)
         self.infoWindow4.setGeometry(400, 400, 600, 450)
-        self.infoWindow4.setWindowTitle('Process Graph')
+        self.infoWindow4.setWindowTitle('Job Process Graph')
         self.infoWindow4.show()
-        self.copy_and_adaptBtn.clicked.connect(self.copy_and_adapt)
+        self.copy_and_adaptBtn.clicked.connect(self.copy_and_adapt_job)
 
-    def copy_and_adapt(self):
-        self.processgraphEdit_2.setText(str(self.infoBox4.toPlainText()).replace("'", '"').replace("None", '"None"'))
+    def pg_info_service(self, row):
+        """
+        Returns detailed information about a the process graph of a batch job in a PopUp-Window:
+        :param row: Integer number of the row the button is clicked.
+        """
+        service_id = self.servicesTableWidget.item(row, 1).text()
+        process_graph_service = self.connection.pg_info_service(service_id)
+
+        self.infoWindow6 = QWidget()
+        self.hbox8 = QHBoxLayout()
+        self.infoBox5 = QTextEdit()
+        self.infoBox5.setText(str(process_graph_service))
+        self.infoBox5.setReadOnly(True)
+        self.copy_adaptBtn = QPushButton('Copy and Adapt Service Process Graph in QGIS Plugin')
+        self.hbox8.addWidget(self.infoBox5)
+        self.hbox8.addWidget(self.copy_adaptBtn)
+        self.infoWindow6.setLayout(self.hbox8)
+        self.infoWindow6.setGeometry(400, 400, 600, 450)
+        self.infoWindow6.setWindowTitle('Service Process Graph')
+        self.infoWindow6.show()
+        self.copy_adaptBtn.clicked.connect(self.copy_and_adapt_service)
+
+    def copy_and_adapt_job(self):
+        self.processgraphEdit_2.setText(str(self.infoBox4.toPlainText()).replace("'", '"').replace("None", '"None"').replace("True", '"True"'))
         self.infoWindow4.close()
         self.tabWidget.setCurrentIndex(1)
 
@@ -1272,6 +1310,21 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn_2.setEnabled(True)
         self.insertChangeBtn_3.setEnabled(True)
         self.loadButton2.setEnabled(True)
+        self.sendButton.setEnabled(True)
+        self.sendButton_service.setEnabled(False)
+
+    def copy_and_adapt_service(self):
+        self.processgraphEdit_2.setText(str(self.infoBox5.toPlainText()).replace("'", '"').replace("None", '"None"').replace("True", '"True"'))
+        self.infoWindow6.close()
+        self.tabWidget.setCurrentIndex(1)
+
+        # Enable Buttons
+        self.insertChangeBtn.setEnabled(True)
+        self.insertChangeBtn_2.setEnabled(True)
+        self.insertChangeBtn_3.setEnabled(True)
+        self.loadButton2.setEnabled(True)
+        self.sendButton.setEnabled(False)
+        self.sendButton_service.setEnabled(True)
 
     def init_jobs(self):
         """
@@ -1299,9 +1352,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Initializes the services table
         """
         self.servicesTableWidget.clear()
-        self.servicesTableWidget.setColumnCount(7)
-        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Title', 'Service ID', 'Display', 'Information', 'Description/Error',
-                                                            'Submission Date', 'Type'])
+        self.servicesTableWidget.setColumnCount(8)
+        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Title', 'Service ID', 'Display', 'Information',
+                                                            'Process Graph', 'Description/Error', 'Submission Date',
+                                                            'Type'])
         header = self.servicesTableWidget.horizontalHeader()
         self.servicesTableWidget.setSortingEnabled(True)
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Interactive)
@@ -1311,6 +1365,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.Interactive)
         header.setSectionResizeMode(5, QtWidgets.QHeaderView.Interactive)
         header.setSectionResizeMode(6, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(7, QtWidgets.QHeaderView.Interactive)
 
     def refresh_jobs(self):
         """
@@ -1396,7 +1451,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.jobsTableWidget.setCellWidget(row, 5, self.infoBtn3)
             self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info(row))
             self.jobsTableWidget.setCellWidget(row, 6, self.processGraphBtn)
-            self.processGraphBtn.clicked.connect(lambda *args, row=row: self.pg_info(row))
+            self.processGraphBtn.clicked.connect(lambda *args, row=row: self.pg_info_job(row))
 
             row += 1
 
@@ -1437,16 +1492,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     if "message" in val["error"]:
                         qitem = QTableWidgetItem(val["error"]["message"])
                         qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                        self.servicesTableWidget.setItem(row, 4, qitem)
+                        self.servicesTableWidget.setItem(row, 5, qitem)
             elif "description" in val:
                 qitem = QTableWidgetItem(val["description"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.servicesTableWidget.setItem(row, 4, qitem)
+                self.servicesTableWidget.setItem(row, 5, qitem)
 
             if "submitted" in val:
                 qitem = QTableWidgetItem(val["submitted"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.servicesTableWidget.setItem(row, 5, qitem)
+                self.servicesTableWidget.setItem(row, 6, qitem)
 
             displayBtn = QPushButton(self.servicesTableWidget)
             displayBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'display_icon.png')))
@@ -1455,7 +1510,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             if "type" in val:
                 qitem = QTableWidgetItem(val["type"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.servicesTableWidget.setItem(row, 6, qitem)
+                self.servicesTableWidget.setItem(row, 7, qitem)
 
             self.servicesTableWidget.setCellWidget(row, 2, displayBtn)
             displayBtn.clicked.connect(lambda *args, row=row: self.service_execute(val["url"], val["id"]))
@@ -1464,7 +1519,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.infoBtn4.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
             self.infoBtn4.setIconSize(QSize(25, 25))
             self.servicesTableWidget.setCellWidget(row, 3, self.infoBtn4)
-            #self.infoBtn4.clicked.connect(lambda *args, row=row: self.service_info(row))
+            self.infoBtn4.clicked.connect(lambda *args, row=row: self.service_info(row))
+
+            self.processGraphBtn_service = QPushButton(self.jobsTableWidget)
+            self.processGraphBtn_service.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'processGraph_icon.png')))
+            self.processGraphBtn_service.setIconSize(QSize(22, 22))
+            self.servicesTableWidget.setCellWidget(row, 4, self.processGraphBtn_service)
+            self.processGraphBtn_service.clicked.connect(lambda *args, row=row: self.pg_info_service(row))
 
             row += 1
 
@@ -1528,6 +1589,20 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             warning(self.iface, "Not able to created new job, Response: {}".format(str(response.json())))
 
         self.refresh_jobs()
+
+    def send_service(self):
+        """
+        Sends the current process graph to the backend to create a new service.
+        """
+        graph = self.processgraphEdit.toPlainText()
+        # info(self.iface, graph)
+        response = self.connection.service_create(json.loads(graph))
+        if response.status_code == 201:
+            info(self.iface, "Successfully created new service, Response: {}".format(response.status_code))
+        else:
+            warning(self.iface, "Not able to created new service, Response: {}".format(str(response.json())))
+
+        self.refresh_services()
 
     def del_job(self):
         self.chosenRow = self.jobsTableWidget.currentRow()

@@ -41,11 +41,11 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit, QListWidget, QListWidgetItem, QApplication, \
     QWidget, QLabel, QGridLayout
 from PyQt5 import QtCore
-from PyQt5.QtCore import QDate, Qt, QSize
+from PyQt5.QtCore import QDate, Qt, QSize, QSettings
 from PyQt5 import QtGui
 from PyQt5.QtGui import QColor, QIcon, QPixmap
 from PyQt5.QtWidgets import QCalendarWidget
-import ast
+
 
 from .models.result import Result
 from .models.connect import Connection
@@ -1500,11 +1500,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         if download_dir:
             info(self.iface, "Downloaded to {}".format(download_dir))  # def web_view(self):
             result = Result(path=download_dir)
+            crs_background = iface.activeLayer().crs().authid()
+            QSettings().setValue('/Projections/defaultBehaviour', 'useGlobal')
+            QSettings().setValue('/Projections/layerDefaultCrs', crs_background)
             result.display()
             iface.zoomToActiveLayer()
 
         self.refresh_jobs()
-        # info(self.iface, "New Job {}".format(job_id))
 
     def send_job(self):
         """

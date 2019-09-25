@@ -1395,7 +1395,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info(row))
             self.processGraphBtn.clicked.connect(lambda *args, row=row: self.pg_info(row))
 
-        row += 1
+            row += 1
 
     def refresh_services(self):
         """

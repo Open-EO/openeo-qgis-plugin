@@ -34,7 +34,7 @@ from qgis.PyQt import uic, QtGui, QtWidgets
 from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, \
     QApplication, QAction, QMainWindow, QFileDialog
 import qgis.PyQt.QtCore as QtCore
-from qgis.core import QgsVectorLayer
+from qgis.core import QgsVectorLayer, QgsRasterLayer, QgsProject
 from qgis.utils import iface
 
 from PyQt5 import QtWidgets
@@ -54,6 +54,8 @@ from .utils.logging import info, warning
 from .drawRect import DrawRectangle
 from .drawPoly import DrawPolygon
 from distutils.version import LooseVersion
+
+from qgis.core import QgsRasterLayer, QgsProject
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
@@ -1297,17 +1299,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Initializes the services table
         """
         self.servicesTableWidget.clear()
-        self.servicesTableWidget.setColumnCount(6)
-        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Title', 'Service ID', 'Description/Error',
-                                                            'Submission Date', 'Type', 'Display'])
+        self.servicesTableWidget.setColumnCount(7)
+        self.servicesTableWidget.setHorizontalHeaderLabels(['Service Title', 'Service ID', 'Display', 'Information', 'Description/Error',
+                                                            'Submission Date', 'Type'])
         header = self.servicesTableWidget.horizontalHeader()
         self.servicesTableWidget.setSortingEnabled(True)
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Interactive)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Interactive)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Interactive)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.Interactive)
-        header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(5, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(6, QtWidgets.QHeaderView.Interactive)
 
     def refresh_jobs(self):
         """
@@ -1391,8 +1394,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.processGraphBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'processGraph_icon.png')))
             self.processGraphBtn.setIconSize(QSize(22, 22))
             self.jobsTableWidget.setCellWidget(row, 5, self.infoBtn3)
-            self.jobsTableWidget.setCellWidget(row, 6, self.processGraphBtn)
             self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info(row))
+            self.jobsTableWidget.setCellWidget(row, 6, self.processGraphBtn)
             self.processGraphBtn.clicked.connect(lambda *args, row=row: self.pg_info(row))
 
             row += 1
@@ -1434,16 +1437,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     if "message" in val["error"]:
                         qitem = QTableWidgetItem(val["error"]["message"])
                         qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                        self.servicesTableWidget.setItem(row, 2, qitem)
+                        self.servicesTableWidget.setItem(row, 4, qitem)
             elif "description" in val:
                 qitem = QTableWidgetItem(val["description"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.servicesTableWidget.setItem(row, 2, qitem)
+                self.servicesTableWidget.setItem(row, 4, qitem)
 
             if "submitted" in val:
                 qitem = QTableWidgetItem(val["submitted"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.servicesTableWidget.setItem(row, 3, qitem)
+                self.servicesTableWidget.setItem(row, 5, qitem)
 
             displayBtn = QPushButton(self.servicesTableWidget)
             displayBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'display_icon.png')))
@@ -1452,10 +1455,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             if "type" in val:
                 qitem = QTableWidgetItem(val["type"])
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                self.servicesTableWidget.setItem(row, 4, qitem)
+                self.servicesTableWidget.setItem(row, 6, qitem)
 
-            self.servicesTableWidget.setCellWidget(row, 5, displayBtn)
+            self.servicesTableWidget.setCellWidget(row, 2, displayBtn)
             displayBtn.clicked.connect(lambda *args, row=row: self.service_execute(val["url"], val["id"]))
+
+            self.infoBtn4 = QPushButton(self.jobsTableWidget)
+            self.infoBtn4.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
+            self.infoBtn4.setIconSize(QSize(25, 25))
+            self.servicesTableWidget.setCellWidget(row, 3, self.infoBtn4)
+            #self.infoBtn4.clicked.connect(lambda *args, row=row: self.service_info(row))
 
             row += 1
 
@@ -1465,8 +1474,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         This method is called after the "Execute" button is clicked at the job table.
         :param row: Integer number of the row the button is clicked.
         """
-        from qgis.core import QgsRasterLayer, QgsProject
-
         urlWithParams = 'type=xyz&url={}'.format(url)
         # urlWithParams = 'type=xyz&url={}&zmax=19&zmin=0&crs=EPSG3857'.format(url)
 

@@ -273,7 +273,7 @@ class Connection:
         }
         #print(process_graph)
 
-        service_status = self.post("/services", postdata=pg)
+        service_status = self.post("/jobs", postdata=pg)
 
         #if job_status.status_code == 201:
         #    return job_status
@@ -304,6 +304,12 @@ class Connection:
 
     def delete_job(self, job_id):
         path = "/jobs/{}".format(job_id)
+        auth_header = self.get_header()
+        auth = self.get_auth()
+        return requests.delete(self._url+path, headers=auth_header, auth=auth)
+
+    def delete_service(self, service_id):
+        path = "/services/{}".format(service_id)
         auth_header = self.get_header()
         auth = self.get_auth()
         return requests.delete(self._url+path, headers=auth_header, auth=auth)

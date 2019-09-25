@@ -226,7 +226,7 @@
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>4</number>
    </property>
    <widget class="QWidget" name="tab_3">
     <attribute name="title">
@@ -313,7 +313,7 @@
     <widget class="QLabel" name="label_21">
      <property name="geometry">
       <rect>
-       <x>560</x>
+       <x>580</x>
        <y>510</y>
        <width>171</width>
        <height>31</height>
@@ -890,7 +890,7 @@
        <x>20</x>
        <y>90</y>
        <width>791</width>
-       <height>441</height>
+       <height>421</height>
       </rect>
      </property>
     </widget>
@@ -932,6 +932,19 @@
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;2  Adapt Job in QGIS Plugin&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
+    <widget class="QLabel" name="label_25">
+     <property name="geometry">
+      <rect>
+       <x>580</x>
+       <y>510</y>
+       <width>171</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://openeo.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;https://openeo.org/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
     <zorder>label_14</zorder>
     <zorder>insertChangeBtn</zorder>
     <zorder>loadHubBtn</zorder>
@@ -940,6 +953,7 @@
     <zorder>insertChangeBtn_3</zorder>
     <zorder>processgraphEdit_2</zorder>
     <zorder>label_15</zorder>
+    <zorder>label_25</zorder>
    </widget>
    <widget class="QWidget" name="tab_2">
     <attribute name="title">
@@ -997,7 +1011,7 @@
     <widget class="QLabel" name="label_23">
      <property name="geometry">
       <rect>
-       <x>560</x>
+       <x>580</x>
        <y>510</y>
        <width>171</width>
        <height>31</height>
@@ -1087,7 +1101,7 @@
     <widget class="QLabel" name="label_22">
      <property name="geometry">
       <rect>
-       <x>560</x>
+       <x>580</x>
        <y>510</y>
        <width>171</width>
        <height>31</height>
@@ -1141,9 +1155,73 @@
       <rect>
        <x>10</x>
        <y>10</y>
-       <width>831</width>
-       <height>521</height>
+       <width>821</width>
+       <height>491</height>
       </rect>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="refreshButton_service">
+     <property name="geometry">
+      <rect>
+       <x>760</x>
+       <y>510</y>
+       <width>31</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>../../../../../../../../../../../../../../../../.designer/backup/reload_icon.png</normaloff>../../../../../../../../../../../../../../../../.designer/backup/reload_icon.png</iconset>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="deleteFinalButton_service">
+     <property name="geometry">
+      <rect>
+       <x>800</x>
+       <y>510</y>
+       <width>31</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>../../../../../../../../../../../../../../../../.designer/backup/deleteFinalBtn.png</normaloff>../../../../../../../../../../../../../../../../.designer/backup/deleteFinalBtn.png</iconset>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_24">
+     <property name="geometry">
+      <rect>
+       <x>580</x>
+       <y>510</y>
+       <width>171</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://openeo.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;https://openeo.org/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="deleteButton_service">
+     <property name="geometry">
+      <rect>
+       <x>720</x>
+       <y>510</y>
+       <width>31</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>../../../../../../../../../../../../../../../../.designer/backup/delete_job.png</normaloff>../../../../../../../../../../../../../../../../.designer/backup/delete_job.png</iconset>
      </property>
     </widget>
    </widget>

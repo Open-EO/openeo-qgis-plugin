@@ -39,13 +39,12 @@ from qgis.utils import iface
 
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit, QListWidget, QListWidgetItem, QApplication, \
-    QWidget, QLabel, QGridLayout
+    QWidget, QLabel, QGridLayout, QVBoxLayout
 from PyQt5 import QtCore
 from PyQt5.QtCore import QDate, Qt, QSize, QSettings
 from PyQt5 import QtGui
 from PyQt5.QtGui import QColor, QIcon, QPixmap
 from PyQt5.QtWidgets import QCalendarWidget
-
 
 from .models.result import Result
 from .models.connect import Connection
@@ -54,8 +53,6 @@ from .utils.logging import info, warning
 from .drawRect import DrawRectangle
 from .drawPoly import DrawPolygon
 from distutils.version import LooseVersion
-
-from qgis.core import QgsRasterLayer, QgsProject
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
@@ -151,7 +148,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processTableWidget.setEnabled(False)
         self.label_7.setEnabled(False)  # Add Process
 
-        self.refreshButton.clicked.connect(self.refresh_jobs)
         self.clearButton.clicked.connect(self.clear)  # Clear Button
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
         self.sendButton_service.clicked.connect(self.send_service)
@@ -160,8 +156,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
         self.loadButton2.clicked.connect(self.load_collection2)
         self.loadButton.setEnabled(False)
+        self.refreshButton.clicked.connect(self.refresh_jobs)
         self.deleteButton.clicked.connect(self.del_job)
         self.deleteFinalButton.clicked.connect(self.delete_job_final)
+        self.refreshButton_service.clicked.connect(self.refresh_services)
+        self.deleteButton_service.clicked.connect(self.del_service)
+
+        self.refreshButton.setEnabled(False)
+        self.deleteButton.setEnabled(False)
+        self.deleteFinalButton.setEnabled(False)
+        self.refreshButton_service.setEnabled(False)
+        self.deleteButton_service.setEnabled(False)
+        self.deleteFinalButton_service.setEnabled(False)
 
         # Temporal Extent
         self.selectDate.clicked.connect(self.add_temporal)
@@ -789,6 +795,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def adapt_bands(self):
         self.tabWidget.setCurrentIndex(0)
+        self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
+
         # Settings
         self.adaptButton.show()
         self.loadButton.hide()
@@ -1177,6 +1185,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.connection.connect(url, user, pwd) # disconnect
         self.sendButton.setEnabled(False)
 
+        self.refreshButton.setEnabled(False)
+        self.deleteButton.setEnabled(False)
+        self.deleteFinalButton.setEnabled(False)
+        self.refreshButton_service.setEnabled(False)
+        self.deleteButton_service.setEnabled(False)
+        self.deleteFinalButton_service.setEnabled(False)
+        self.jobsTableWidget.clear()
+        self.servicesTableWidget.clear()
+
     def col_info(self):
         collection_info_result = self.connection.list_collections()
         selected_col = str(self.collectionBox.currentText())
@@ -1265,11 +1282,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         process_graph_job = self.connection.pg_info_job(job_id)
 
         self.infoWindow4 = QWidget()
-        self.hbox5 = QHBoxLayout()
+        self.hbox5 = QVBoxLayout()
         self.infoBox4 = QTextEdit()
         self.infoBox4.setText(str(process_graph_job))
         self.infoBox4.setReadOnly(True)
         self.copy_and_adaptBtn = QPushButton('Copy and Adapt Job Process Graph in QGIS Plugin')
+        self.copy_and_adaptBtn.move(20, 10)
         self.hbox5.addWidget(self.infoBox4)
         self.hbox5.addWidget(self.copy_and_adaptBtn)
         self.infoWindow4.setLayout(self.hbox5)
@@ -1287,13 +1305,14 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         process_graph_service = self.connection.pg_info_service(service_id)
 
         self.infoWindow6 = QWidget()
-        self.hbox8 = QHBoxLayout()
+        self.hbox8 = QVBoxLayout()
         self.infoBox5 = QTextEdit()
         self.infoBox5.setText(str(process_graph_service))
         self.infoBox5.setReadOnly(True)
         self.copy_adaptBtn = QPushButton('Copy and Adapt Service Process Graph in QGIS Plugin')
+        self.copy_adaptBtn.move(120, 280)
         self.hbox8.addWidget(self.infoBox5)
-        self.hbox8.addWidget(self.copy_adaptBtn)
+        self.hbox8.addWidget(self.copy_adaptBtn, Qt.RightButton)
         self.infoWindow6.setLayout(self.hbox8)
         self.infoWindow6.setGeometry(400, 400, 600, 450)
         self.infoWindow6.setWindowTitle('Service Process Graph')
@@ -1452,6 +1471,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.infoBtn3.clicked.connect(lambda *args, row=row: self.job_info(row))
             self.jobsTableWidget.setCellWidget(row, 6, self.processGraphBtn)
             self.processGraphBtn.clicked.connect(lambda *args, row=row: self.pg_info_job(row))
+
+            self.refreshButton.setEnabled(True)
+            self.deleteButton.setEnabled(True)
+            self.deleteFinalButton.setEnabled(True)
+            self.refreshButton_service.setEnabled(True)
+            self.deleteButton_service.setEnabled(True)
+            self.deleteFinalButton_service.setEnabled(True)
+            self.deleteFinalButton.clicked.connect(lambda *args, row=row: self.delete_service_final(row))
+            self.deleteFinalButton_service.clicked.connect(lambda *args, row=row: self.delete_service_final(row))
 
             row += 1
 
@@ -1613,6 +1641,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.connection.delete_job(job_id)
         self.refresh_jobs()
 
+    def del_service(self):
+        self.chosenRow = self.servicesTableWidget.currentRow()
+        self.servicesTableWidget.removeRow(self.chosenRow)
+
+    def delete_service_final(self, row):
+        service_id = self.servicesTableWidget.item(row, 1).text()
+        selected_item =  self.servicesTableWidget.currentRow()
+        self.connection.delete_service(selected_item)
+        self.refresh_services()
+
     def load_collection(self):
         """
         Loads the collection form the GUI and starts a new process graph in doing so.
@@ -1691,7 +1729,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.tabWidget.setCurrentIndex(2)
         example_job = self.processgraphEdit_2.toPlainText()
         example_job_correct_spelling = str(example_job).replace('"{', '{').replace('}"', '}').replace('\\', '')\
-            .replace('"[', '').replace(']"', '')
+            .replace('"[', '[').replace(']"', ']')
         self.processgraphEdit.setText(example_job_correct_spelling)
 
         # Settings

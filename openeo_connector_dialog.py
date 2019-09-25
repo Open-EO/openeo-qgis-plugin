@@ -87,36 +87,40 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.setupUi(self)
         ### Backend Issue:
-        backendURL = requests.get('http://hub.openeo.org/api/backends')
+        self.backendURL = requests.get('http://hub.openeo.org/api/backends')
+
+        if self.backendURL.status_code == 200:
+            self.backendsALL = self.backendURL.json()
 
         backends = []
+        if 'VITO GeoPySpark' in self.backendsALL:
+            for item in self.backendsALL['VITO GeoPySpark'].values():
+                backends.append(str(item))
+            del self.backendsALL['VITO GeoPySpark']
 
-        if backendURL.status_code == 200:
-            backendsALL = backendURL.json()
+        for backend in self.backendsALL.values():
+            if ".well-known" in str(backend):
+                backend_versions = requests.get(backend)
 
-            if 'VITO GeoPySpark' in backendsALL:
-                for item in backendsALL['VITO GeoPySpark'].values():
-                    backends.append(str(item))
-                del backendsALL['VITO GeoPySpark']
+                if backend_versions.status_code == 200:
+                    backend_versions = backend_versions.json()
+                    for versions in backend_versions.values():
 
-            for backend in backendsALL.values():
-                if ".well-known" in str(backend):
-                    backend_versions = requests.get(backend)
+                        for version in versions:
+                            if "api_version" in version:
+                                if LooseVersion("0.4.0") <= LooseVersion(version["api_version"]):
+                                    if "url" in version:
+                                        backends.append(str(version["url"]))
+            else:
+                backends.append(str(backend))
 
-                    if backend_versions.status_code == 200:
-                        backend_versions = backend_versions.json()
-                        for versions in backend_versions.values():
-
-                            for version in versions:
-                                if "api_version" in version:
-                                    if LooseVersion("0.4.0") <= LooseVersion(version["api_version"]):
-                                        if "url" in version:
-                                            backends.append(str(version["url"]))
-                else:
-                    backends.append(str(backend))
+        # Change Names from Links to Title:
+        backend_names = []
+        for index in self.backendsALL.items():
+            backend_names.append(index[0])
+        # backend_names.sort(key=str.lower)
 
         self.backendEdit.addItems(backends)  # or Backends
-
         self.connectButton.clicked.connect(self.connect)
         self.disconnectButton.hide()
         self.disconnectButton.clicked.connect(self.disconnect)
@@ -151,8 +155,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.clearButton.clicked.connect(self.clear)  # Clear Button
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
         self.sendButton_service.clicked.connect(self.send_service)
-        self.sendButton.setEnabled(False)
-        self.sendButton_service.setEnabled(False)
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
         self.loadButton2.clicked.connect(self.load_collection2)
         self.loadButton.setEnabled(False)
@@ -941,12 +943,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         If there are no credentials, it connects to the backend without authentication.
         This method also loads all collections and processes from the backend.
         """
-
-        if self.backendEdit.currentText() == "None of the listed ones match":
-            url = self.backendEdit2.text()
-        else:
-            url = self.backendEdit.currentText()
-
+        url = self.backendEdit.currentText()
         pwd = self.passwordEdit.text()
         user = self.usernameEdit.text()
         if user == "":
@@ -1009,7 +1006,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.label_10.setEnabled(True)
         self.label_6.setEnabled(True)
         self.infoBtn.setEnabled(True)
-        self.sendButton.setEnabled(True)
         self.start_wizard0()
 
     def start_wizard0(self):

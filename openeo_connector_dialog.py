@@ -34,7 +34,7 @@ from qgis.PyQt import uic, QtGui, QtWidgets
 from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, \
     QApplication, QAction, QMainWindow, QFileDialog
 import qgis.PyQt.QtCore as QtCore
-from qgis.core import QgsVectorLayer, QgsRasterLayer, QgsProject, QgsCoordinateReferenceSystem
+from qgis.core import QgsVectorLayer, QgsRasterLayer, QgsProject
 from qgis.utils import iface
 
 from PyQt5 import QtWidgets
@@ -155,6 +155,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.clearButton.clicked.connect(self.clear)  # Clear Button
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
         self.sendButton_service.clicked.connect(self.send_service)
+        self.sendButton.setEnabled(False)
+        self.sendButton_service.setEnabled(False)
+        self.tabWidget.currentChanged.connect(self.empty_window)
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
         self.loadButton2.clicked.connect(self.load_collection2)
         self.loadButton.setEnabled(False)
@@ -268,6 +271,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     # def set_font(self):
     #    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
     #    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
+
+    def empty_window(self):
+        window = str(self.processgraphEdit.toPlainText())
+        if window == None:
+            self.sendButton.setEnabled(False)
+            self.sendButton_service.setEnabled(False)
+        elif window == "":
+            self.sendButton.setEnabled(False)
+            self.sendButton_service.setEnabled(False)
+        else:
+            self.sendButton.setEnabled(True)
+            self.sendButton_service.setEnabled(True)
 
     def set_canvas(self):
         iface.actionPan().trigger()
@@ -1191,8 +1206,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             pwd = None
 
         self.connection.connect(url, user, pwd) # disconnect
-        self.sendButton.setEnabled(False)
-
         self.refreshButton.setEnabled(False)
         self.deleteButton.setEnabled(False)
         self.deleteFinalButton.setEnabled(False)
@@ -1337,8 +1350,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn_2.setEnabled(True)
         self.insertChangeBtn_3.setEnabled(True)
         self.loadButton2.setEnabled(True)
-        self.sendButton.setEnabled(True)
-        self.sendButton_service.setEnabled(False)
 
     def copy_and_adapt_service(self):
         self.processgraphEdit_2.setText(str(self.infoBox5.toPlainText()).replace("'", '"').replace("None", '"None"').replace("True", '"True"'))
@@ -1350,8 +1361,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn_2.setEnabled(True)
         self.insertChangeBtn_3.setEnabled(True)
         self.loadButton2.setEnabled(True)
-        self.sendButton.setEnabled(False)
-        self.sendButton_service.setEnabled(True)
 
     def init_jobs(self):
         """
@@ -1596,7 +1605,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         job_id = self.jobsTableWidget.item(row, 1).text()
         download_dir = self.connection.job_result_download(job_id)
         if download_dir:
-            info(self.iface, "Downloaded to {}".format(download_dir))  # def web_view(self):
+            info(self.iface, "Downloaded to {}".format(download_dir))
             result = Result(path=download_dir)
             if iface.activeLayer():
                 crs_background = iface.activeLayer().crs().authid()
@@ -1729,8 +1738,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processgraphEdit.setText(str(processgraph_correct_spelling))
 
         #self.iface.messageBar().pushMessage("You are not connected to a backend.", duration=5)
-        #self.sendButton.setEnabled(False)
-        self.sendButton.setEnabled(True)
 
     def load_collection2(self):
         self.tabWidget.setCurrentIndex(2)
@@ -1774,6 +1781,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.collectionBox.show()
         self.collectionBox_individual_job.hide()
         self.sendButton.setEnabled(True)
+        self.sendButton_service.setEnabled(True)
 
     def load_extent(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
@@ -1820,6 +1828,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def clear(self):
         self.processgraphEdit.clear()
         self.sendButton.setEnabled(False)
+        self.sendButton_service.setEnabled(False)
 
     def add_process(self):
         """

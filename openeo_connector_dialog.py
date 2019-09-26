@@ -1663,9 +1663,14 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def delete_service_final(self, row):
         service_id = self.servicesTableWidget.item(row, 1).text()
-        selected_item =  self.servicesTableWidget.currentRow()
-        self.connection.delete_service(selected_item)
-        self.refresh_services()
+        selected_item = self.servicesTableWidget.currentRow()
+        selected_service_id = self.servicesTableWidget.item(int(selected_item), 1).text()
+        #self.processgraphEdit.setText(str(selected_item) + " " + str(service_id) + " " + self.servicesTableWidget.item(int(selected_item), 1).text())
+        if service_id == selected_service_id:
+            self.connection.delete_service(selected_item)
+            self.refresh_services()
+        else:
+            self.processgraphEdit.setText("It does not work that way")
 
     def load_collection(self):
         """

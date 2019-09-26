@@ -136,6 +136,7 @@ class Connection:
 
         title = job_info['title']
         description = job_info['description']
+        submission = job_info['submitted']
         cost = job_info['costs']
         processes = []
         # Data & Extents & Processes
@@ -145,8 +146,8 @@ class Connection:
                 temporal_extent = job_info['process_graph'][key]['arguments']['spatial_extent']
                 spatial_extent = job_info['process_graph'][key]['arguments']['temporal_extent']
                 processes.append(key)
-                job_info_id = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}.\nTemporal Extent: {}. \nCost: {}."\
-                    .format(title, description, data_set, processes, spatial_extent, temporal_extent, cost)\
+                job_info_id = "Title: {}. \nDescription: {}. \nSubmission Date: {} \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}.\nTemporal Extent: {}. \nCost: {}."\
+                    .format(title, description, submission, data_set, processes, spatial_extent, temporal_extent, cost)\
                     .replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
                 return job_info_id
 
@@ -162,6 +163,8 @@ class Connection:
 
         title = service_info['title']
         description = service_info['description']
+        submission = service_info['submitted']
+        type = service_info['type']
         cost = service_info['costs']
         processes = []
         # Data & Extents & Processes
@@ -171,8 +174,8 @@ class Connection:
                 temporal_extent = service_info['process_graph'][key]['arguments']['spatial_extent']
                 spatial_extent = service_info['process_graph'][key]['arguments']['temporal_extent']
                 processes.append(key)
-                service_info_id = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}.\nTemporal Extent: {}. \nCost: {}." \
-                    .format(title, description, data_set, processes, spatial_extent, temporal_extent, cost) \
+                service_info_id = "Title: {}. \nDescription: {}. \nSubmission Date: {} \nType: {} \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}.\nTemporal Extent: {}. \nCost: {}." \
+                    .format(title, description, submission, type, data_set, processes, spatial_extent, temporal_extent, cost) \
                     .replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
                 return service_info_id
 
@@ -188,7 +191,9 @@ class Connection:
         get_info = self.get(requested_info, stream=True)
         service_info = get_info.json()
         process_graph_service = service_info['process_graph']
-        return process_graph_service
+    #    return process_graph_service
+
+        return service_info
 
     def job_result_url(self, job_id):
         """

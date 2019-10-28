@@ -2,9 +2,6 @@
     <qresource prefix="/plugins/openeo-qgis-plugin-master" >
         <file>icon_new.png</file>
         <file>info_icon.png</file>
-<<<<<<< HEAD
-=======
         <file>reload_icon.png</file>
->>>>>>> ngnann
     </qresource>
 </RCC>

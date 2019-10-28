@@ -55,6 +55,8 @@ from .drawRect import DrawRectangle
 from .drawPoly import DrawPolygon
 from distutils.version import LooseVersion
 
+from .temp_dialog import TempDialog
+
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
@@ -184,6 +186,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.EndDateEdit.setEnabled(False)
         self.label_9.setEnabled(False)  # Add Temporal Extent
         self.minimum_date = QDate()
+        self.maximum_date = QDate()
 
         extentBoxItems = OrderedDict(
             {"Set Extent to Current Map Canvas Extent": self.set_canvas, "Draw Rectangle": self.draw_rect,
@@ -750,35 +753,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.example_job = json.loads(self.processgraphEdit.toPlainText())
 
     def adapt_temporal(self):
-        self.tabWidget.setCurrentIndex(0)
-        # Settings
-        self.adaptButton.show()
-        self.loadButton.hide()
-        self.collectionBox.setEnabled(False)
-        self.label_10.setEnabled(False)
-        self.label_6.setEnabled(False)
-        self.label_12.hide()
-        self.previousButton.hide()
-        self.nextButton.hide()
-        self.moveButton.setEnabled(False)
-        self.label_9.setEnabled(True)
-        self.selectDate.setEnabled(True)
-        self.StartDateEdit.setEnabled(True)
-        self.EndDateEdit.setEnabled(True)
-        self.label_8.setEnabled(False)
-        self.extentBox.setEnabled(False)
-        self.layersBox.setEnabled(False)
-        self.getBtn.setEnabled(False)
-        self.drawBtn.setEnabled(False)
-        self.processgraphSpatialExtent.setEnabled(False)
-        self.processgraphBands.setEnabled(False)
-        self.label_16.setEnabled(False)
-        self.multipleBandBtn.setEnabled(False)
-        self.allBandBtn.setEnabled(False)
-        self.label_11.setEnabled(False)
-        self.collectionBox_individual_job.setEnabled(False)
-        self.adaptButton.setText("Adapt Temporal Extent")
-        self.adaptButton.clicked.connect(self.insert_Change_temporal)
+
+        self.temp_dialog = TempDialog(iface=self.iface, parent=self, minimum_date=self.minimum_date,
+                                      maximum_date=self.maximum_date, max_date=self.max_date)
+
+        self.temp_dialog.show()
+        self.temp_dialog.raise_()
+        self.temp_dialog.activateWindow()
 
     def adapt_spatial(self):
         self.tabWidget.setCurrentIndex(0)
@@ -882,10 +863,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.adaptButton.clicked.connect(self.insert_Change_bands)
 
-    def insert_Change_temporal(self):
+    def insert_Change_temporal(self, start_date=None, end_date=None):
         self.tabWidget.setCurrentIndex(1)
-        new_start_date = self.show_start()
-        new_end_date = self.show_end()
+
+        if not start_date:
+            new_start_date = self.show_start()
+        else:
+            new_start_date = start_date
+
+        if not end_date:
+            new_end_date = self.show_end()
+        else:
+            new_end_date = end_date
         dates = []
         dates.append(new_start_date)
         dates.append(new_end_date)

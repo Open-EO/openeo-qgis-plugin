@@ -46,6 +46,7 @@ from PyQt5 import QtGui
 from PyQt5.QtGui import QColor, QIcon, QPixmap
 from PyQt5.QtWidgets import QCalendarWidget
 
+from .models.job import Job
 from .models.result import Result
 from .models.connect import Connection
 from .models.processgraph import Processgraph
@@ -707,43 +708,31 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def load_job_from_hub(self):
         example_jobs_URL = requests.get('http://hub.openeo.org/api/process_graphs')
-        self.examples_job_list = example_jobs_URL.json()
+        examples_job_list = example_jobs_URL.json()
 
         # Get names and process graphs of all available processes (7)
-        self.example_jobs_t = []
-        self.example_jobs_pg = []
-        self.example_jobs_pg_test = []
+        self.example_jobs = []
 
-        for item in self.examples_job_list:
-            self.example_jobs_t.append("{}".format(item['title']))
-            self.example_jobs_pg.append("{}".format(item['process_graph']))  # returns ALL process Graphs
-
-            # show only example jobs when they can be computed in the respective backend
-            #data_collection = self.connection.list_collections()
-            #for item in self.example_jobs_pg:
-            #    example = json.dumps(self.example_jobs_pg)
-             #   for key, value in example.items():
-             #       if example[key]['process_id'] == "load_collection":
-             #           used_collection = example[key]['arguments']['id']
-             #           if used_collection in data_collection:
-             #               self.example_jobs_pg_test.append(item)
+        for item in examples_job_list:
+            job = Job(title=item['title'], process_graph=item['process_graph'])
+            self.example_jobs.append(job)
 
         # Open a window, where desired job can be selected
         self.example_jobs_window = QWidget()
-        self.hbox6 = QHBoxLayout()
+        hbox6 = QHBoxLayout()
         self.exampleJobBox = QListWidget()
-        for job in self.example_jobs_t:
-            self.job_item = QListWidgetItem(self.exampleJobBox)
-            self.job_item.setFlags(
-                self.job_item.flags() | QtCore.Qt.ItemIsSelectable)  # only one item can be selected this time
-            self.job_item.setSelected(False)
-            self.job_item.setText(job)  # add Titles as QListWidgetItems
+        for job in self.example_jobs:
+            job_item = QListWidgetItem(self.exampleJobBox)
+            job_item.setFlags(
+                job_item.flags() | QtCore.Qt.ItemIsSelectable)  # only one item can be selected this time
+            job_item.setSelected(False)
+            job_item.setText(job.title)  # add Titles as QListWidgetItems
 
-        self.closeWindowBtn = QPushButton('Show process graph \n and close window')
-        self.hbox6.addWidget(self.exampleJobBox)
-        self.hbox6.addWidget(self.closeWindowBtn)
-        self.closeWindowBtn.clicked.connect(self.pick_job_from_hub)
-        self.example_jobs_window.setLayout(self.hbox6)
+        closeWindowBtn = QPushButton('Show process graph \n and close window')
+        hbox6.addWidget(self.exampleJobBox)
+        hbox6.addWidget(closeWindowBtn)
+        closeWindowBtn.clicked.connect(self.pick_job_from_hub)
+        self.example_jobs_window.setLayout(hbox6)
         self.example_jobs_window.setGeometry(400, 400, 600, 200)
         self.example_jobs_window.setWindowTitle('Select a Job')
         self.example_jobs_window.show()
@@ -754,9 +743,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn_3.setEnabled(True)
         self.loadButton2.setEnabled(True)
 
-        selected_job = self.exampleJobBox.currentRow()
-        id_selected_job = int(selected_job)
-        self.processgraphEdit_2.setText(self.example_jobs_pg[id_selected_job])
+        selected_row = self.exampleJobBox.currentRow()
+        #id_selected_job = int(selected_row)
+        self.processgraphEdit_2.setText(self.example_jobs[selected_row].process_graph)
         self.example_jobs_window.close()
         self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
 
@@ -1603,10 +1592,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         :param row: Integer number of the row the button is clicked.
         """
         job_id = self.jobsTableWidget.item(row, 1).text()
+        process_graph_job = self.connection.pg_info_job(job_id)
         download_dir = self.connection.job_result_download(job_id)
         if download_dir:
             info(self.iface, "Downloaded to {}".format(download_dir))
-            result = Result(path=download_dir)
+            result = Result(path=download_dir, process_graph=process_graph_job)
             if iface.activeLayer():
                 crs_background = iface.activeLayer().crs().authid()
                 QSettings().setValue('/Projections/defaultBehaviour', 'useGlobal')

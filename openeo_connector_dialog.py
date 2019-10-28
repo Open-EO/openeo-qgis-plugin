@@ -160,7 +160,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.sendButton_service.setEnabled(False)
         self.tabWidget.currentChanged.connect(self.empty_window)
         self.loadButton.clicked.connect(self.load_collection)  # Load Button shall load the complete json file
-        self.loadButton2.clicked.connect(self.load_collection2)
+
         self.loadButton.setEnabled(False)
         self.refreshButton.clicked.connect(self.refresh_jobs)
         self.deleteButton.clicked.connect(self.del_job)
@@ -261,7 +261,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn.setEnabled(False)
         self.insertChangeBtn_2.setEnabled(False)
         self.insertChangeBtn_3.setEnabled(False)
-        self.loadButton2.setEnabled(False)
+
         self.collectionBox_individual_job.hide()
 
         # self.set_font()
@@ -741,13 +741,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn.setEnabled(True)
         self.insertChangeBtn_2.setEnabled(True)
         self.insertChangeBtn_3.setEnabled(True)
-        self.loadButton2.setEnabled(True)
+
 
         selected_row = self.exampleJobBox.currentRow()
         #id_selected_job = int(selected_row)
-        self.processgraphEdit_2.setText(self.example_jobs[selected_row].process_graph)
+        self.processgraphEdit.setText(self.example_jobs[selected_row].process_graph)
         self.example_jobs_window.close()
-        self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
+        self.example_job = json.loads(self.processgraphEdit.toPlainText())
 
     def adapt_temporal(self):
         self.tabWidget.setCurrentIndex(0)
@@ -813,7 +813,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def adapt_bands(self):
         self.tabWidget.setCurrentIndex(0)
-        self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
+        self.example_job = json.loads(self.processgraphEdit.toPlainText())
 
         # Settings
         self.adaptButton.show()
@@ -890,31 +890,31 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         dates.append(new_start_date)
         dates.append(new_end_date)
 
-        self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
+        self.example_job = json.loads(self.processgraphEdit.toPlainText())
         for key, _ in self.example_job.items():
             if self.example_job[key]["process_id"] == "load_collection":
                 self.example_job[key]["arguments"]["temporal_extent"] = dates
-                self.processgraphEdit_2.setText(json.dumps(self.example_job))
+                self.processgraphEdit.setText(json.dumps(self.example_job))
 
     def insert_Change_spatial(self):
         self.tabWidget.setCurrentIndex(1)
-        #self.processgraphEdit_2.setText(self.processgraphSpatialExtent.toPlainText())
+        #self.processgraphEdit.setText(self.processgraphSpatialExtent.toPlainText())
 
-        self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
+        self.example_job = json.loads(self.processgraphEdit.toPlainText())
         for key, _ in self.example_job.items():
             if self.example_job[key]['process_id'] == "load_collection":
                 self.example_job[key]['arguments']['spatial_extent'] = self.processgraphSpatialExtent.toPlainText()
-                self.processgraphEdit_2.setText(json.dumps(self.example_job))
+                self.processgraphEdit.setText(json.dumps(self.example_job))
 
     def insert_Change_bands(self):
         self.tabWidget.setCurrentIndex(1)
-        #self.processgraphEdit_2.setText(str(self.processgraphBands.toPlainText()))
+        #self.processgraphEdit.setText(str(self.processgraphBands.toPlainText()))
 
-        self.example_job = json.loads(self.processgraphEdit_2.toPlainText())
+        self.example_job = json.loads(self.processgraphEdit.toPlainText())
         for key, _ in self.example_job.items():
             if self.example_job[key]['process_id'] == "load_collection":
                 self.example_job[key]['arguments']['bands'] = self.processgraphBands.toPlainText()
-                self.processgraphEdit_2.setText(json.dumps(self.example_job))
+                self.processgraphEdit.setText(json.dumps(self.example_job))
 
     def user_manual(self):
         self.umWindow = QWidget()
@@ -1330,7 +1330,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.copy_adaptBtn.clicked.connect(self.copy_and_adapt_service)
 
     def copy_and_adapt_job(self):
-        self.processgraphEdit_2.setText(str(self.infoBox4.toPlainText()).replace("'", '"').replace("None", '"None"').replace("True", '"True"'))
+        self.processgraphEdit.setText(str(self.infoBox4.toPlainText()).replace("'", '"').replace("None", '"None"').replace("True", '"True"'))
         self.infoWindow4.close()
         self.tabWidget.setCurrentIndex(1)
 
@@ -1338,10 +1338,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn.setEnabled(True)
         self.insertChangeBtn_2.setEnabled(True)
         self.insertChangeBtn_3.setEnabled(True)
-        self.loadButton2.setEnabled(True)
 
     def copy_and_adapt_service(self):
-        self.processgraphEdit_2.setText(str(self.infoBox5.toPlainText()).replace("'", '"').replace("None", '"None"').replace("True", '"True"'))
+        self.processgraphEdit.setText(str(self.infoBox5.toPlainText()).replace("'", '"').replace("None", '"None"').replace("True", '"True"'))
         self.infoWindow6.close()
         self.tabWidget.setCurrentIndex(1)
 
@@ -1349,7 +1348,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn.setEnabled(True)
         self.insertChangeBtn_2.setEnabled(True)
         self.insertChangeBtn_3.setEnabled(True)
-        self.loadButton2.setEnabled(True)
 
     def init_jobs(self):
         """
@@ -1733,50 +1731,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processgraphEdit.setText(str(processgraph_correct_spelling))
 
         #self.iface.messageBar().pushMessage("You are not connected to a backend.", duration=5)
-
-    def load_collection2(self):
-        self.tabWidget.setCurrentIndex(2)
-        example_job = self.processgraphEdit_2.toPlainText()
-        example_job_correct_spelling = str(example_job).replace('"{', '{').replace('}"', '}').replace('\\', '')\
-            .replace('"[', '[').replace(']"', ']')
-        self.processgraphEdit.setText(example_job_correct_spelling)
-
-        # Settings
-        self.label_9.setEnabled(False)
-        self.selectDate.setEnabled(False)
-        self.StartDateEdit.setEnabled(False)
-        self.EndDateEdit.setEnabled(False)
-        self.processgraphBands.setEnabled(True)
-        self.label_16.setEnabled(False)
-        self.multipleBandBtn.setEnabled(False)
-        self.allBandBtn.setEnabled(False)
-        self.label_11.setEnabled(False)
-        self.processgraphSpatialExtent.clear()
-        self.label_8.setEnabled(False)
-        self.extentBox.setEnabled(False)
-        self.layersBox.setEnabled(False)
-        self.getBtn.setEnabled(False)
-        self.drawBtn.setEnabled(False)
-        self.adaptButton.hide()
-        self.insertChangeBtn.setEnabled(False)
-        self.insertChangeBtn_2.setEnabled(False)
-        self.insertChangeBtn_3.setEnabled(False)
-        self.loadButton2.setEnabled(False)
-        self.processgraphEdit_2.clear()
-        self.collectionBox.setEnabled(True)
-        self.label_10.setEnabled(True)
-        self.label_6.setEnabled(True)
-        self.infoBtn.setEnabled(True)
-        self.label_12.show()
-        self.previousButton.show()
-        self.nextButton.show()
-        self.loadButton.show()
-        self.moveButton.setEnabled(True)
-        self.start_wizard0()
-        self.collectionBox.show()
-        self.collectionBox_individual_job.hide()
-        self.sendButton.setEnabled(True)
-        self.sendButton_service.setEnabled(True)
 
     def load_extent(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":

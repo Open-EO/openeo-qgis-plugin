@@ -226,7 +226,7 @@
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="currentIndex">
-    <number>4</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab_3">
     <attribute name="title">
@@ -241,7 +241,7 @@
        <height>31</height>
       </rect>
      </property>
-     <property name="currentText" stdset="0">
+     <property name="currentText">
       <string/>
      </property>
     </widget>
@@ -754,7 +754,7 @@
        <height>31</height>
       </rect>
      </property>
-     <property name="currentText" stdset="0">
+     <property name="currentText">
       <string/>
      </property>
     </widget>
@@ -842,20 +842,6 @@
  openEO Hub</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="loadButton2">
-     <property name="geometry">
-      <rect>
-       <x>720</x>
-       <y>10</y>
-       <width>111</width>
-       <height>51</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Load Job or 
- Service</string>
-     </property>
-    </widget>
     <widget class="QPushButton" name="insertChangeBtn_2">
      <property name="geometry">
       <rect>
@@ -884,13 +870,13 @@
  of Bands</string>
      </property>
     </widget>
-    <widget class="QTextEdit" name="processgraphEdit_2">
+    <widget class="QTextEdit" name="processgraphEdit">
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>90</y>
-       <width>791</width>
-       <height>421</height>
+       <y>80</y>
+       <width>691</width>
+       <height>431</height>
       </rect>
      </property>
     </widget>
@@ -945,87 +931,24 @@
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://openeo.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;https://openeo.org/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
-    <zorder>label_14</zorder>
-    <zorder>insertChangeBtn</zorder>
-    <zorder>loadHubBtn</zorder>
-    <zorder>loadButton2</zorder>
-    <zorder>insertChangeBtn_2</zorder>
-    <zorder>insertChangeBtn_3</zorder>
-    <zorder>processgraphEdit_2</zorder>
-    <zorder>label_15</zorder>
-    <zorder>label_25</zorder>
-   </widget>
-   <widget class="QWidget" name="tab_2">
-    <attribute name="title">
-     <string>Process Graph View</string>
-    </attribute>
-    <widget class="QLabel" name="label_4">
+    <widget class="QPushButton" name="sendButton_service">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>10</y>
-       <width>131</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Process Graph&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="clearButton">
-     <property name="geometry">
-      <rect>
-       <x>730</x>
-       <y>190</y>
+       <x>720</x>
+       <y>370</y>
        <width>111</width>
        <height>51</height>
       </rect>
      </property>
      <property name="text">
-      <string>Clear Graph</string>
-     </property>
-    </widget>
-    <widget class="QTextEdit" name="processgraphEdit">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>30</y>
-       <width>711</width>
-       <height>481</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="sendButton">
-     <property name="geometry">
-      <rect>
-       <x>730</x>
-       <y>30</y>
-       <width>111</width>
-       <height>51</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Create Job</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_23">
-     <property name="geometry">
-      <rect>
-       <x>580</x>
-       <y>510</y>
-       <width>171</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://openeo.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;https://openeo.org/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>Create Service</string>
      </property>
     </widget>
     <widget class="Line" name="line_5">
      <property name="geometry">
       <rect>
-       <x>730</x>
-       <y>160</y>
+       <x>720</x>
+       <y>430</y>
        <width>111</width>
        <height>20</height>
       </rect>
@@ -1046,26 +969,44 @@
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
-    <widget class="QPushButton" name="sendButton_service">
+    <widget class="QPushButton" name="clearButton">
      <property name="geometry">
       <rect>
-       <x>730</x>
-       <y>100</y>
+       <x>720</x>
+       <y>460</y>
        <width>111</width>
        <height>51</height>
       </rect>
      </property>
      <property name="text">
-      <string>Create Service</string>
+      <string>Clear Graph</string>
      </property>
     </widget>
-    <zorder>sendButton_service</zorder>
-    <zorder>label_4</zorder>
-    <zorder>clearButton</zorder>
+    <widget class="QPushButton" name="sendButton">
+     <property name="geometry">
+      <rect>
+       <x>720</x>
+       <y>300</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Create Job</string>
+     </property>
+    </widget>
+    <zorder>label_14</zorder>
+    <zorder>insertChangeBtn</zorder>
+    <zorder>loadHubBtn</zorder>
+    <zorder>insertChangeBtn_2</zorder>
+    <zorder>insertChangeBtn_3</zorder>
     <zorder>processgraphEdit</zorder>
-    <zorder>sendButton</zorder>
-    <zorder>label_23</zorder>
+    <zorder>label_15</zorder>
+    <zorder>label_25</zorder>
+    <zorder>sendButton_service</zorder>
     <zorder>line_5</zorder>
+    <zorder>clearButton</zorder>
+    <zorder>sendButton</zorder>
    </widget>
    <widget class="QWidget" name="tab_4">
     <attribute name="title">

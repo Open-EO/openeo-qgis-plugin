@@ -53,6 +53,7 @@ from distutils.version import LooseVersion
 
 from .temp_dialog import TempDialog
 from .spatial_dialog import SpatialDialog
+from .band_dialog import BandDialog
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
@@ -305,8 +306,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.check_spatial_cover()
         elif not iface.activeLayer():
             self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
-
-
 
     def check_spatial_cover(self):
         west = self.west
@@ -767,106 +766,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.spatial_dialog.raise_()
         self.spatial_dialog.activateWindow()
 
-        # self.tabWidget.setCurrentIndex(0)
-        # # Settings
-        # self.adaptButton.show()
-        # self.loadButton.hide()
-        # self.collectionBox.setEnabled(False)
-        # self.label_10.setEnabled(False)
-        # self.label_6.setEnabled(False)
-        # self.label_12.hide()
-        # self.previousButton.hide()
-        # self.nextButton.hide()
-        # self.moveButton.setEnabled(False)
-        # self.label_9.setEnabled(False)
-        # self.selectDate.setEnabled(False)
-        # self.StartDateEdit.setEnabled(False)
-        # self.EndDateEdit.setEnabled(False)
-        # self.label_8.setEnabled(True)
-        # self.extentBox.setEnabled(True)
-        # self.layersBox.setEnabled(True)
-        # self.getBtn.setEnabled(True)
-        # self.drawBtn.setEnabled(True)
-        # self.processgraphSpatialExtent.setEnabled(True)
-        # self.processgraphBands.setEnabled(False)
-        # self.label_16.setEnabled(False)
-        # self.multipleBandBtn.setEnabled(False)
-        # self.allBandBtn.setEnabled(False)
-        # self.label_11.setEnabled(False)
-        # self.collectionBox_individual_job.setEnabled(False)
-        # self.adaptButton.setText("Adapt Spatial Extent")
-        # self.adaptButton.clicked.connect(self.insert_Change_spatial)
-
     def adapt_bands(self):
-        self.tabWidget.setCurrentIndex(0)
-        self.example_job = json.loads(self.processgraphEdit.toPlainText())
 
-        # Settings
-        self.adaptButton.show()
-        self.loadButton.hide()
-        self.collectionBox.setEnabled(False)
-        self.label_10.setEnabled(False)
-        self.label_6.setEnabled(False)
-        self.label_12.hide()
-        self.previousButton.hide()
-        self.nextButton.hide()
-        self.moveButton.setEnabled(False)
-        self.label_9.setEnabled(False)
-        self.selectDate.setEnabled(False)
-        self.StartDateEdit.setEnabled(False)
-        self.EndDateEdit.setEnabled(False)
-        self.processgraphBands.setEnabled(True)
-        self.label_16.setEnabled(True)
-        self.multipleBandBtn.setEnabled(True)
-        self.allBandBtn.setEnabled(True)
-        self.label_11.setEnabled(True)
-        self.label_8.setEnabled(False)
-        self.extentBox.setEnabled(False)
-        self.layersBox.setEnabled(False)
-        self.getBtn.setEnabled(False)
-        self.drawBtn.setEnabled(False)
-        self.processgraphSpatialExtent.setEnabled(False)
-        self.collectionBox_individual_job.setEnabled(True)
-        self.adaptButton.setText("Adapt Bands")
+        self.band_dialog = BandDialog(iface=self.iface, parent=self)
 
-        # id has to be the exact same as in the example
-        self.collectionBox.hide()
-        self.collectionBox_individual_job.show()
-
-        data_collection = self.connection.list_collections()
-        for key, _ in self.example_job.items():
-            if self.example_job[key]['process_id'] == "load_collection":
-                if self.called2 == False:
-                    self.collectionBox_individual_job.addItem(self.example_job[key]['arguments']['id'])
-                    self.called2 = True
-
-        selected_process = str(self.collectionBox_individual_job.currentText())
-
-        for col in data_collection:
-            if str(col['id']) == selected_process:
-                data = self.connection.get('/collections/{}'.format(col['id']), auth=False)
-                if data.status_code == 200:
-                    band_info = data.json()
-                    bands = band_info['properties']['cube:dimensions']['bands']['values']
-
-                    self.all_bands = []
-                    for each_band in bands:
-                        self.all_bands.append(each_band)
-
-                        if len(self.all_bands) == 1:
-                            self.label_16.setText(str(self.all_bands[0]))
-                            self.label_16.show()
-                            self.processgraphBands.hide()
-                            self.multipleBandBtn.hide()
-                            self.allBandBtn.hide()
-                        else:
-                            self.label_16.hide()
-                            self.multipleBandBtn.show()
-                            self.allBandBtn.show()
-                            self.processgraphBands.setText(str(self.all_bands).replace("'", '"'))
-                            self.processgraphBands.show()
-
-        self.adaptButton.clicked.connect(self.insert_Change_bands)
+        self.band_dialog.show()
+        self.band_dialog.raise_()
+        self.band_dialog.activateWindow()
 
     def insert_Change_temporal(self, start_date=None, end_date=None):
         self.tabWidget.setCurrentIndex(1)
@@ -892,7 +798,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def insert_Change_spatial(self, spatial_extent):
         self.tabWidget.setCurrentIndex(1)
-        #self.processgraphEdit.setText(self.processgraphSpatialExtent.toPlainText())
 
         self.example_job = json.loads(self.processgraphEdit.toPlainText())
         for key, _ in self.example_job.items():
@@ -900,14 +805,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 self.example_job[key]['arguments']['spatial_extent'] = json.loads(spatial_extent)
                 self.processgraphEdit.setText(json.dumps(self.example_job, indent=4))
 
-    def insert_Change_bands(self):
+    def insert_Change_bands(self, band_choices):
         self.tabWidget.setCurrentIndex(1)
-        #self.processgraphEdit.setText(str(self.processgraphBands.toPlainText()))
 
         self.example_job = json.loads(self.processgraphEdit.toPlainText())
         for key, _ in self.example_job.items():
             if self.example_job[key]['process_id'] == "load_collection":
-                self.example_job[key]['arguments']['bands'] = self.processgraphBands.toPlainText()
+                self.example_job[key]['arguments']['bands'] = json.loads(band_choices)
                 self.processgraphEdit.setText(json.dumps(self.example_job, indent=4))
 
     def user_manual(self):
@@ -935,7 +839,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.grid.addWidget(self.image, 2, 0)
         self.grid.addWidget(self.text, 4, 0)
         self.umWindow.setLayout(self.grid)
-        #self.umWindow.setGeometry(400, 400, 600, 450)
         self.umWindow.setWindowTitle('User Manual')
         self.umWindow.show()
 

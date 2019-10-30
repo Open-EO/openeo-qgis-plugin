@@ -35,6 +35,8 @@ class Connection:
 
         return True
 
+
+
     def get_header(self):
         """
         Returns the header (used for a request) with e.g. the authentication token.
@@ -82,6 +84,20 @@ class Connection:
                 return response["collections"]
 
         return []
+
+    def backend_info(self) -> dict:
+        """
+        Loads all available imagecollections types.
+        :return: data_dict: Dict All available data types
+        """
+        data = self.get('/', auth=False)
+
+        response = None
+
+        if data:
+            response = self.parse_json_response(data)
+
+        return response
 
     def user_jobs(self) -> dict:
         """

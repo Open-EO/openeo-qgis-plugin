@@ -58,16 +58,11 @@ class BandDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def init_bands(self):
         data_collection = self.parent().connection.list_collections()
-        for key, _ in self.parent().example_job.items():
-            if self.parent().example_job[key]['process_id'] == "load_collection":
-                if self.called2 == False:
-                    self.parent().collectionBox_individual_job.addItem(self.parent().example_job[key]['arguments']['id'])
-                    self.called2 = True
 
-        selected_process = str(self.parent().collectionBox_individual_job.currentText())
+        selected_collection = self.parent().get_pg_collection()
 
         for col in data_collection:
-            if str(col['id']) == selected_process:
+            if str(col['id']) == selected_collection:
                 data = self.parent().connection.get('/collections/{}'.format(col['id']), auth=False)
                 if data.status_code == 200:
                     band_info = data.json()

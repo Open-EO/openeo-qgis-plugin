@@ -31,20 +31,16 @@ from collections import OrderedDict
 import webbrowser
 
 from qgis.PyQt import uic, QtGui, QtWidgets
-from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, \
-    QApplication, QAction, QMainWindow, QFileDialog
+from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QMainWindow, QFileDialog
 import qgis.PyQt.QtCore as QtCore
 from qgis.core import QgsVectorLayer, QgsRasterLayer, QgsProject
 from qgis.utils import iface
 
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QTextEdit, QListWidget, QListWidgetItem, QApplication, \
-    QWidget, QLabel, QGridLayout, QVBoxLayout
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QTextEdit, QListWidget, QListWidgetItem, QApplication, \
+    QWidget, QLabel, QGridLayout, QVBoxLayout, QCalendarWidget, QDialog
 from PyQt5.QtCore import QDate, Qt, QSize, QSettings
-from PyQt5 import QtGui
 from PyQt5.QtGui import QColor, QIcon, QPixmap
-from PyQt5.QtWidgets import QCalendarWidget
 
 from .models.job import Job
 from .models.result import Result
@@ -56,6 +52,7 @@ from .drawPoly import DrawPolygon
 from distutils.version import LooseVersion
 
 from .temp_dialog import TempDialog
+from .spatial_dialog import SpatialDialog
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
@@ -470,7 +467,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         layers = iface.mapCanvas().layers()
         for layer in layers:
             self.layersBox.addItem(layer.name())
-            self.layers = layer
 
     def insert_shape(self):
         iface.actionPan().trigger()
@@ -721,7 +717,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.example_jobs.append(job)
 
         # Open a window, where desired job can be selected
-        self.example_jobs_window = QWidget()
+        self.example_jobs_window = QDialog(parent=self)
         hbox6 = QHBoxLayout()
         self.exampleJobBox = QListWidget()
         for job in self.example_jobs:
@@ -731,12 +727,14 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             job_item.setSelected(False)
             job_item.setText(job.title)  # add Titles as QListWidgetItems
 
+        self.exampleJobBox.setMinimumWidth(500)
+
         closeWindowBtn = QPushButton('Show process graph \n and close window')
         hbox6.addWidget(self.exampleJobBox)
         hbox6.addWidget(closeWindowBtn)
         closeWindowBtn.clicked.connect(self.pick_job_from_hub)
         self.example_jobs_window.setLayout(hbox6)
-        self.example_jobs_window.setGeometry(400, 400, 600, 200)
+       # self.example_jobs_window.setGeometry(400, 400, 600, 200)
         self.example_jobs_window.setWindowTitle('Select a Job')
         self.example_jobs_window.show()
 
@@ -748,9 +746,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         selected_row = self.exampleJobBox.currentRow()
         #id_selected_job = int(selected_row)
-        self.processgraphEdit.setText(self.example_jobs[selected_row].process_graph)
         self.example_jobs_window.close()
-        self.example_job = json.loads(self.processgraphEdit.toPlainText())
+        self.example_job = json.loads(self.example_jobs[selected_row].process_graph)
+        self.processgraphEdit.setText(json.dumps(self.example_job, indent=4))
 
     def adapt_temporal(self):
 
@@ -762,35 +760,42 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.temp_dialog.activateWindow()
 
     def adapt_spatial(self):
-        self.tabWidget.setCurrentIndex(0)
-        # Settings
-        self.adaptButton.show()
-        self.loadButton.hide()
-        self.collectionBox.setEnabled(False)
-        self.label_10.setEnabled(False)
-        self.label_6.setEnabled(False)
-        self.label_12.hide()
-        self.previousButton.hide()
-        self.nextButton.hide()
-        self.moveButton.setEnabled(False)
-        self.label_9.setEnabled(False)
-        self.selectDate.setEnabled(False)
-        self.StartDateEdit.setEnabled(False)
-        self.EndDateEdit.setEnabled(False)
-        self.label_8.setEnabled(True)
-        self.extentBox.setEnabled(True)
-        self.layersBox.setEnabled(True)
-        self.getBtn.setEnabled(True)
-        self.drawBtn.setEnabled(True)
-        self.processgraphSpatialExtent.setEnabled(True)
-        self.processgraphBands.setEnabled(False)
-        self.label_16.setEnabled(False)
-        self.multipleBandBtn.setEnabled(False)
-        self.allBandBtn.setEnabled(False)
-        self.label_11.setEnabled(False)
-        self.collectionBox_individual_job.setEnabled(False)
-        self.adaptButton.setText("Adapt Spatial Extent")
-        self.adaptButton.clicked.connect(self.insert_Change_spatial)
+
+        self.spatial_dialog = SpatialDialog(iface=self.iface, parent=self)
+
+        self.spatial_dialog.show()
+        self.spatial_dialog.raise_()
+        self.spatial_dialog.activateWindow()
+
+        # self.tabWidget.setCurrentIndex(0)
+        # # Settings
+        # self.adaptButton.show()
+        # self.loadButton.hide()
+        # self.collectionBox.setEnabled(False)
+        # self.label_10.setEnabled(False)
+        # self.label_6.setEnabled(False)
+        # self.label_12.hide()
+        # self.previousButton.hide()
+        # self.nextButton.hide()
+        # self.moveButton.setEnabled(False)
+        # self.label_9.setEnabled(False)
+        # self.selectDate.setEnabled(False)
+        # self.StartDateEdit.setEnabled(False)
+        # self.EndDateEdit.setEnabled(False)
+        # self.label_8.setEnabled(True)
+        # self.extentBox.setEnabled(True)
+        # self.layersBox.setEnabled(True)
+        # self.getBtn.setEnabled(True)
+        # self.drawBtn.setEnabled(True)
+        # self.processgraphSpatialExtent.setEnabled(True)
+        # self.processgraphBands.setEnabled(False)
+        # self.label_16.setEnabled(False)
+        # self.multipleBandBtn.setEnabled(False)
+        # self.allBandBtn.setEnabled(False)
+        # self.label_11.setEnabled(False)
+        # self.collectionBox_individual_job.setEnabled(False)
+        # self.adaptButton.setText("Adapt Spatial Extent")
+        # self.adaptButton.clicked.connect(self.insert_Change_spatial)
 
     def adapt_bands(self):
         self.tabWidget.setCurrentIndex(0)
@@ -883,17 +888,17 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         for key, _ in self.example_job.items():
             if self.example_job[key]["process_id"] == "load_collection":
                 self.example_job[key]["arguments"]["temporal_extent"] = dates
-                self.processgraphEdit.setText(json.dumps(self.example_job))
+                self.processgraphEdit.setText(json.dumps(self.example_job, indent=4))
 
-    def insert_Change_spatial(self):
+    def insert_Change_spatial(self, spatial_extent):
         self.tabWidget.setCurrentIndex(1)
         #self.processgraphEdit.setText(self.processgraphSpatialExtent.toPlainText())
 
         self.example_job = json.loads(self.processgraphEdit.toPlainText())
         for key, _ in self.example_job.items():
             if self.example_job[key]['process_id'] == "load_collection":
-                self.example_job[key]['arguments']['spatial_extent'] = self.processgraphSpatialExtent.toPlainText()
-                self.processgraphEdit.setText(json.dumps(self.example_job))
+                self.example_job[key]['arguments']['spatial_extent'] = json.loads(spatial_extent)
+                self.processgraphEdit.setText(json.dumps(self.example_job, indent=4))
 
     def insert_Change_bands(self):
         self.tabWidget.setCurrentIndex(1)
@@ -903,10 +908,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         for key, _ in self.example_job.items():
             if self.example_job[key]['process_id'] == "load_collection":
                 self.example_job[key]['arguments']['bands'] = self.processgraphBands.toPlainText()
-                self.processgraphEdit.setText(json.dumps(self.example_job))
+                self.processgraphEdit.setText(json.dumps(self.example_job, indent=4))
 
     def user_manual(self):
-        self.umWindow = QWidget()
+        self.umWindow = QDialog(parent=self)
         self.grid = QGridLayout()
 
         # User Manual Text
@@ -930,7 +935,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.grid.addWidget(self.image, 2, 0)
         self.grid.addWidget(self.text, 4, 0)
         self.umWindow.setLayout(self.grid)
-        self.umWindow.setGeometry(400, 400, 600, 450)
+        #self.umWindow.setGeometry(400, 400, 600, 450)
         self.umWindow.setWindowTitle('User Manual')
         self.umWindow.show()
 
@@ -1746,7 +1751,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             layers = iface.mapCanvas().layers()
             for layer in layers:
                 self.layersBox.addItem(layer.name())
-                self.layers = layer
         elif str(self.extentBox.currentText()) == "Insert Shapefile":
             self.drawBtn.setVisible(False)
             self.getBtn.setVisible(True)

@@ -2,7 +2,6 @@ from qgis.core import QgsRasterLayer
 from qgis.PyQt.QtCore import QFileInfo
 from qgis.core import QgsProject
 
-
 class Result():
 
     def __init__(self, path=None):
@@ -27,6 +26,3 @@ class Result():
         else:
             print
             "Unable to read basename and file path - Your string is probably invalid"
-
-
-

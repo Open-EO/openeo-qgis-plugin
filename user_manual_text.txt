@@ -1,0 +1,25 @@
+
+2. On the right hand side of the Figure above, you can see the  Button, which transfers you to the User Manual. Furthermore, you are enabled 
+to switch between the five tabs - “New Job”, “Adapt Job Example”, “Process Graph View”, “Jobs” and “Services”.
+
+How to prepare a Process Graph?
+
+3. After your login you can concentrate on the first two tabs: Either create a complete new job (in Tab: “New Job”) or load and optionally 
+adapt an existing example job (in Tab: “Adapt Job Example”). You will be guided through both processes by inserting the required information
+step by step, which the back-end needs, to successfully answer your query. After clicking the “Load Job”-Button (in both cases) you will 
+automatically be transferred to the Tab “Process Graph View”. 
+
+How to view a Process Graph?
+
+4. In Tab “Process Graph View”, you can see the final version of your process graph. If you click on “Create Job”, the process graph is sent to the
+respective back-end as JSON. You will be informed, if your query is successful or not. If it is, you will be automatically transferred to the Tab
+“Jobs”, where you can see a list of all the jobs you created so far. If not, you can use the “Clear Job”-Button to clear the Process Graph Window.
+
+What happens with jobs, which were successfully sent to the back-end?
+
+5 Within the Tab “Jobs”, you have the possibilities to execute or display the result of your query. All successful queries are listed here. 
+Besides, you are enabled to get general information on characteristics of each job () or the process graph of each job ().
+
+What is the purpose of the “Service” Tab?
+
+6. The “Service” Tab is only enabled when the queried data is free of charge. By moving over the canvas, your query is loaded for each view.

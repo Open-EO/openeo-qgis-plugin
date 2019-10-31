@@ -24,6 +24,15 @@ class Connection:
                 self.token = token.json()["access_token"]
             else:
                 return False
+
+        # disconnect
+        elif username and password == None:
+            token_dis = requests.get(self._url)
+            if token_dis.status_code == 200:
+                return False
+            else:
+                return False
+
         return True
 
     def get_header(self):
@@ -31,7 +40,6 @@ class Connection:
         Returns the header (used for a request) with e.g. the authentication token.
         :return: header: Dict
         """
-
         if self.token:
             return {'Authorization': 'Bearer {}'.format(self.token)}
         else:
@@ -120,29 +128,72 @@ class Connection:
         """
         Returns information about a created job.
         :param: job_id: Identifier of the job
-        :return: jobs: Strings containing details about the created jobs.
+        :return: job_info_id: Strings containing details about the created jobs.
         """
         requested_info = "/jobs/{}".format(job_id)
         get_info = self.get(requested_info, stream=True)
-        json = get_info.json()
-
-        title = json['title']
-        description = json['description']
-        process_graph = json['process_graph']
-        cost = json['costs']
+        job_info = get_info.json()
+        
+        title = job_info['title']
+        description = job_info['description']
+        submission = job_info['submitted']
+        cost = job_info['costs']
         processes = []
         # Data & Extents & Processes
-        for key in json['process_graph'].keys():
+        for key in job_info['process_graph'].keys():
             if "load_collection" in key:
-                data_set = json['process_graph'][key]['arguments']['id']
-                temporal_extent = json['process_graph'][key]['arguments']['spatial_extent']
-                spatial_extent = json['process_graph'][key]['arguments']['temporal_extent']
+                data_set = job_info['process_graph'][key]['arguments']['id']
+                temporal_extent = job_info['process_graph'][key]['arguments']['spatial_extent']
+                spatial_extent = job_info['process_graph'][key]['arguments']['temporal_extent']
                 processes.append(key)
+                job_info_id = "Title: {}. \nDescription: {}. \nSubmission Date: {} \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}.\nTemporal Extent: {}. \nCost: {}."\
+                    .format(title, description, submission, data_set, processes, spatial_extent, temporal_extent, cost)\
+                    .replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
+                return job_info_id
 
-                job_info = "Title: {}. \nDescription: {}. \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}. \nTemporal Extent: {}. \nCost: {}.".\
-                    format(title, description, data_set, processes, spatial_extent, temporal_extent, cost).replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
+    def service_info(self, service_id):
+        """
+        Returns information about a created service.
+        :param: service_id: Identifier of the service
+        :return: service_info_id: Strings containing details about the created service.
+        """
+        requested_info = "/services/{}".format(service_id)
+        get_info = self.get(requested_info, stream=True)
+        service_info = get_info.json()
 
-                return job_info, process_graph
+        title = service_info['title']
+        description = service_info['description']
+        submission = service_info['submitted']
+        type = service_info['type']
+        cost = service_info['costs']
+        processes = []
+        # Data & Extents & Processes
+        for key in service_info['process_graph'].keys():
+            if "load_collection" in key:
+                data_set = service_info['process_graph'][key]['arguments']['id']
+                temporal_extent = service_info['process_graph'][key]['arguments']['spatial_extent']
+                spatial_extent = service_info['process_graph'][key]['arguments']['temporal_extent']
+                processes.append(key)
+                service_info_id = "Title: {}. \nDescription: {}. \nSubmission Date: {} \nType: {} \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}.\nTemporal Extent: {}. \nCost: {}." \
+                    .format(title, description, submission, type, data_set, processes, spatial_extent, temporal_extent, cost) \
+                    .replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
+                return service_info_id
+
+    def pg_info_job(self, job_id):
+        requested_info = "/jobs/{}".format(job_id)
+        get_info = self.get(requested_info, stream=True)
+        job_info = get_info.json()
+        process_graph_job = job_info['process_graph']
+        return process_graph_job
+
+    def pg_info_service(self, service_id):
+        requested_info = "/services/{}".format(service_id)
+        get_info = self.get(requested_info, stream=True)
+        service_info = get_info.json()
+        process_graph_service = service_info['process_graph']
+    #    return process_graph_service
+
+        return service_info
 
     def job_result_url(self, job_id):
         """
@@ -216,6 +267,24 @@ class Connection:
 
         return job_status
 
+    def service_create(self, process_graph):
+        """
+        Sends the process graph to the backend and creates a new job.
+        :param: process_graph: Dict, Process Graph of the new job
+        :return: status: String, Status of the job creation
+        """
+        pg = {
+            "process_graph": process_graph
+        }
+        #print(process_graph)
+
+        service_status = self.post("/jobs", postdata=pg)
+
+        #if job_status.status_code == 201:
+        #    return job_status
+
+        return service_status
+
     def post(self, path, postdata):
         """
         Makes a RESTful POST request to the back end.
@@ -238,8 +307,15 @@ class Connection:
         auth = self.get_auth()
         return requests.delete(self._url+path, headers=auth_header, auth=auth)
 
+
     def delete_job(self, job_id):
         path = "/jobs/{}".format(job_id)
+        auth_header = self.get_header()
+        auth = self.get_auth()
+        return requests.delete(self._url+path, headers=auth_header, auth=auth)
+
+    def delete_service(self, service_id):
+        path = "/services/{}".format(service_id)
         auth_header = self.get_header()
         auth = self.get_auth()
         return requests.delete(self._url+path, headers=auth_header, auth=auth)

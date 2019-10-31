@@ -133,7 +133,7 @@ class Connection:
         requested_info = "/jobs/{}".format(job_id)
         get_info = self.get(requested_info, stream=True)
         job_info = get_info.json()
-
+        
         title = job_info['title']
         description = job_info['description']
         submission = job_info['submitted']
@@ -306,6 +306,7 @@ class Connection:
         auth_header = self.get_header()
         auth = self.get_auth()
         return requests.delete(self._url+path, headers=auth_header, auth=auth)
+
 
     def delete_job(self, job_id):
         path = "/jobs/{}".format(job_id)

@@ -18,7 +18,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'temp_dia
 
 
 class TempDialog(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self, parent=None, iface=None, minimum_date=None, maximum_date=None, max_date=None):
+    def __init__(self, parent=None, iface=None, minimum_date=None, maximum_date=None, max_date=None, cur_dates=None):
         """Constructor method
         """
         super(TempDialog, self).__init__(parent)
@@ -42,13 +42,17 @@ class TempDialog(QtWidgets.QDialog, FORM_CLASS):
         self.maximum_date = maximum_date
         self.max_date = max_date
 
+        if cur_dates:
+            self.StartDateEdit.setCurrentDate(QDate.fromString(cur_dates[0], "yyyy-MM-dd"))
+            self.EndDateEdit.setCurrentDate(QDate.fromString(cur_dates[1], "yyyy-MM-dd"))
+
         self.selectDate.clicked.connect(self.add_temporal)
         #self.refreshButton_service.clicked.connect(self.refresh_services)
         #self.refreshButton_service.clicked.connect(self.refresh_services)
         self.buttonBox.accepted.connect(self.accept_dialog)
 
     def accept_dialog(self):
-        self.parent().insert_Change_temporal(start_date=self.show_start(), end_date=self.show_end())
+        self.parent().change_example_temporal(start_date=self.show_start(), end_date=self.show_end())
 
     def add_temporal(self):
         QMainWindow.show(self)

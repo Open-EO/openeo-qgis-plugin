@@ -38,7 +38,7 @@ from qgis.utils import iface
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QTextEdit, QListWidget, QListWidgetItem, QApplication, \
-    QWidget, QLabel, QGridLayout, QVBoxLayout, QCalendarWidget, QDialog
+    QWidget, QLabel, QGridLayout, QVBoxLayout, QCalendarWidget, QDialog, QComboBox
 from PyQt5.QtCore import QDate, Qt, QSize, QSettings
 from PyQt5.QtGui import QColor, QIcon, QPixmap
 
@@ -86,30 +86,37 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.setupUi(self)
         ### Backend Issue:
-        self.backendURL = requests.get('http://hub.openeo.org/api/backends')
+        try:
+            self.backendURL = requests.get('http://hub.openeo.org/api/backends', timeout=5)
+        except:
+            self.backendsALL = {}
 
         if self.backendURL.status_code == 200:
             self.backendsALL = self.backendURL.json()
 
+        self.processgraphEdit.setText(json.dumps(self.backendsALL, indent=4))
+
         backends = []
-        if 'VITO GeoPySpark' in self.backendsALL:
-            for item in self.backendsALL['VITO GeoPySpark'].values():
-                backends.append(str(item))
-            del self.backendsALL['VITO GeoPySpark']
 
         for backend in self.backendsALL.values():
             if ".well-known" in str(backend):
-                backend_versions = requests.get(backend)
+                try:
+                    backend_versions = requests.get(backend, timeout=5)
 
-                if backend_versions.status_code == 200:
-                    backend_versions = backend_versions.json()
-                    for versions in backend_versions.values():
+                    if backend_versions.status_code == 200:
+                        backend_versions = backend_versions.json()
+                        for versions in backend_versions.values():
 
-                        for version in versions:
-                            if "api_version" in version:
-                                if LooseVersion("0.4.0") <= LooseVersion(version["api_version"]):
-                                    if "url" in version:
-                                        backends.append(str(version["url"]))
+                            for version in versions:
+                                if "api_version" in version:
+                                    if LooseVersion("0.4.0") <= LooseVersion(version["api_version"]):
+                                        if "url" in version:
+                                            backends.append(str(version["url"]))
+                except:
+                    print("Exception connecting to backend {}".format(backend))
+            elif isinstance(backend, dict):
+                for item in backend.values():
+                    backends.append(str(item))
             else:
                 backends.append(str(backend))
 
@@ -128,22 +135,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.label_15.setStyleSheet("color: white")
         self.label_14.setStyleSheet("background-color: grey")
 
-        #self.collectionBox.currentTextChanged.connect(self.bands_selected)
-        #self.collectionBox.currentTextChanged.connect(self.date_limits)
-        #self.collectionBox.currentTextChanged.connect(self.spatial_limits)
-        #self.collectionBox.currentTextChanged.connect(self.start_wizard0)
         self.collectionBox.currentTextChanged.connect(self.col_info)
 
         self.collectionBox.setEnabled(True)
         self.collectionBox.show()
-        #self.label_6.setEnabled(False)  # Load Collection
         self.label_12.hide()
 
         self.processBox.currentTextChanged.connect(self.process_selected)
-        #self.processBox.currentTextChanged.connect(self.start_wizard1)
-        #self.processBox.setEnabled(False)
-        #self.processTableWidget.setEnabled(False)
-        #self.label_7.setEnabled(False)  # Add Process
 
         self.clearButton.clicked.connect(self.clear)  # Clear Button
         self.sendButton.clicked.connect(self.send_job)  # Create Job Button
@@ -205,9 +203,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn.clicked.connect(self.adapt_temporal)
         self.insertChangeBtn_2.clicked.connect(self.adapt_spatial)
         self.insertChangeBtn_3.clicked.connect(self.adapt_bands)
+        self.insertChangeBtn_4.clicked.connect(self.adapt_collection)
         self.insertChangeBtn.setEnabled(False)
         self.insertChangeBtn_2.setEnabled(False)
         self.insertChangeBtn_3.setEnabled(False)
+        self.insertChangeBtn_4.setEnabled(False)
 
         # self.set_font()
         # Jobs Tab
@@ -325,7 +325,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         return
 
     def load_job_from_hub(self):
-        example_jobs_URL = requests.get('http://hub.openeo.org/api/process_graphs')
+        try:
+            example_jobs_URL = requests.get('http://hub.openeo.org/api/process_graphs', timeout=5)
+        except:
+            example_jobs_URL = []
+
         examples_job_list = example_jobs_URL.json()
 
         # Get names and process graphs of all available processes (7)
@@ -360,6 +364,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn.setEnabled(True)
         self.insertChangeBtn_2.setEnabled(True)
         self.insertChangeBtn_3.setEnabled(True)
+        self.insertChangeBtn_4.setEnabled(True)
 
 
         selected_row = self.exampleJobBox.currentRow()
@@ -369,8 +374,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def adapt_temporal(self):
 
+        current_date = self.get_example_temporal()
+
+
         self.temp_dialog = TempDialog(iface=self.iface, parent=self, minimum_date=self.minimum_date,
-                                      maximum_date=self.maximum_date, max_date=self.max_date)
+                                      maximum_date=self.maximum_date, max_date=self.max_date, cur_dates=current_date)
 
         self.temp_dialog.show()
         self.temp_dialog.raise_()
@@ -392,7 +400,57 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.band_dialog.raise_()
         self.band_dialog.activateWindow()
 
-    def insert_Change_temporal(self, start_date=None, end_date=None):
+    def adapt_collection(self):
+
+        col_window = QDialog(parent=self)
+
+        col_combo = QComboBox()
+        ok_button = QPushButton()
+        cancel_button = QPushButton()
+
+        ok_button.setText("Ok")
+        cancel_button.setText("Cancel")
+
+        all_items = [self.collectionBox.itemText(i) for i in range(self.collectionBox.count())]
+        col_combo.addItems(all_items)
+
+        selected_id = self.get_example_collection()
+        col_combo.setCurrentText(selected_id)
+
+        col_combo.setMinimumWidth(250)
+
+        ok_button.clicked.connect(lambda: self.change_example_collection(col_combo.currentText(), col_window))
+        cancel_button.clicked.connect(col_window.reject)
+
+        vbox = QVBoxLayout()
+        vbox.addWidget(col_combo)
+
+        hbox = QHBoxLayout()
+        hbox.addWidget(ok_button)
+        hbox.addWidget(cancel_button)
+
+        vbox.addLayout(hbox)
+        col_window.setLayout(vbox)
+        col_window.setWindowTitle('Choose Collection')
+        col_window.show()
+
+    def get_example_collection(self):
+        example_job = json.loads(self.processgraphEdit.toPlainText())
+        selected_id = ""
+        for key, _ in example_job.items():
+            if example_job[key]["process_id"] == "load_collection":
+                selected_id = example_job[key]["arguments"]["id"]
+        return selected_id
+
+    def change_example_collection(self, col_id, dialog):
+        example_job = json.loads(self.processgraphEdit.toPlainText())
+        for key, _ in example_job.items():
+            if example_job[key]["process_id"] == "load_collection":
+                example_job[key]["arguments"]["id"] = col_id
+                self.processgraphEdit.setText(json.dumps(example_job, indent=4))
+        dialog.close()
+
+    def change_example_temporal(self, start_date=None, end_date=None):
         self.tabWidget.setCurrentIndex(1)
 
         if not start_date:
@@ -404,39 +462,62 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             new_end_date = self.show_end()
         else:
             new_end_date = end_date
-        dates = []
-        dates.append(new_start_date)
-        dates.append(new_end_date)
 
-        self.example_job = json.loads(self.processgraphEdit.toPlainText())
-        for key, _ in self.example_job.items():
-            if self.example_job[key]["process_id"] == "load_collection":
-                self.example_job[key]["arguments"]["temporal_extent"] = dates
-                self.processgraphEdit.setText(json.dumps(self.example_job, indent=4))
+        dates = [new_start_date, new_end_date]
 
-    def insert_Change_spatial(self, spatial_extent):
+        example_job = json.loads(self.processgraphEdit.toPlainText())
+        for key, _ in example_job.items():
+            if example_job[key]["process_id"] == "load_collection":
+                example_job[key]["arguments"]["temporal_extent"] = dates
+                self.processgraphEdit.setText(json.dumps(example_job, indent=4))
+
+    def get_example_temporal(self):
+        example_job = json.loads(self.processgraphEdit.toPlainText())
+        temporal = ""
+        for key, _ in example_job.items():
+            if example_job[key]["process_id"] == "load_collection":
+                temporal = example_job[key]["arguments"]["temporal"]
+        return json.loads(temporal)
+
+    def change_example_spatial(self, spatial_extent):
         self.tabWidget.setCurrentIndex(1)
 
-        self.example_job = json.loads(self.processgraphEdit.toPlainText())
-        for key, _ in self.example_job.items():
-            if self.example_job[key]['process_id'] == "load_collection":
-                self.example_job[key]['arguments']['spatial_extent'] = json.loads(spatial_extent)
-                self.processgraphEdit.setText(json.dumps(self.example_job, indent=4))
+        example_job = json.loads(self.processgraphEdit.toPlainText())
+        for key, _ in example_job.items():
+            if example_job[key]['process_id'] == "load_collection":
+                example_job[key]['arguments']['spatial_extent'] = json.loads(spatial_extent)
+                self.processgraphEdit.setText(json.dumps(example_job, indent=4))
 
-    def insert_Change_bands(self, band_choices):
+    def get_example_spatial(self):
+        example_job = json.loads(self.processgraphEdit.toPlainText())
+        extent = ""
+        for key, _ in example_job.items():
+            if example_job[key]["process_id"] == "load_collection":
+                extent = example_job[key]["arguments"]["spatial_extent"]
+        return extent
+
+    def change_example_bands(self, band_choices):
         self.tabWidget.setCurrentIndex(1)
 
-        self.example_job = json.loads(self.processgraphEdit.toPlainText())
-        for key, _ in self.example_job.items():
-            if self.example_job[key]['process_id'] == "load_collection":
-                self.example_job[key]['arguments']['bands'] = json.loads(band_choices)
-                self.processgraphEdit.setText(json.dumps(self.example_job, indent=4))
+        example_job = json.loads(self.processgraphEdit.toPlainText())
+        for key, _ in example_job.items():
+            if example_job[key]['process_id'] == "load_collection":
+                example_job[key]['arguments']['bands'] = json.loads(band_choices)
+                self.processgraphEdit.setText(json.dumps(example_job, indent=4))
+
+    def get_example_bands(self):
+        example_job = json.loads(self.processgraphEdit.toPlainText())
+        bands = ""
+        for key, _ in example_job.items():
+            if example_job[key]["process_id"] == "load_collection":
+                bands = example_job[key]["arguments"]["bands"]
+        return bands
 
     def get_pg_collection(self):
-        self.example_job = json.loads(self.processgraphEdit.toPlainText())
-        for key, _ in self.example_job.items():
-            if self.example_job[key]['process_id'] == "load_collection":
-                return self.example_job[key]['arguments']['id']
+        example_job = json.loads(self.processgraphEdit.toPlainText())
+        for key, _ in example_job.items():
+            if example_job[key]['process_id'] == "load_collection":
+                return example_job[key]['arguments']['id']
 
     def user_manual(self):
         self.umWindow = QDialog(parent=self)
@@ -569,6 +650,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.refreshButton.setEnabled(False)
         self.deleteButton.setEnabled(False)
         self.deleteFinalButton.setEnabled(False)
+        self.deleteFinalButton.setEnabled(False)
         self.refreshButton_service.setEnabled(False)
         self.deleteButton_service.setEnabled(False)
         self.deleteFinalButton_service.setEnabled(False)
@@ -630,28 +712,28 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         job_id = self.jobsTableWidget.item(row, 1).text()
         job_info = self.connection.job_info(job_id)
-        self.infoWindow3 = QWidget()
+        self.infoWindow3 = QDialog(parent=self)
         self.hbox3 = QHBoxLayout()
         self.infoBox3 = QTextEdit()
         self.infoBox3.setText(str(job_info))
         self.infoBox3.setReadOnly(True)
         self.hbox3.addWidget(self.infoBox3)
         self.infoWindow3.setLayout(self.hbox3)
-        self.infoWindow3.setGeometry(400, 400, 600, 450)
+        #self.infoWindow3.setGeometry(400, 400, 600, 450)
         self.infoWindow3.setWindowTitle('Job Information')
         self.infoWindow3.show()
 
     def service_info(self, row):
         service_id = self.servicesTableWidget.item(row, 1).text()
         service_info = self.connection.service_info(service_id)
-        self.infoWindow5 = QWidget()
+        self.infoWindow5 = QDialog(parent=self)
         self.hbox7 = QHBoxLayout()
         self.infoBox2 = QTextEdit()
         self.infoBox2.setText(str(service_info))
         self.infoBox2.setReadOnly(True)
         self.hbox7.addWidget(self.infoBox2)
         self.infoWindow5.setLayout(self.hbox7)
-        self.infoWindow5.setGeometry(400, 400, 600, 450)
+        #self.infoWindow5.setGeometry(400, 400, 600, 450)
         self.infoWindow5.setWindowTitle('Service Information')
         self.infoWindow5.show()
 
@@ -663,17 +745,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         job_id = self.jobsTableWidget.item(row, 1).text()
         process_graph_job = self.connection.pg_info_job(job_id)
 
-        self.infoWindow4 = QWidget()
+        self.infoWindow4 = QDialog(parent=self)
         self.hbox5 = QVBoxLayout()
         self.infoBox4 = QTextEdit()
-        self.infoBox4.setText(str(process_graph_job))
+        self.infoBox4.setText(json.dumps(process_graph_job, indent=4))
         self.infoBox4.setReadOnly(True)
+        self.infoBox4.setMinimumWidth(500)
+        self.infoBox4.setMinimumHeight(800)
         self.copy_and_adaptBtn = QPushButton('Copy and Adapt Job Process Graph in QGIS Plugin')
         self.copy_and_adaptBtn.move(20, 10)
         self.hbox5.addWidget(self.infoBox4)
         self.hbox5.addWidget(self.copy_and_adaptBtn)
         self.infoWindow4.setLayout(self.hbox5)
-        self.infoWindow4.setGeometry(400, 400, 600, 450)
+        #self.infoWindow4.setGeometry(400, 400, 600, 450)
         self.infoWindow4.setWindowTitle('Job Process Graph')
         self.infoWindow4.show()
         self.copy_and_adaptBtn.clicked.connect(self.copy_and_adapt_job)
@@ -686,23 +770,25 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         service_id = self.servicesTableWidget.item(row, 1).text()
         process_graph_service = self.connection.pg_info_service(service_id)
 
-        self.infoWindow6 = QWidget()
+        self.infoWindow6 = QDialog(parent=self)
         self.hbox8 = QVBoxLayout()
         self.infoBox5 = QTextEdit()
-        self.infoBox5.setText(str(process_graph_service))
+        self.infoBox5.setText(json.dumps(process_graph_service, indent=4))
         self.infoBox5.setReadOnly(True)
+        self.infoBox5.setMinimumWidth(500)
+        self.infoBox5.setMinimumHeight(800)
         self.copy_adaptBtn = QPushButton('Copy and Adapt Service Process Graph in QGIS Plugin')
         self.copy_adaptBtn.move(120, 280)
         self.hbox8.addWidget(self.infoBox5)
         self.hbox8.addWidget(self.copy_adaptBtn, Qt.RightButton)
         self.infoWindow6.setLayout(self.hbox8)
-        self.infoWindow6.setGeometry(400, 400, 600, 450)
+        #self.infoWindow6.setGeometry(400, 400, 600, 450)
         self.infoWindow6.setWindowTitle('Service Process Graph')
         self.infoWindow6.show()
         self.copy_adaptBtn.clicked.connect(self.copy_and_adapt_service)
 
     def copy_and_adapt_job(self):
-        self.processgraphEdit.setText(str(self.infoBox4.toPlainText()).replace("'", '"').replace("None", '"None"').replace("True", '"True"'))
+        self.processgraphEdit.setText(self.infoBox4.toPlainText()) #str().replace("'", '"').replace("None", '"None"').replace("True", '"True"'))
         self.infoWindow4.close()
         self.tabWidget.setCurrentIndex(1)
 
@@ -710,9 +796,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn.setEnabled(True)
         self.insertChangeBtn_2.setEnabled(True)
         self.insertChangeBtn_3.setEnabled(True)
+        self.insertChangeBtn_4.setEnabled(True)
 
     def copy_and_adapt_service(self):
-        self.processgraphEdit.setText(str(self.infoBox5.toPlainText()).replace("'", '"').replace("None", '"None"').replace("True", '"True"'))
+        self.processgraphEdit.setText(json.dumps(str(self.infoBox4.toPlainText()), indent=4)) #(str(self.infoBox5.toPlainText()).replace("'", '"').replace("None", '"None"').replace("True", '"True"'))
         self.infoWindow6.close()
         self.tabWidget.setCurrentIndex(1)
 
@@ -720,6 +807,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.insertChangeBtn.setEnabled(True)
         self.insertChangeBtn_2.setEnabled(True)
         self.insertChangeBtn_3.setEnabled(True)
+        self.insertChangeBtn_4.setEnabled(True)
 
     def init_jobs(self):
         """
@@ -1022,14 +1110,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.refresh_services()
         else:
             self.processgraphEdit.setText("It does not work that way")
-
-    def collection_selected(self):
-        """
-        Gets called if a new collection is selected, resets the process graph with an initial one and the collection id.
-        --Deprecated--
-        """
-        # self.processgraph.set_collection(str(self.collectionBox.currentText()))
-        # self.reload_processgraph_view()
 
     def clear(self):
         self.processgraphEdit.clear()

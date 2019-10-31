@@ -86,7 +86,7 @@ class BandDialog(QtWidgets.QDialog, FORM_CLASS):
                             self.processgraphBands.show()
 
     def accept_dialog(self):
-        self.parent().insert_Change_bands(self.processgraphBands.toPlainText())
+        self.parent().change_example_bands(self.processgraphBands.toPlainText())
 
     def multiple_bands(self):
         """

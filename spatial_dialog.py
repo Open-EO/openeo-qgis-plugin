@@ -76,7 +76,7 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
         self.buttonBox.accepted.connect(self.accept_dialog)
 
     def accept_dialog(self):
-        self.parent().insert_Change_spatial(self.processgraphSpatialExtent.toPlainText())
+        self.parent().change_example_spatial(self.processgraphSpatialExtent.toPlainText())
 
     def refresh_layers(self):
         self.layersBox.clear()

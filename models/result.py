@@ -29,6 +29,7 @@ class Result():
             crs.createFromId(4326, QgsCoordinateReferenceSystem.EpsgCrsId)
             if self.extent:
                 if "crs" in self.extent:
+                    self.extent["crs"] = self.extent["crs"].replace("EPSG:", "")
                     crs.createFromId(int(self.extent["crs"]))
 
             layer.setCrs(crs)

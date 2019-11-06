@@ -269,7 +269,7 @@ class Connection:
 
         return None
 
-    def job_create(self, process_graph):
+    def job_create(self, process_graph, title=None):
         """
         Sends the process graph to the backend and creates a new job.
         :param: process_graph: Dict, Process Graph of the new job
@@ -278,6 +278,8 @@ class Connection:
         pg = {
             "process_graph": process_graph
         }
+        if title:
+            pg["title"] = title
         #print(process_graph)
 
         job_status = self.post("/jobs", postdata=pg)

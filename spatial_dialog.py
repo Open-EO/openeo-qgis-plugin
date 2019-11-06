@@ -28,10 +28,11 @@ from PyQt5.QtCore import QDate
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'spatial_dialog.ui'))
 
+PROCESSES_SPATIAL = ["load_collection", "filter_bbox"]
 
 class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
 
-    def __init__(self, parent=None, iface=None):
+    def __init__(self, parent=None, iface=None, pg_graph=None):
         """Constructor method
         """
         super(SpatialDialog, self).__init__(parent)
@@ -67,6 +68,12 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
         self.getBtn.setVisible(True)
         self.getBtn.setEnabled(True)
 
+        self.pg_graph = pg_graph
+
+        self.comboProcessBox.currentTextChanged.connect(self.update_selection)
+
+        self.init_processes()
+
         self.reloadBtn.clicked.connect(self.refresh_layers)
         self.reloadBtn.setVisible(False)
         self.reloadBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'reload_icon.png')))
@@ -76,13 +83,37 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
         self.buttonBox.accepted.connect(self.accept_dialog)
 
     def accept_dialog(self):
-        self.parent().change_example_spatial(self.processgraphSpatialExtent.toPlainText())
+        process_selection = self.comboProcessBox.currentText().split(" - ")[1]
+        self.parent().change_example_spatial(self.processgraphSpatialExtent.toPlainText(), process_id=process_selection)
 
     def refresh_layers(self):
         self.layersBox.clear()
         layers = iface.mapCanvas().layers()
         for layer in layers:
             self.layersBox.addItem(layer.name())
+
+    def init_processes(self):
+        example_job = self.pg_graph
+        for key, _ in example_job.items():
+            if example_job[key]["process_id"] in PROCESSES_SPATIAL:
+                self.comboProcessBox.addItem("{} - {}".format(example_job[key]["process_id"], key))
+
+    def update_selection(self):
+        example_job = self.pg_graph
+        if self.comboProcessBox.currentText():
+            process_selection = self.comboProcessBox.currentText().split(" - ")
+            if process_selection[0] == "load_collection":
+                if "spatial_extent" in example_job[process_selection[1]]["arguments"]:
+                    spatial = example_job[process_selection[1]]["arguments"]["spatial_extent"]
+                    self.init_extent(spatial)
+            elif process_selection[0] == "filter_spatial":
+                if "extent" in example_job[process_selection[1]]["arguments"]:
+                    spatial = example_job[process_selection[1]]["arguments"]["extent"]
+                    self.init_extent(spatial)
+
+    def init_extent(self, init_value):
+        self.processgraphSpatialExtent.setText(str(init_value))
+
 
     def load_extent(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":

@@ -16,9 +16,10 @@ from PyQt5.QtWidgets import QVBoxLayout, QApplication, QWidget, QPushButton, QLi
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'band_dialog.ui'))
 
+PROCESSES_BANDS = ["load_collection", "filter_bands"]
 
 class BandDialog(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self, parent=None, iface=None, minimum_date=None, maximum_date=None, max_date=None):
+    def __init__(self, parent=None, iface=None, pg_graph=None):
         """Constructor method
         """
         super(BandDialog, self).__init__(parent)
@@ -50,16 +51,31 @@ class BandDialog(QtWidgets.QDialog, FORM_CLASS):
         self.label_16.setEnabled(True)
         self.label_11.setEnabled(True)  # Add Bands
 
+        self.pg_graph = pg_graph
+
+        self.comboProcessBox.currentTextChanged.connect(self.update_selection)
+
+        self.init_processes()
+
         self.all_bands = []
 
         self.init_bands()
 
+        self.update_selection()
+
         self.buttonBox.accepted.connect(self.accept_dialog)
 
-    def init_bands(self):
+    def init_bands(self, process_id=None, cur_bands=None):
         data_collection = self.parent().connection.list_collections()
 
-        selected_collection = self.parent().get_pg_collection()
+        if process_id:
+            selected_collection = self.parent().get_pg_collection(process_id=process_id)
+        else:
+            selected_collection = self.parent().get_pg_collection()
+
+        if cur_bands:
+            self.processgraphBands.setText(str(cur_bands))
+            self.processgraphBands.show()
 
         for col in data_collection:
             if str(col['id']) == selected_collection:
@@ -82,11 +98,30 @@ class BandDialog(QtWidgets.QDialog, FORM_CLASS):
                             self.label_16.hide()
                             self.multipleBandBtn.show()
                             self.allBandBtn.show()
-                            self.processgraphBands.setText(str(self.all_bands).replace("'", '"'))
+                            if cur_bands:
+                                self.processgraphBands.setText(str(cur_bands))
+                            else:
+                                self.processgraphBands.setText(str(self.all_bands).replace("'", '"'))
                             self.processgraphBands.show()
 
+    def update_selection(self):
+        example_job = self.pg_graph
+        if self.comboProcessBox.currentText():
+            process_selection = self.comboProcessBox.currentText().split(" - ")
+            if process_selection[0] in ["load_collection", "filter_bands"]:
+                if "bands" in example_job[process_selection[1]]["arguments"]:
+                    bands = example_job[process_selection[1]]["arguments"]["bands"]
+                    self.init_bands(process_id=process_selection[1], cur_bands=bands)
+
     def accept_dialog(self):
-        self.parent().change_example_bands(self.processgraphBands.toPlainText())
+        process_selection = self.comboProcessBox.currentText().split(" - ")[1]
+        self.parent().change_example_bands(self.processgraphBands.toPlainText(), process_id=process_selection)
+
+    def init_processes(self):
+        example_job = self.pg_graph
+        for key, _ in example_job.items():
+            if example_job[key]["process_id"] in PROCESSES_BANDS:
+                self.comboProcessBox.addItem("{} - {}".format(example_job[key]["process_id"], key))
 
     def multiple_bands(self):
         """
@@ -98,7 +133,7 @@ class BandDialog(QtWidgets.QDialog, FORM_CLASS):
         if self.multipleBandBtn.clicked:
             self.multipleBandBtn.setStyleSheet("background-color: lightgray")
 
-        self.processgraphBands.clear()
+        #self.processgraphBands.clear()
         self.band_window = QDialog(parent=self)
         self.hbox4 = QVBoxLayout()
         self.bandBox = QListWidget()
@@ -135,6 +170,7 @@ class BandDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def save_band_choice2(self):
         checked_items = []
+        self.processgraphBands.clear()
         for index in range(self.bandBox.count()):
             if self.bandBox.item(index).checkState() == Qt.Checked:
                 checked_items.append(self.bandBox.item(index).text())

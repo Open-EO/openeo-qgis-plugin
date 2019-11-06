@@ -177,9 +177,9 @@ class OpenEO:
             self.first_start = False
             self.dlg = OpenEODialog(iface=self.iface)
             self.dlg.label_20.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'icon_new.png')))
-            self.dlg.infoBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
+            # self.dlg.infoBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
             self.dlg.infoBtn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
-            self.dlg.reloadBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'reload_icon.png')))
+            # self.dlg.reloadBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'reload_icon.png')))
             self.dlg.refreshButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'reload_icon.png')))
             self.dlg.deleteButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'delete_job.png')))
             self.dlg.deleteFinalButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'deleteFinalBtn.png')))

@@ -17,21 +17,24 @@ class Connection:
         self.username=username
 
         if username and password:
-            token = requests.get(self._url + '/credentials/basic',
-                                 auth=HTTPBasicAuth(username, password))
+            try:
+                token = requests.get(self._url + '/credentials/basic',
+                                    auth=HTTPBasicAuth(username, password), timeout=5)
 
-            if token.status_code == 200:
-                self.token = token.json()["access_token"]
-            else:
+                if token.status_code == 200:
+                    self.token = token.json()["access_token"]
+                else:
+                    return False
+            except:
                 return False
 
         # disconnect
         elif username and password == None:
-            token_dis = requests.get(self._url)
-            if token_dis.status_code == 200:
+            try:
+                requests.get(self._url, timeout=5)
+            except:
                 return False
-            else:
-                return False
+            return False
 
         return True
 
@@ -82,6 +85,20 @@ class Connection:
                 return response["collections"]
 
         return []
+
+    def backend_info(self) -> dict:
+        """
+        Loads all available imagecollections types.
+        :return: data_dict: Dict All available data types
+        """
+        data = self.get('/', auth=False)
+
+        response = None
+
+        if data:
+            response = self.parse_json_response(data)
+
+        return response
 
     def user_jobs(self) -> dict:
         """
@@ -234,22 +251,25 @@ class Connection:
             target = tempfile.gettempdir()+"/{}".format(job_id)
 
             with open(target, 'wb') as handle:
-                response = requests.get(download_url, stream=True, headers=auth_header)
+                try:
+                    response = requests.get(download_url, stream=True, headers=auth_header, timeout=5)
 
-                if not response.ok:
-                    print(response)
+                    if not response.ok:
+                        print(response)
 
-                for block in response.iter_content(1024):
+                    for block in response.iter_content(1024):
 
-                    if not block:
-                        break
-                    handle.write(block)
+                        if not block:
+                            break
+                        handle.write(block)
+                except:
+                    return target
 
             return target
 
         return None
 
-    def job_create(self, process_graph):
+    def job_create(self, process_graph, title=None):
         """
         Sends the process graph to the backend and creates a new job.
         :param: process_graph: Dict, Process Graph of the new job
@@ -258,6 +278,8 @@ class Connection:
         pg = {
             "process_graph": process_graph
         }
+        if title:
+            pg["title"] = title
         #print(process_graph)
 
         job_status = self.post("/jobs", postdata=pg)
@@ -295,7 +317,7 @@ class Connection:
 
         auth_header = self.get_header()
         auth = self.get_auth()
-        return requests.post(self._url+path, json=postdata, headers=auth_header, auth=auth)
+        return requests.post(self._url+path, json=postdata, headers=auth_header, auth=auth, timeout=5)
 
     def delete(self, path):
         """
@@ -305,20 +327,20 @@ class Connection:
         """
         auth_header = self.get_header()
         auth = self.get_auth()
-        return requests.delete(self._url+path, headers=auth_header, auth=auth)
+        return requests.delete(self._url+path, headers=auth_header, auth=auth, timeout=5)
 
 
     def delete_job(self, job_id):
         path = "/jobs/{}".format(job_id)
         auth_header = self.get_header()
         auth = self.get_auth()
-        return requests.delete(self._url+path, headers=auth_header, auth=auth)
+        return requests.delete(self._url+path, headers=auth_header, auth=auth, timeout=5)
 
     def delete_service(self, service_id):
         path = "/services/{}".format(service_id)
         auth_header = self.get_header()
         auth = self.get_auth()
-        return requests.delete(self._url+path, headers=auth_header, auth=auth)
+        return requests.delete(self._url+path, headers=auth_header, auth=auth, timeout=5)
 
     def patch(self, path):
         """
@@ -328,7 +350,7 @@ class Connection:
         """
         auth_header = self.get_header()
         auth = self.get_auth()
-        return requests.patch(self._url+path, headers=auth_header, auth=auth)
+        return requests.patch(self._url+path, headers=auth_header, auth=auth, timeout=5)
 
     def put(self, path, header={}, data=None):
         """
@@ -346,9 +368,9 @@ class Connection:
         head.update(header)
 
         if data:
-            return requests.put(self._url+path, headers=head, data=data, auth=auth)
+            return requests.put(self._url+path, headers=head, data=data, auth=auth, timeout=5)
         else:
-            return requests.put(self._url+path, headers=head, auth=auth)
+            return requests.put(self._url+path, headers=head, auth=auth, timeout=5)
 
     def get(self, path, stream=False, auth=True):
         """
@@ -367,7 +389,7 @@ class Connection:
             auth = None
 
         try:
-            resp = requests.get(self._url + path, headers=auth_header, stream=stream, auth=auth)
+            resp = requests.get(self._url + path, headers=auth_header, stream=stream, auth=auth, timeout=5)
             return resp
         except:
             return None

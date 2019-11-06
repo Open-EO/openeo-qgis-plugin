@@ -39,6 +39,7 @@ from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QTextEdit, QListWidget, QListWidgetItem, QApplication, \
     QWidget, QLabel, QGridLayout, QVBoxLayout, QCalendarWidget, QDialog, QComboBox, QLineEdit
+
 from PyQt5.QtCore import QDate, Qt, QSize, QSettings
 from PyQt5.QtGui import QColor, QIcon, QPixmap
 
@@ -872,6 +873,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Initializes the jobs table
         """
         self.jobsTableWidget.clear()
+
         self.jobsTableWidget.setColumnCount(8)
         self.jobsTableWidget.setHorizontalHeaderLabels(['Job Title', 'Job ID', 'Status', 'Execute', 'Display',
                                                         'Information', 'Process Graph', 'Error'])
@@ -891,9 +893,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Initializes the services table
         """
         self.servicesTableWidget.clear()
+
         self.servicesTableWidget.setColumnCount(6)
         self.servicesTableWidget.setHorizontalHeaderLabels(['Service Title', 'Service ID', 'Display', 'Information',
                                                             'Process Graph', 'Error'])
+
         header = self.servicesTableWidget.horizontalHeader()
         self.servicesTableWidget.setSortingEnabled(True)
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Interactive)
@@ -1208,6 +1212,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.jobsTableWidget.removeRow(self.chosenRow)
 
     def delete_job_final(self, row):
+
         job_id = self.jobsTableWidget.item(row, 1).text()
         self.connection.delete_job(job_id)
         self.refresh_jobs()

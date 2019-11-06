@@ -589,8 +589,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.title.setText("User Manual \n ")
         self.startText = QLabel()
         self.startText.setText("1. At first, please focus on the upper part (header) of the openEO Plugin. "
-                               "There, you can choose a back-end and enter your login credentials. By clicking \n"
-                               "the “Connect”-Button, you will be connected with the chosen back-end. \n")
+                               "There, you can choose a back-end and enter your login credentials. \nBy clicking"
+                               "the “Connect”-Button, you will be connected with the chosen back-end. \nIf the connection "
+                               "was successful you will see it in the Status text. \n")
         # openEO Header Image
         self.image = QLabel()
         self.image.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'openEO_plugin_header.png')))

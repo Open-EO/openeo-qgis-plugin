@@ -1,9 +1,18 @@
 import requests
+from distutils.version import LooseVersion
 from requests.auth import HTTPBasicAuth
+from typing import Union
 import tempfile
-import json
+
 
 class Connection:
+
+    def __init__(self):
+        self.token = None
+        self._url = None
+        self.version = None
+        self.username = None
+
     def connect(self, url, username=None, password=None) -> bool:
         """
         Authenticates a user to the backend using auth class.
@@ -13,8 +22,11 @@ class Connection:
         """
 
         self._url = url
+
+        self.version = ComparableVersion(self.backend_info()["api_version"])
+
         self.token = None
-        self.username=username
+        self.username = username
 
         if username and password:
             try:
@@ -25,15 +37,17 @@ class Connection:
                     self.token = token.json()["access_token"]
                 else:
                     return False
+
             except:
                 return False
-
-        # disconnect
-        elif username and password == None:
+        elif username and not password:
             try:
                 requests.get(self._url, timeout=5)
             except:
                 return False
+            return False
+
+        if not self.token:
             return False
 
         return True
@@ -56,7 +70,6 @@ class Connection:
         return None
 
     def list_processes(self) -> dict:
-        # TODO: Maybe format the result dictionary so that the process_id is the key of the dictionary.
         """
         Loads all available processes of the back end.
         :return: processes_dict: Dict All available processes of the back end.
@@ -150,7 +163,7 @@ class Connection:
         requested_info = "/jobs/{}".format(job_id)
         get_info = self.get(requested_info, stream=True)
         job_info = get_info.json()
-        
+
         title = job_info['title']
         description = job_info['description']
         submission = job_info['submitted']
@@ -163,8 +176,9 @@ class Connection:
                 temporal_extent = job_info['process_graph'][key]['arguments']['spatial_extent']
                 spatial_extent = job_info['process_graph'][key]['arguments']['temporal_extent']
                 processes.append(key)
-                job_info_id = "Title: {}. \nDescription: {}. \nSubmission Date: {} \nData: {}. \nProcess(es): {}. \nSpatial Extent: {}.\nTemporal Extent: {}. \nCost: {}."\
-                    .format(title, description, submission, data_set, processes, spatial_extent, temporal_extent, cost)\
+                job_info_id = "Title: {}. \nDescription: {}. \nSubmission Date: {} \nData: {}. \nProcess(es): {}" \
+                              ". \nSpatial Extent: {}.\nTemporal Extent: {}. \nCost: {}." \
+                    .format(title, description, submission, data_set, processes, spatial_extent, temporal_extent, cost) \
                     .replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
                 return job_info_id
 
@@ -405,3 +419,90 @@ class Connection:
             return response.json()
         else:
             return None
+
+
+class ComparableVersion:
+    """
+    Helper to compare a version (e.g. API version) against another (threshold) version
+
+        >>> v = ComparableVersion('1.2.3')
+        >>> v.at_least('1.2.1')
+        True
+        >>> v.at_least('1.10.2')
+        False
+        >>> v > "2.0"
+        False
+
+    To express a threshold condition you sometimes want the reference value on
+    the left hand side or right hand side. There are two groups of methods
+    to handle each case:
+
+    - right hand side referencing methods. These read more intuitively. For example:
+
+        `a.at_least(b)`: a is equal or higher than b
+        `a.below(b)`: a is lower than b
+
+    - left hand side referencing methods. These allow "currying" a threshold value
+      in a reusable condition callable. For example:
+
+        `a.or_higher(b)`: b is equal or higher than a
+        `a.accept_lower(b)`: b is lower than a
+    """
+
+    def __init__(self, version: Union[str, 'ComparableVersion']):
+        if isinstance(version, ComparableVersion):
+            self._version = version._version
+        else:
+            self._version = LooseVersion(version)
+
+    def __str__(self):
+        return str(self._version)
+
+    def to_string(self):
+        return str(self)
+
+    def __ge__(self, other: Union[str, 'ComparableVersion']):
+        return self._version >= ComparableVersion(other)._version
+
+    def __gt__(self, other: Union[str, 'ComparableVersion']):
+        return self._version > ComparableVersion(other)._version
+
+    def __le__(self, other: Union[str, 'ComparableVersion']):
+        return self._version <= ComparableVersion(other)._version
+
+    def __lt__(self, other: Union[str, 'ComparableVersion']):
+        return self._version < ComparableVersion(other)._version
+
+    # Right hand side referencing expressions.
+    def at_least(self, other: Union[str, 'ComparableVersion']):
+        """Self is at equal or higher than other."""
+        return self >= other
+
+    def above(self, other: Union[str, 'ComparableVersion']):
+        """Self is higher than other."""
+        return self > other
+
+    def at_most(self, other: Union[str, 'ComparableVersion']):
+        """Self is equal or lower than other."""
+        return self <= other
+
+    def below(self, other: Union[str, 'ComparableVersion']):
+        """Self is lower than other."""
+        return self < other
+
+    # Left hand side referencing expressions.
+    def or_higher(self, other: Union[str, 'ComparableVersion']):
+        """Other is equal or higher than self."""
+        return ComparableVersion(other) >= self
+
+    def or_lower(self, other: Union[str, 'ComparableVersion']):
+        """Other is equal or lower than self"""
+        return ComparableVersion(other) <= self
+
+    def accept_lower(self, other: Union[str, 'ComparableVersion']):
+        """Other is lower than self."""
+        return ComparableVersion(other) < self
+
+    def accept_higher(self, other: Union[str, 'ComparableVersion']):
+        """Other is higher than self."""
+        return ComparableVersion(other) > self

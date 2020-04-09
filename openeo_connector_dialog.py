@@ -43,16 +43,19 @@ from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QTextEdit, QListWidget, QL
 from PyQt5.QtCore import QDate, Qt, QSize, QSettings
 from PyQt5.QtGui import QColor, QIcon, QPixmap
 
-from .models.job import Job
+from .models.models import Job
 from .models.result import Result
 from .models.connect import Connection
 from .models.processgraph import Processgraph
+from .models.openeohub import get_hub_backends, get_hub_jobs
 from .utils.logging import info, warning
 from distutils.version import LooseVersion
 
 from .temp_dialog import TempDialog
 from .spatial_dialog import SpatialDialog
 from .band_dialog import BandDialog
+
+
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
@@ -66,7 +69,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'openeo_c
 
 
 class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self, parent=None, iface=None):
+    def __init__(self, parent=None, iface=None, backend=None):
         """Constructor method
         """
         super(OpenEODialog, self).__init__(parent)
@@ -79,58 +82,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         QApplication.setStyle("cleanlooks")
 
         self.iface = iface
-        self.connection = Connection()
         self.processgraph = Processgraph()
         self.called = False
         self.called2 = False
         self.processes = None
 
         self.setupUi(self)
-        ### Backend Issue:
-        try:
-            self.backendURL = requests.get('http://hub.openeo.org/api/backends', timeout=5)
-        except:
-            self.backendsALL = {}
 
-        if self.backendURL.status_code == 200:
-            self.backendsALL = self.backendURL.json()
-
-        # self.processgraphEdit.setText(json.dumps(self.backendsALL, indent=4))
-
-        backends = []
-
-        for backend in self.backendsALL.values():
-            if ".well-known" in str(backend):
-                try:
-                    backend_versions = requests.get(backend, timeout=5)
-
-                    if backend_versions.status_code == 200:
-                        backend_versions = backend_versions.json()
-                        for versions in backend_versions.values():
-
-                            for version in versions:
-                                if "api_version" in version:
-                                    if LooseVersion("0.4.0") <= LooseVersion(version["api_version"]):
-                                        if "url" in version:
-                                            backends.append(str(version["url"]))
-                except:
-                    print("Exception connecting to backend {}".format(backend))
-            elif isinstance(backend, dict):
-                for item in backend.values():
-                    backends.append(str(item))
-            else:
-                backends.append(str(backend))
-
-        # Change Names from Links to Title:
-        backend_names = []
-        for index in self.backendsALL.items():
-            backend_names.append(index[0])
-        # backend_names.sort(key=str.lower)
-
-        self.backendEdit.addItems(backends)  # or Backends
-        self.connectButton.clicked.connect(self.connect)
-        self.disconnectButton.hide()
-        self.disconnectButton.clicked.connect(self.disconnect)
         self.operationManualBtn.clicked.connect(self.user_manual)
 
         self.label_15.setStyleSheet("color: white")
@@ -170,7 +128,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.minimum_date = QDate()
         self.maximum_date = QDate()
 
-
         # Set initial button visibility correctly
         self.all_bands = []
         self.limit_west = -100000000000000000
@@ -182,16 +139,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.moveButton.clicked.connect(self.web_view)
 
         # Info Buttons about Datasets and Methods
-        #self.collectionBox.setGeometry(10, 90, 401, 31)
+        # self.collectionBox.setGeometry(10, 90, 401, 31)
         self.infoBtn2.setStyleSheet('''   
-                                 border-image: url("./info_icon.png") 10 10 0 0;
-                                 border-top: 10px transparent;
-                                 border-bottom: 10px transparent;
-                                 border-right: 0px transparent;
-                                 border-left: 0px transparent''')
+                                         border-image: url("./info_icon.png") 10 10 0 0;
+                                         border-top: 10px transparent;
+                                         border-bottom: 10px transparent;
+                                         border-right: 0px transparent;
+                                         border-left: 0px transparent''')
         self.infoBtn2.clicked.connect(self.pr_info)
-        #self.processBox.setGeometry(10, 180, 401, 31)  # when add Button visible, set 381 to 291
-        #self.infoBtn2.setGeometry(300, 180, 31, 31)  # remove, when add Button is visible
+        # self.processBox.setGeometry(10, 180, 401, 31)  # when add Button visible, set 381 to 291
+        # self.infoBtn2.setGeometry(300, 180, 31, 31)  # remove, when add Button is visible
         self.infoBtn2.setVisible(False)
         self.infoBtn2.setEnabled(True)
 
@@ -216,6 +173,41 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.init_services()
 
         self.tab_3.setEnabled(False)
+
+        self.backend = backend
+
+        collection_result = self.backend.get_collections()
+
+        # self.collectionBox.setGeometry(10, 90, 361, 31)
+        self.infoBtn2.setVisible(True)
+
+        # self.processBox.setGeometry(10, 180, 281, 31)  # when add Button is visible - set 351 to 261
+
+        self.collectionBox.clear()
+        self.processBox.clear()
+
+        # Load Collections from Backend
+        self.collectionBox.addItem("Choose one of the data sets listed below")
+        for col in collection_result:
+            if "id" in col:
+                self.collectionBox.addItem(col['id'])
+
+        # Load Processes from Backend
+        self.processBox.addItem("Select a job")
+        for key, val in self.backend.get_processes().items():
+            self.processBox.addItem(key)
+
+        self.refresh_jobs()
+        self.refresh_services()
+
+        if len(collection_result) == 0 and len(self.backend.get_processes()) == 0:
+            warning(self.iface, "Backend URL does not have collections or processes defined, or is not valid!")
+            return
+
+        self.tab_3.setEnabled(True)
+
+        self.backend_info()
+
 
     # def set_font(self):
     #    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
@@ -273,7 +265,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                                 duration=5)
 
     def spatial_limits(self):
-        collection_result = self.connection.list_collections()
+        collection_result = self.backend.get_collections()
         selected_process = str(self.collectionBox.currentText())
         for col in collection_result:
             if str(col['id']) == selected_process:
@@ -287,7 +279,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def date_limits(self):
         # Get min and max date from each collection
-        collection_result = self.connection.list_collections()
+        collection_result = self.backend.get_collections()
         selected_process = str(self.collectionBox.currentText())
         for col in collection_result:
             if str(col['id']) == selected_process:
@@ -326,25 +318,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         return
 
     def load_job_from_hub(self):
-        try:
-            example_jobs_URL = requests.get('http://hub.openeo.org/api/process_graphs', timeout=5)
-        except:
-            example_jobs_URL = []
-
-        examples_job_list = example_jobs_URL.json()
-
-        # Get names and process graphs of all available processes (7)
-        self.example_jobs = []
-
-        for item in examples_job_list:
-            job = Job(title=item['title'], process_graph=item['process_graph'])
-            self.example_jobs.append(job)
+        self.example_hub_jobs = get_hub_jobs()
 
         # Open a window, where desired job can be selected
-        self.example_jobs_window = QDialog(parent=self)
+        self.hub_jobs_window = QDialog(parent=self)
         hbox6 = QHBoxLayout()
         self.exampleJobBox = QListWidget()
-        for job in self.example_jobs:
+        for job in self.example_hub_jobs:
             job_item = QListWidgetItem(self.exampleJobBox)
             job_item.setFlags(
                 job_item.flags() | QtCore.Qt.ItemIsSelectable)  # only one item can be selected this time
@@ -357,9 +337,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         hbox6.addWidget(self.exampleJobBox)
         hbox6.addWidget(closeWindowBtn)
         closeWindowBtn.clicked.connect(self.pick_job_from_hub)
-        self.example_jobs_window.setLayout(hbox6)
-        self.example_jobs_window.setWindowTitle('Select a Job')
-        self.example_jobs_window.show()
+        self.hub_jobs_window.setLayout(hbox6)
+        self.hub_jobs_window.setWindowTitle('Select a Job')
+        self.hub_jobs_window.show()
 
     def pick_job_from_hub(self):
         self.insertChangeBtn.setEnabled(True)
@@ -369,8 +349,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
 
         selected_row = self.exampleJobBox.currentRow()
-        self.example_jobs_window.close()
-        self.example_job = json.loads(self.example_jobs[selected_row].process_graph)
+        self.hub_jobs_window.close()
+        self.example_job = json.loads(self.example_hub_jobs[selected_row].process_graph)
         self.processgraphEdit.setText(json.dumps(self.example_job, indent=4))
 
     def adapt_temporal(self):
@@ -614,112 +594,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
 
-    def connect(self):
-        """
-        Connect to the backend via the given credentials. It will connect via BasicAuthentication and Bearertoken.
-        If there are no credentials, it connects to the backend without authentication.
-        This method also loads all collections and processes from the backend.
-        """
-        url = self.backendEdit.currentText()
-        pwd = self.passwordEdit.text()
-        user = self.usernameEdit.text()
-        if user == "":
-            user = None
-        if pwd == "":
-            pwd = None
-
-        auth = self.connection.connect(url, username=user, password=pwd)
-
-        if not auth:
-            warning(self.iface, "Authentication failed!")
-            return
-
-        collection_result = self.connection.list_collections()
-        process_result = self.connection.list_processes()
-        self.processes = process_result
-
-        #self.collectionBox.setGeometry(10, 90, 361, 31)
-        self.infoBtn2.setVisible(True)
-
-        #self.processBox.setGeometry(10, 180, 281, 31)  # when add Button is visible - set 351 to 261
-
-        self.collectionBox.clear()
-        self.processBox.clear()
-
-        # Load Collections from Backend
-        self.collectionBox.addItem("Choose one of the data sets listed below")
-        for col in collection_result:
-            if "id" in col:
-                self.collectionBox.addItem(col['id'])
-
-        # Load Processes from Backend
-        self.processBox.addItem("Select a job")
-        for pr in process_result:
-            if "id" in pr:
-                self.processBox.addItem(pr['id'])
-
-        self.refresh_jobs()
-        self.refresh_services()
-
-        if len(collection_result) == 0 and len(process_result) == 0:
-            warning(self.iface, "Backend URL does not have collections or processes defined, or is not valid!")
-            return
-
-        # Update Status text
-        boldFont = QtGui.QFont()
-        boldFont.setBold(True)
-        self.statusLabel.setFont(boldFont)
-        if user:
-            self.statusLabel.setText("Connected to {} as {}".format(url, user))
-            #self.bands_selected()
-        else:
-            self.statusLabel.setText("Connected to {} without user".format(url))
-
-        self.connectButton.hide()
-        self.disconnectButton.show()
-
-        self.collectionBox.setEnabled(True)
-
-        self.tab_3.setEnabled(True)
-
-        self.backend_info()
-
-    def disconnect(self):
-        self.statusLabel.setText("Disconnected")
-        self.usernameEdit.clear()
-        self.passwordEdit.clear()
-        self.connectButton.show()
-        self.disconnectButton.hide()
-        self.collectionBox.clear()
-        #self.collectionBox.setEnabled(False)
-        #self.label_6.setEnabled(False)
-
-        if self.backendEdit.currentText() == "None of the listed ones match":
-            url = self.backendEdit2.text()
-        else:
-            url = self.backendEdit.currentText()
-        pwd = self.passwordEdit.text()
-        user = self.usernameEdit.text()
-        if user == "":
-            user = None
-        if pwd == "":
-            pwd = None
-
-        self.connection.connect(url, user, pwd) # disconnect
-        self.refreshButton.setEnabled(False)
-        self.deleteButton.setEnabled(False)
-        self.deleteFinalButton.setEnabled(False)
-        self.deleteFinalButton.setEnabled(False)
-        self.refreshButton_service.setEnabled(False)
-        self.deleteButton_service.setEnabled(False)
-        self.deleteFinalButton_service.setEnabled(False)
-        self.jobsTableWidget.clear()
-        self.servicesTableWidget.clear()
-
-        self.tab_3.setEnabled(False)
-
     def col_info(self):
-        collection_info_result = self.connection.list_collections()
+        collection_info_result = self.backend.get_collections()
         selected_col = str(self.collectionBox.currentText())
         for col_info in collection_info_result:
             if str(col_info['id']) == selected_col:
@@ -727,36 +603,39 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     self.collectionInfo.setText(str(col_info['id']) + ': ' + str(col_info['description']))
 
     def backend_info(self):
-        backend_info = self.connection.backend_info()
+        backend_info = self.backend.get_metadata()
 
         if "description" in backend_info:
             self.backendInfo.setText(str(backend_info["description"]))
 
     def pr_info(self):
-        process_info_result = self.connection.list_processes()
-        selected_process = str(self.processBox.currentText())
-        for pr_info in process_info_result:
-            if str(pr_info['id']) == selected_process:
-                if "description" in pr_info:
-                    self.infoWindow2 = QDialog(parent=self)
-                    self.hbox2 = QHBoxLayout()
-                    self.infoBox = QTextEdit()
-                    if "returns" in pr_info:
-                        self.infoBox.setText(
-                            str(str(pr_info['id']) + ': ' + str(pr_info['description']) + "\n\n Returns: \n" + str(
-                                pr_info['returns']['description'])))
-                    else:
-                        self.infoBox.setText(
-                            str(str(pr_info['id']) + ': ' + str(pr_info['description'])))
-                    self.infoBox.setReadOnly(True)
-                    self.infoBox.setMinimumWidth(500)
-                    self.infoBox.setMinimumHeight(500)
-                    self.hbox2.addWidget(self.infoBox)
-                    self.infoWindow2.setLayout(self.hbox2)
-                    #self.infoWindow2.setGeometry(400, 400, 600, 350)
-                    self.infoWindow2.setWindowTitle('Process Information')
-                    self.infoWindow2.show()
-                    # self.processgraphEdit.setText(str(pr_info['id']) + ": " + str(pr_info['description']))
+
+        process = self.backend.get_process(str(self.processBox.currentText()))
+
+        if not process:
+            return
+
+        self.infoWindow2 = QDialog(parent=self)
+        self.hbox2 = QHBoxLayout()
+        self.infoBox = QTextEdit()
+
+        if process.returns_desc:
+            self.infoBox.setText(
+                str(str(process.id) + ': ' + str(process.desc) + "\n\n Returns: \n" + str(process.returns) + "\n" +
+                    process.returns_desc))
+        else:
+            self.infoBox.setText(
+                str(str(process.id) + ': ' + str(process.desc)))
+
+        self.infoBox.setReadOnly(True)
+        self.infoBox.setMinimumWidth(500)
+        self.infoBox.setMinimumHeight(500)
+        self.hbox2.addWidget(self.infoBox)
+        self.infoWindow2.setLayout(self.hbox2)
+        # self.infoWindow2.setGeometry(400, 400, 600, 350)
+        self.infoWindow2.setWindowTitle('Process Information')
+        self.infoWindow2.show()
+        # self.processgraphEdit.setText(str(pr_info['id']) + ": " + str(pr_info['description']))
 
     def job_info(self, row):
         """
@@ -770,7 +649,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
 
         job_id = self.jobsTableWidget.item(row, 1).text()
-        job_info = self.connection.job_info(job_id)
+        job_info = self.backend.job_info(job_id)
         self.infoWindow3 = QDialog(parent=self)
         self.hbox3 = QHBoxLayout()
         self.infoBox3 = QTextEdit()
@@ -784,7 +663,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
     def service_info(self, row):
         service_id = self.servicesTableWidget.item(row, 1).text()
-        service_info = self.connection.service_info(service_id)
+        service_info = self.backend.service_info(service_id)
         self.infoWindow5 = QDialog(parent=self)
         self.hbox7 = QHBoxLayout()
         self.infoBox2 = QTextEdit()
@@ -802,7 +681,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         :param row: Integer number of the row the button is clicked.
         """
         job_id = self.jobsTableWidget.item(row, 1).text()
-        process_graph_job = self.connection.pg_info_job(job_id)
+        process_graph_job = self.backend.job_pg_info(job_id)
 
         self.infoWindow4 = QDialog(parent=self)
         self.hbox5 = QVBoxLayout()
@@ -827,7 +706,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         :param row: Integer number of the row the button is clicked.
         """
         service_id = self.servicesTableWidget.item(row, 1).text()
-        process_graph_service = self.connection.pg_info_service(service_id)
+        process_graph_service = self.backend.service_pg_info(service_id)
 
         self.infoWindow6 = QDialog(parent=self)
         self.hbox8 = QVBoxLayout()
@@ -913,7 +792,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         This method also generates the "Execute" and "Display" buttons.
         """
 
-        jobs = self.connection.user_jobs()
+        jobs = self.backend.get_jobs()
 
         if not isinstance(jobs, list):
             jobs = []
@@ -1025,7 +904,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         This method also generates the "Execute" and "Display" buttons.
         """
 
-        services = self.connection.user_services()
+        services = self.backend.get_services()
 
         if not isinstance(services, list):
             services = []
@@ -1122,7 +1001,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         :param row: Integer number of the row the button is clicked.
         """
         job_id = self.jobsTableWidget.item(row, 1).text()
-        self.connection.job_start(job_id)
+        self.backend.job_start(job_id)
         self.refresh_jobs()
 
     def job_display(self, row):
@@ -1132,8 +1011,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         :param row: Integer number of the row the button is clicked.
         """
         job_id = self.jobsTableWidget.item(row, 1).text()
-        process_graph_job = self.connection.pg_info_job(job_id)
-        download_dir = self.connection.job_result_download(job_id)
+        process_graph_job = self.backend.job_pg_info(job_id)
+        download_dir = self.backend.job_result_download(job_id)
         if download_dir:
             info(self.iface, "Downloaded to {}".format(download_dir))
             result = Result(path=download_dir, process_graph=process_graph_job)
@@ -1183,7 +1062,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def send_job_backend(self, title=None, dialog=None):
         graph = self.processgraphEdit.toPlainText()
         # info(self.iface, graph)
-        response = self.connection.job_create(json.loads(graph), title=title)
+        response = self.backend.job_create(json.loads(graph), title=title)
         if response.status_code == 201:
             info(self.iface, "Successfully created new job, Response: {}".format(response.status_code))
         else:
@@ -1199,7 +1078,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         graph = self.processgraphEdit.toPlainText()
         # info(self.iface, graph)
-        response = self.connection.service_create(json.loads(graph))
+        response = self.backend.service_create(json.loads(graph))
         if response.status_code == 201:
             info(self.iface, "Successfully created new service, Response: {}".format(response.status_code))
         else:
@@ -1214,7 +1093,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     def delete_job_final(self, row):
 
         job_id = self.jobsTableWidget.item(row, 1).text()
-        self.connection.delete_job(job_id)
+        self.backend.job_delete(job_id)
         self.refresh_jobs()
 
     def del_service(self):
@@ -1227,7 +1106,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         selected_service_id = self.servicesTableWidget.item(int(selected_item), 1).text()
         #self.processgraphEdit.setText(str(selected_item) + " " + str(service_id) + " " + self.servicesTableWidget.item(int(selected_item), 1).text())
         if service_id == selected_service_id:
-            self.connection.delete_service(selected_item)
+            self.backend.service_delete(selected_item)
             self.refresh_services()
         else:
             self.processgraphEdit.setText("It does not work that way")
@@ -1252,52 +1131,50 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         It loads all agruments with their type and an example (if exist) into the value
         """
         self.processTableWidget.clear()
-        for p in self.processes:
-            if "id" in p:
-                if p['id'] == str(self.processBox.currentText()):
-                    process = p
-                    if "parameters" in process:
-                        # info(self.iface, "New Process {}".format(process['parameters']))
-                        self.processTableWidget.setRowCount(len(process['parameters']))
-                        self.processTableWidget.setColumnCount(3)
-                        self.processTableWidget.setHorizontalHeaderLabels(['Parameter', 'Type', 'Example'])
-                        header = self.processTableWidget.horizontalHeader()
-                        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-                        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-                        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        pr = self.backend.get_process(str(self.processBox.currentText()))
 
-                        counter = 0
-                        for key, val in process['parameters'].items():
-                            # if key != "data" and key != "imagery":
-                            qitem = QTableWidgetItem(key)
-                            qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-                            if "required" in val:
-                                if val["required"]:
-                                    boldFont = QtGui.QFont()
-                                    boldFont.setBold(True)
-                                    qitem.setFont(boldFont)
+        if not pr:
+            return
 
-                            self.processTableWidget.setItem(counter, 0, qitem)
-                            if "schema" in val:
-                                if "type" in val["schema"]:
-                                    type = QTableWidgetItem(str(val['schema']['type']))
-                                    type.setFlags(QtCore.Qt.ItemIsEnabled)
-                                    self.processTableWidget.setItem(counter, 1, type)
-                                if "examples" in val["schema"]:
-                                    # type = QTableWidgetItem(str(val['schema']['type']))
-                                    # type.setFlags(QtCore.Qt.ItemIsEnabled)
-                                    # self.processTableWidget.setItem(counter, 2, type)
-                                    example = QTableWidgetItem(str(val['schema']['examples'][0]))
-                                    example.setFlags(QtCore.Qt.ItemIsEnabled)
-                                    self.processTableWidget.setItem(counter, 2, example)
-                                else:
-                                    example = QTableWidgetItem("")
-                                    example.setFlags(QtCore.Qt.ItemIsEnabled)
-                                    self.processTableWidget.setItem(counter, 2, example)
-                            counter += 1
-                        return
-                    else:
-                        info(self.iface, "New Process: Parameters not found")
+        # info(self.iface, "New Process {}".format(process['parameters']))
+        self.processTableWidget.setRowCount(len(pr.parameters))
+        self.processTableWidget.setColumnCount(3)
+        self.processTableWidget.setHorizontalHeaderLabels(['Parameter', 'Type', 'Example'])
+        header = self.processTableWidget.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+
+        counter = 0
+        for param in pr.parameters:
+            # if key != "data" and key != "imagery":
+            qitem = QTableWidgetItem(param.name)
+            qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+
+            if param.required:
+                boldFont = QtGui.QFont()
+                boldFont.setBold(True)
+                qitem.setFont(boldFont)
+
+            self.processTableWidget.setItem(counter, 0, qitem)
+
+            type = QTableWidgetItem(str(param.type))
+            type.setFlags(QtCore.Qt.ItemIsEnabled)
+            self.processTableWidget.setItem(counter, 1, type)
+
+            if param.example:
+                # type = QTableWidgetItem(str(val['schema']['type']))
+                # type.setFlags(QtCore.Qt.ItemIsEnabled)
+                # self.processTableWidget.setItem(counter, 2, type)
+                example = QTableWidgetItem(str(param.example))
+                example.setFlags(QtCore.Qt.ItemIsEnabled)
+                self.processTableWidget.setItem(counter, 2, example)
+            else:
+                example = QTableWidgetItem("")
+                example.setFlags(QtCore.Qt.ItemIsEnabled)
+                self.processTableWidget.setItem(counter, 2, example)
+
+            counter += 1
 
     def fill_item(self, item, value):
         """

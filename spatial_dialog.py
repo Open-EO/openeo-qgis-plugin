@@ -26,7 +26,7 @@ from PyQt5.QtCore import QDate
 ########################################################################################################################
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
-FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'spatial_dialog.ui'))
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'login_dialog.ui'))
 
 PROCESSES_SPATIAL = ["load_collection", "filter_bbox"]
 

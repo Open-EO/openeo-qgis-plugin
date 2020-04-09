@@ -54,7 +54,7 @@ from .temp_dialog import TempDialog
 from .spatial_dialog import SpatialDialog
 from .band_dialog import BandDialog
 
-os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+#os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 

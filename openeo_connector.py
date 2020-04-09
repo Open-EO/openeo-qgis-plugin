@@ -32,7 +32,7 @@ from .resources import *
 # Import the code for the dialog
 from .openeo_connector_dialog import OpenEODialog
 import os.path
-os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+#os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 class OpenEO:

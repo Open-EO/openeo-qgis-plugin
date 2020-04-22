@@ -94,3 +94,4 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
         self.dlg.operationManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'user_manual_icon.png')))
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()
+        self.close()

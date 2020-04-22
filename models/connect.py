@@ -2,7 +2,7 @@ import requests
 from distutils.version import LooseVersion
 from requests.auth import HTTPBasicAuth
 from typing import Union
-import tempfile
+import os
 
 
 class Connection:
@@ -25,7 +25,7 @@ class Connection:
 
         self.version = ComparableVersion(self.backend_info()["api_version"])
 
-        self.token = None
+        self.token = "Undefined"
         self.username = username
 
         if username and password:
@@ -34,7 +34,7 @@ class Connection:
                                     auth=HTTPBasicAuth(username, password), timeout=5)
 
                 if token.status_code == 200:
-                    self.token = token.json()["access_token"]
+                    self.token = self.parse_json_response(token)["access_token"]
                 else:
                     return False
 
@@ -120,6 +120,8 @@ class Connection:
         """
         jobs = self.get('/jobs', auth=True)
 
+        # return jobs.request.headers
+
         if jobs:
             jobs = self.parse_json_response(jobs)
 
@@ -164,23 +166,7 @@ class Connection:
         get_info = self.get(requested_info, stream=True)
         job_info = get_info.json()
 
-        title = job_info['title']
-        description = job_info['description']
-        submission = job_info['submitted']
-        cost = job_info['costs']
-        processes = []
-        # Data & Extents & Processes
-        for key in job_info['process_graph'].keys():
-            if "load_collection" in key:
-                data_set = job_info['process_graph'][key]['arguments']['id']
-                temporal_extent = job_info['process_graph'][key]['arguments']['spatial_extent']
-                spatial_extent = job_info['process_graph'][key]['arguments']['temporal_extent']
-                processes.append(key)
-                job_info_id = "Title: {}. \nDescription: {}. \nSubmission Date: {} \nData: {}. \nProcess(es): {}" \
-                              ". \nSpatial Extent: {}.\nTemporal Extent: {}. \nCost: {}." \
-                    .format(title, description, submission, data_set, processes, spatial_extent, temporal_extent, cost) \
-                    .replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
-                return job_info_id
+        return job_info
 
     def service_info(self, service_id):
         """
@@ -214,7 +200,12 @@ class Connection:
         requested_info = "/jobs/{}".format(job_id)
         get_info = self.get(requested_info, stream=True)
         job_info = get_info.json()
-        process_graph_job = job_info['process_graph']
+        process_graph_job = {}
+        if 'process_graph' in job_info:
+            process_graph_job = job_info['process_graph']
+        elif "process":
+            if "process_graph" in job_info["process"]:
+                process_graph_job = job_info["process"]['process_graph']
         return process_graph_job
 
     def pg_info_service(self, service_id):
@@ -243,7 +234,7 @@ class Connection:
                     return download_url
         return None
 
-    def job_result_download(self, job_id):
+    def job_result(self, job_id):
         """
         Downloads the result of the job into the temporary folder.
         :param: job_id: Identifier of the job
@@ -253,20 +244,25 @@ class Connection:
         r = self.get(download_url, stream=True)
 
         if r.status_code == 200:
+            return self.parse_json_response(r)
 
-            url = r.json()
-            if "links" in url:
-                download_url = url["links"][0]
-                if "href" in download_url:
-                    download_url = download_url["href"]
+        return None
 
-            auth_header = self.get_header()
+    def download_url(self, urls, path):
+        """
+        Downloads the result of the URLs into a given path folder.
+        :param: urls: URLs to download from
+        :param: path: PATH to download to
+        :return: path: String, path to the downloaded result image.
+        """
 
-            target = tempfile.gettempdir()+"/{}".format(job_id)
+        file_paths = []
 
-            with open(target, 'wb') as handle:
+        for fname, href in urls.items():
+            f_path = os.path.join(path, fname)
+            with open(f_path, 'wb') as handle:
                 try:
-                    response = requests.get(download_url, stream=True, headers=auth_header, timeout=5)
+                    response = requests.get(href["href"], stream=True, headers=self.get_header(), timeout=5)
 
                     if not response.ok:
                         print(response)
@@ -276,12 +272,11 @@ class Connection:
                         if not block:
                             break
                         handle.write(block)
+                    file_paths.append(f_path)
                 except:
-                    return target
+                    return file_paths
 
-            return target
-
-        return None
+        return file_paths
 
     def job_create(self, process_graph, title=None):
         """
@@ -343,7 +338,6 @@ class Connection:
         auth = self.get_auth()
         return requests.delete(self._url+path, headers=auth_header, auth=auth, timeout=5)
 
-
     def delete_job(self, job_id):
         path = "/jobs/{}".format(job_id)
         auth_header = self.get_header()
@@ -397,17 +391,16 @@ class Connection:
 
         if auth:
             auth_header = self.get_header()
-            auth = self.get_auth()
+            # auth = self.get_auth()
         else:
             auth_header = {}
-            auth = None
+            # auth = None
 
         try:
-            resp = requests.get(self._url + path, headers=auth_header, stream=stream, auth=auth, timeout=5)
+            resp = requests.get(self._url + path, headers=auth_header, stream=stream, timeout=5)
             return resp
         except:
             return None
-
 
     def parse_json_response(self, response: requests.Response):
         """

@@ -1,6 +1,30 @@
 from datetime import datetime
 
 
+def list_to_lang(list_arg):
+    pretty_txt = ""
+
+    if len(list_arg) > 0:
+        pretty_txt = list_arg[0]
+
+    for i in range(1, len(list_arg)-1):
+        pretty_txt += ", {}".format(list_arg[i])
+
+    if pretty_txt:
+        pretty_txt += " or {}".format(list_arg[-1])
+
+    return pretty_txt
+
+
+class HubJob:
+    title = None
+    process_graph = None
+
+    def __init__(self, title, process_graph):
+        self.title = title
+        self.process_graph = process_graph
+
+
 class Job:
 
     id = None
@@ -178,6 +202,26 @@ class Process:
     def __str__(self):
         return str(self.id)
 
+    def get_return_type(self):
+        schema = self.returns["schema"]
+        if "subtype" in schema:
+            return schema["subtype"]
+        elif "type" in schema:
+            if isinstance(schema["type"], list):
+                return list_to_lang(schema["type"])
+            else:
+                return schema["type"]
+        elif isinstance(schema, list):
+            type_list = []
+            for item in schema:
+                if "subtype" in item:
+                    type_list.append(item["subtype"])
+                elif "type" in item:
+                    type_list.append(item["type"])
+            return list_to_lang(type_list)
+        else:
+            return schema["description"]
+
     def from_metadata(self, metadata, version):
 
         if version.at_least("1.0.0"):
@@ -282,6 +326,26 @@ class Parameter:
                 self.experimental = metadata["experimental"]
             if "schema" in metadata:
                 self.schema = metadata["schema"]
+
+    def get_type(self):
+
+        if "subtype" in self.schema:
+            return self.schema["subtype"]
+        elif "type" in self.schema:
+            if isinstance(self.schema["type"], list):
+                return list_to_lang(self.schema["type"])
+            else:
+                return self.schema["type"]
+        elif isinstance(self.schema, list):
+            type_list = []
+            for item in self.schema:
+                if "subtype" in item:
+                    type_list.append(item["subtype"])
+                elif "type" in item:
+                    type_list.append(item["type"])
+            return list_to_lang(type_list)
+        else:
+            return self.schema["description"]
 
 
 # class ProcessInfo:

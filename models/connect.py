@@ -1,4 +1,5 @@
 import requests
+import json
 from distutils.version import LooseVersion
 from requests.auth import HTTPBasicAuth
 from typing import Union
@@ -99,6 +100,20 @@ class Connection:
 
         return []
 
+    def get_collection(self, collection_id) -> dict:
+        """
+        Loads all available imagecollections types.
+        :return: data_dict: Dict All available data types
+        """
+        data = self.get('/collections/{}'.format(collection_id), auth=False)
+
+        response = None
+
+        if data.status_code == 200:
+            response = self.parse_json_response(data)
+
+        return response
+
     def backend_info(self) -> dict:
         """
         Loads all available imagecollections types.
@@ -197,9 +212,7 @@ class Connection:
                 return service_info_id
 
     def pg_info_job(self, job_id):
-        requested_info = "/jobs/{}".format(job_id)
-        get_info = self.get(requested_info, stream=True)
-        job_info = get_info.json()
+        job_info = self.job_info(job_id)
         process_graph_job = {}
         if 'process_graph' in job_info:
             process_graph_job = job_info['process_graph']
@@ -278,20 +291,23 @@ class Connection:
 
         return file_paths
 
-    def job_create(self, process_graph, title=None):
+    def job_create(self, process_graph, title=None, desc=None):
         """
         Sends the process graph to the backend and creates a new job.
         :param: process_graph: Dict, Process Graph of the new job
         :return: status: String, Status of the job creation
         """
-        pg = {
-            "process_graph": process_graph
-        }
-        if title:
-            pg["title"] = title
-        #print(process_graph)
 
-        job_status = self.post("/jobs", postdata=pg)
+        batch_job = {"process": {"process_graph": process_graph}}
+        if title:
+            batch_job["title"] = title
+        if desc:
+            batch_job["description"] = desc
+
+        #print(process_graph)
+        batch_job = json.dumps(batch_job)
+
+        job_status = self.post("/jobs", postdata=batch_job)
 
         #if job_status.status_code == 201:
         #    return job_status
@@ -324,9 +340,13 @@ class Connection:
         :return: response: Response
         """
 
+        # auth_header = self.get_header()
+        # auth = self.get_auth()
+
         auth_header = self.get_header()
-        auth = self.get_auth()
-        return requests.post(self._url+path, json=postdata, headers=auth_header, auth=auth, timeout=5)
+
+        return requests.post(self._url+path, json=postdata, headers=auth_header, timeout=5)
+        # {"url": self._url+path, "json": postdata, "headers": auth_header}
 
     def delete(self, path):
         """

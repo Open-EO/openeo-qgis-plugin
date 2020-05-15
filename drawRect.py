@@ -2,6 +2,8 @@ from qgis.gui import QgsMapTool, QgsRubberBand, QgsMapCanvas
 from qgis.core import QgsWkbTypes, QgsPointXY, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtCore import pyqtSignal
+from .utils.logging import info, warning
+
 
 class DrawRectangle(QgsMapTool):
 
@@ -25,7 +27,7 @@ class DrawRectangle(QgsMapTool):
         self.rubberBand.reset(QgsWkbTypes.PolygonGeometry)
 
     def canvasPressEvent(self, e):
-        self.startPoint = self.toMapCoordinates(e.pos())
+        self.startPoint = self.toMapCoordinates(e.pos())  #self.toMapCoordinates(e.pos())
         self.endPoint = self.startPoint
         self.isEmittingPoint = True
         self.showRect(self.startPoint, self.endPoint)
@@ -35,12 +37,14 @@ class DrawRectangle(QgsMapTool):
         self.rubberBand.show()
         #self.transformCoordinates() # do not activate, otherwise coordinates will not match the crs
         #self.rectangleCreated.emit(self.startPoint.x(), self.startPoint.y(), self.endPoint.x(), self.endPoint.y())
+        point = e.originalMapPoint()
+        # warning(self.action.iface, "canvasReleaseEvent: {}, {} != {}, {}?".format(point.x(), point.y(), self.endPoint.x(), self.endPoint.y()))
         self.action.draw_rect(self.startPoint.x(), self.startPoint.y(), self.endPoint.x(), self.endPoint.y())
 
     def canvasMoveEvent(self, e):
         if not self.isEmittingPoint:
             return
-        self.endPoint = self.toMapCoordinates( e.pos() )
+        self.endPoint = self.toMapCoordinates(e.pos())
         self.showRect(self.startPoint, self.endPoint)
 
     def showRect(self, startPoint, endPoint):

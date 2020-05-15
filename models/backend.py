@@ -141,6 +141,21 @@ class Backend:
     def get_collections(self):
         return self.collections
 
+    def get_bands(self, collection_id):
+        bands = []
+
+        data = self.connection.get_collection(collection_id)
+
+        if data:
+            if self.connection.version.at_least("1.0.0"):
+                band_info = data['summaries']['eo:bands']
+                for b in band_info:
+                    bands.append(b["name"])
+            else:
+                bands = data['properties']['cube:dimensions']['bands']['values']
+
+        return bands
+
     def get_processes(self):
         return self.processes
 
@@ -165,8 +180,8 @@ class Backend:
     def service_pg_info(self, service_id):
         return self.connection.pg_info_service(service_id=service_id)
 
-    def job_create(self, process, title):
-        return self.connection.job_create(process_graph=process, title=title)
+    def job_create(self, process, title=None, desc=None):
+        return self.connection.job_create(process_graph=process, title=title, desc=desc)
 
     def job_start(self, job_id):
         return self.connection.job_start(job_id=job_id)
@@ -174,12 +189,18 @@ class Backend:
     def job_info(self, job_id):
         return self.connection.job_info(job_id=job_id)
 
+    def detailed_job(self, job_id):
+        job_info = self.connection.job_info(job_id=job_id)
+        job = Job()
+        job.from_metadata(job_info, self.connection.version)
+        return job
+
     def job_delete(self, job_id):
         return self.connection.delete_job(job_id=job_id)
 
     def job_pg_info(self, job_id):
         job_info = self.connection.pg_info_job(job_id=job_id)
-
+        return job_info
         title = ""
         description = ""
         submission = ""

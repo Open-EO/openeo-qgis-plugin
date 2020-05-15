@@ -39,7 +39,7 @@
     <string>Cancel</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="Adapt">
+  <widget class="QPushButton" name="adaptButton">
    <property name="geometry">
     <rect>
      <x>190</x>

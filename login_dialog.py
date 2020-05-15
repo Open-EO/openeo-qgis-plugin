@@ -13,6 +13,7 @@ from PyQt5.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon, QPixmap
 from .openeo_connector_dialog import OpenEODialog
 from .models.backend import Backend
+from .models.connect import Connection
 from .models.openeohub import get_hub_backends
 
 from .utils.logging import info, warning
@@ -43,13 +44,14 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
         self.processes = None
 
         self.setupUi(self)
+        try:
+            backends = get_hub_backends()
 
-        backends = get_hub_backends()
-
-        self.backendEdit.addItems(backends)  # or Backends
+            self.backendEdit.addItems(backends)  # or Backends
+        except:
+            warning(self.iface, "The plugin was not able to connect to openEO Hub. Are you connected to the internet?")
 
         self.loginButton.clicked.connect(self.login)
-
         self.dlg = None
 
     def connect(self):
@@ -67,6 +69,10 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
             pwd = None
 
         backend = Backend(url=url)
+
+        if not backend:
+            warning(self.iface, "Connection failed, the backend might not be available at the moment!")
+            return None
 
         auth = backend.login(username=user, password=pwd)
 

@@ -5,7 +5,7 @@ import json
 from os.path import expanduser
 
 from qgis.PyQt import uic
-
+from PyQt5.QtCore import Qt
 from qgis.utils import iface
 from PyQt5 import QtWidgets, QtCore
 
@@ -21,7 +21,7 @@ from .drawPoly import DrawPolygon
 
 from PyQt5.QtWidgets import QCalendarWidget
 from PyQt5.QtCore import QDate
-
+from .job_adapt_dialog import JobAdaptDialog
 from .utils.logging import info, warning
 
 ########################################################################################################################
@@ -33,7 +33,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'job_deta
 
 class JobDetailDialog(QtWidgets.QDialog, FORM_CLASS):
 
-    def __init__(self, parent=None, iface=None, job=None):
+    def __init__(self, parent=None, iface=None, job=None, backend=None):
         """Constructor method
         """
         super(JobDetailDialog, self).__init__(parent)
@@ -48,10 +48,31 @@ class JobDetailDialog(QtWidgets.QDialog, FORM_CLASS):
         self.iface = iface
         self.setupUi(self)
 
+        self.backend = backend
         self.job = job
         # warning(self.iface, str(job))
         self.init_table()
         self.fill_table()
+
+        self.cancelButton.clicked.connect(self.close)
+        self.adaptButton.clicked.connect(self.adapt_job)
+
+    def adapt_job(self):
+        self.dlg = JobAdaptDialog(iface=self.iface, job=self.job, backend=self.backend)
+        self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.dlg.show()
+
+    def limit_north(self):
+        return self.parent().limit_north()
+
+    def limit_west(self):
+        return self.parent().limit_west()
+
+    def limit_south(self):
+        return self.parent().limit_south()
+
+    def limit_east(self):
+        return self.parent().limit_east()
 
     def init_table(self):
         self.jobInfoTableWidget.clear()

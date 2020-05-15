@@ -19,6 +19,8 @@ from PyQt5.QtGui import QIcon
 from .drawRect import DrawRectangle
 from .drawPoly import DrawPolygon
 
+from .utils.logging import info, warning
+
 from PyQt5.QtWidgets import QCalendarWidget
 from PyQt5.QtCore import QDate
 
@@ -26,13 +28,14 @@ from PyQt5.QtCore import QDate
 ########################################################################################################################
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
-FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'login_dialog.ui'))
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'spatial_dialog.ui'))
 
 PROCESSES_SPATIAL = ["load_collection", "filter_bbox"]
 
+
 class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
 
-    def __init__(self, parent=None, iface=None, pg_graph=None):
+    def __init__(self, parent=None, iface=None, extent=None):
         """Constructor method
         """
         super(SpatialDialog, self).__init__(parent)
@@ -68,11 +71,13 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
         self.getBtn.setVisible(True)
         self.getBtn.setEnabled(True)
 
-        self.pg_graph = pg_graph
+        self.extent = extent
+        if extent:
+            self.processgraphSpatialExtent.setText(str(extent))
 
-        self.comboProcessBox.currentTextChanged.connect(self.update_selection)
+        # self.comboProcessBox.currentTextChanged.connect(self.update_selection)
 
-        self.init_processes()
+        # self.init_processes()
 
         self.reloadBtn.clicked.connect(self.refresh_layers)
         self.reloadBtn.setVisible(False)
@@ -83,8 +88,9 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
         self.buttonBox.accepted.connect(self.accept_dialog)
 
     def accept_dialog(self):
-        process_selection = self.comboProcessBox.currentText().split(" - ")[1]
-        self.parent().change_example_spatial(self.processgraphSpatialExtent.toPlainText(), process_id=process_selection)
+        # warning(self.iface, "Inside Accep DIalog with {}".format(self.processgraphSpatialExtent.toPlainText()))
+        # process_selection = self.comboProcessBox.currentText().split(" - ")[1]
+        self.parent().change_example_spatial(extent=self.processgraphSpatialExtent.toPlainText())
 
     def refresh_layers(self):
         self.layersBox.clear()
@@ -92,28 +98,29 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
         for layer in layers:
             self.layersBox.addItem(layer.name())
 
-    def init_processes(self):
-        example_job = self.pg_graph
-        for key, _ in example_job.items():
-            if example_job[key]["process_id"] in PROCESSES_SPATIAL:
-                self.comboProcessBox.addItem("{} - {}".format(example_job[key]["process_id"], key))
-
-    def update_selection(self):
-        example_job = self.pg_graph
-        if self.comboProcessBox.currentText():
-            process_selection = self.comboProcessBox.currentText().split(" - ")
-            if process_selection[0] == "load_collection":
-                if "spatial_extent" in example_job[process_selection[1]]["arguments"]:
-                    spatial = example_job[process_selection[1]]["arguments"]["spatial_extent"]
-                    self.init_extent(spatial)
-            elif process_selection[0] == "filter_spatial":
-                if "extent" in example_job[process_selection[1]]["arguments"]:
-                    spatial = example_job[process_selection[1]]["arguments"]["extent"]
-                    self.init_extent(spatial)
+    # def init_processes(self):
+    #     example_job = self.pg_graph
+    #     if example_job:
+    #         for key, _ in example_job.items():
+    #             if example_job[key]["process_id"] in PROCESSES_SPATIAL:
+    #                 self.comboProcessBox.addItem("{} - {}".format(example_job[key]["process_id"], key))
+    #
+    # def update_selection(self):
+    #     example_job = self.pg_graph
+    #     if example_job:
+    #         if self.comboProcessBox.currentText():
+    #             process_selection = self.comboProcessBox.currentText().split(" - ")
+    #             if process_selection[0] == "load_collection":
+    #                 if "spatial_extent" in example_job[process_selection[1]]["arguments"]:
+    #                     spatial = example_job[process_selection[1]]["arguments"]["spatial_extent"]
+    #                     self.init_extent(spatial)
+    #             elif process_selection[0] == "filter_spatial":
+    #                 if "extent" in example_job[process_selection[1]]["arguments"]:
+    #                     spatial = example_job[process_selection[1]]["arguments"]["extent"]
+    #                     self.init_extent(spatial)
 
     def init_extent(self, init_value):
         self.processgraphSpatialExtent.setText(str(init_value))
-
 
     def load_extent(self):
         if str(self.extentBox.currentText()) == "Set Extent to Current Map Canvas Extent":
@@ -171,16 +178,16 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
         east = self.east
         north = self.north
         south = self.south
-        if west < self.parent().limit_west:
+        if west < self.parent().limit_west():
             self.iface.messageBar().pushMessage("Your Choice of extent is not covered by the data provider.",
                                                 duration=5)
-        if east > self.parent().limit_east:
+        if east > self.parent().limit_east():
             self.iface.messageBar().pushMessage("Your Choice of extent is not covered by the data provider.",
                                                 duration=5)
-        if south < self.parent().limit_south:
+        if south < self.parent().limit_south():
             self.iface.messageBar().pushMessage("Your Choice of extent is not covered by the data provider.",
                                                 duration=5)
-        if north > self.parent().limit_north:
+        if north > self.parent().limit_north():
             self.iface.messageBar().pushMessage("Your Choice of extent is not covered by the data provider.",
                                                 duration=5)
 
@@ -236,20 +243,20 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
 
             spatial_extent = {}
             if x1 <= x2:
-                spatial_extent["west"] = round(x1, 1)
-                spatial_extent["east"] = round(x2, 1)
+                spatial_extent["west"] = round(x1, 3)
+                spatial_extent["east"] = round(x2, 3)
             elif x2 <= x1:
-                spatial_extent["west"] = round(x2, 1)
-                spatial_extent["east"] = round(x1, 1)
+                spatial_extent["west"] = round(x2, 3)
+                spatial_extent["east"] = round(x1, 3)
             else:
                 return "Error: Draw a new rectangle"
 
             if y1 <= y2:
-                spatial_extent["north"] = round(y2, 1)
-                spatial_extent["south"] = round(y1, 1)
+                spatial_extent["north"] = round(y2, 3)
+                spatial_extent["south"] = round(y1, 3)
             elif y2 <= y1:
-                spatial_extent["north"] = round(y1, 1)
-                spatial_extent["south"] = round(y2, 1)
+                spatial_extent["north"] = round(y1, 3)
+                spatial_extent["south"] = round(y2, 3)
             else:
                 return "Error: Draw a new rectangle"
 

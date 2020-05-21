@@ -10,7 +10,7 @@ class Result():
         self.extent = None
         self.get_extent(process_graph)
 
-    def display(self):
+    def display(self, layer_name=None):
         """
         Displays an image from the given path on a new created QGIS Layer.
         """
@@ -19,8 +19,10 @@ class Result():
             fileInfo = QFileInfo(self.path)
             path = fileInfo.filePath()
             baseName = fileInfo.baseName()
-            layer = QgsRasterLayer(path, baseName)
-
+            if layer_name:
+                layer = QgsRasterLayer(path, layer_name)
+            else:
+                layer = QgsRasterLayer(path, baseName)
             # reference layer correctly
             crs = QgsCoordinateReferenceSystem()
             crs.createFromId(4326, QgsCoordinateReferenceSystem.EpsgCrsId)

@@ -104,16 +104,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         #self.tabWidget.currentChanged.connect(self.empty_window)
 
         self.refreshButton.clicked.connect(self.refresh_jobs)
-        self.deleteButton.clicked.connect(self.del_job)
+        #self.deleteButton.clicked.connect(self.del_job)
         self.deleteFinalButton.clicked.connect(self.delete_job_final)
         self.refreshButton_service.clicked.connect(self.refresh_services)
-        self.deleteButton_service.clicked.connect(self.del_service)
+        #self.deleteButton_service.clicked.connect(self.del_service)
 
         self.refreshButton.setEnabled(True)
-        self.deleteButton.setEnabled(True)
+        #self.deleteButton.setEnabled(True)
         self.deleteFinalButton.setEnabled(True)
         self.refreshButton_service.setEnabled(True)
-        self.deleteButton_service.setEnabled(True)
+        #self.deleteButton_service.setEnabled(True)
         self.deleteFinalButton_service.setEnabled(True)
 
         # Temporal Extent
@@ -349,6 +349,14 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.hub_jobs_window.show()
 
     def pick_job_from_hub(self):
+        selected_row = self.exampleJobBox.currentRow()
+        self.hub_jobs_window.close()
+
+        job = self.example_hub_jobs[selected_row].to_job()
+
+        self.dlg = JobAdaptDialog(iface=self.iface, job=job, backend=self.backend)
+        self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.dlg.show()
         pass
         # self.insertChangeBtn.setEnabled(True)
         # self.insertChangeBtn_2.setEnabled(True)
@@ -697,7 +705,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         Returns detailed information about a the process graph of a batch job in a PopUp-Window:
         :param row: Integer number of the row the button is clicked.
         """
-        job_id = self.jobsTableWidget.item(row, 1).text()
+        job_id = self.jobs_table[row].id
+        # job_id = self.jobsTableWidget.item(row, 1).text()
         process_graph_job = self.backend.job_pg_info(job_id)
 
         self.infoWindow4 = QDialog(parent=self)
@@ -771,7 +780,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.jobsTableWidget.clear()
 
         self.jobsTableWidget.setColumnCount(7)
-        self.jobsTableWidget.setHorizontalHeaderLabels(['Job Title', 'Job ID', 'Status', 'Execute', 'Display', 'Adapt',
+        self.jobsTableWidget.setHorizontalHeaderLabels(['Job Title', 'Created', 'Status', 'Execute', 'Display', 'Adapt',
                                                         'Information'])
         header = self.jobsTableWidget.horizontalHeader()
         self.jobsTableWidget.setSortingEnabled(True)
@@ -816,8 +825,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.jobs_table = {}
         for job in jobs:
 
-            if job.id:
-                qitem = QTableWidgetItem(job.id)
+            if job.created:
+                qitem = QTableWidgetItem(job.created.strftime("%Y-%m-%d_%H-%M-%S"))
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
                 self.jobsTableWidget.setItem(row, 1, qitem)
 
@@ -886,12 +895,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             # self.processGraphBtn.clicked.connect(lambda *args, row=row: self.pg_info_job(row))
 
             self.refreshButton.setEnabled(True)
-            self.deleteButton.setEnabled(True)
+            #self.deleteButton.setEnabled(True)
             self.deleteFinalButton.setEnabled(True)
             self.refreshButton_service.setEnabled(True)
-            self.deleteButton_service.setEnabled(True)
+            #self.deleteButton_service.setEnabled(True)
             self.deleteFinalButton_service.setEnabled(True)
-            self.deleteFinalButton.clicked.connect(lambda *args, row=row: self.delete_service_final(row))
+            self.deleteFinalButton.clicked.connect(lambda *args, row=row: self.delete_job_final(row))
             self.deleteFinalButton_service.clicked.connect(lambda *args, row=row: self.delete_service_final(row))
 
             self.jobs_table[row] = job
@@ -1025,7 +1034,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         This method is called after the "Execute" button is clicked at the job table.
         :param row: Integer number of the row the button is clicked.
         """
-        job_id = self.jobsTableWidget.item(row, 1).text()
+        job_id = self.jobs_table[row].id
+
         self.backend.job_start(job_id)
         self.refresh_jobs()
 
@@ -1044,9 +1054,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         This method is called after the "Display" button is clicked at the job table.
         :param row: Integer number of the row the button is clicked.
         """
-        job_id = self.jobsTableWidget.item(row, 1).text()
-        process_graph_job = self.backend.job_pg_info(job_id)
-        download_dir = self.backend.job_result_download(job_id)
+        job = self.jobs_table[row]
+
+        process_graph_job = self.backend.job_pg_info(job.id)
+        download_dir = self.backend.job_result_download(job.id)
         if download_dir:
             for ddir in download_dir:
                 info(self.iface, "Downloaded to {}".format(ddir))
@@ -1059,7 +1070,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     QSettings().setValue('/Projections/defaultBehaviour', 'useGlobal')
                     QSettings().setValue('/Projections/layerDefaultCrs', 'EPSG:4326')
 
-                result.display()
+                if job.title:
+                    title = job.title
+                else:
+                    title = "NoTitle"
+
+                result.display(layer_name="{}-{}".format(title, job.created.strftime("%Y-%m-%d_%H-%M-%S")))
                 iface.zoomToActiveLayer()
 
         self.refresh_jobs()
@@ -1121,19 +1137,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
     #
     #     self.refresh_services()
 
-    def del_job(self):
-        self.chosenRow = self.jobsTableWidget.currentRow()
-        self.jobsTableWidget.removeRow(self.chosenRow)
+    # def del_job(self):
+    #     self.chosenRow = self.jobsTableWidget.currentRow()
+    #     self.jobsTableWidget.removeRow(self.chosenRow)
 
     def delete_job_final(self, row):
+        job_id = self.jobs_table[row].id
 
-        job_id = self.jobsTableWidget.item(row, 1).text()
         self.backend.job_delete(job_id)
         self.refresh_jobs()
 
-    def del_service(self):
-        self.chosenRow = self.servicesTableWidget.currentRow()
-        self.servicesTableWidget.removeRow(self.chosenRow)
+    # def del_service(self):
+    #     self.chosenRow = self.servicesTableWidget.currentRow()
+    #     self.servicesTableWidget.removeRow(self.chosenRow)
 
     def delete_service_final(self, row):
         service_id = self.servicesTableWidget.item(row, 1).text()

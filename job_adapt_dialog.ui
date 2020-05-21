@@ -71,7 +71,7 @@
     <enum>QAbstractItemView::SelectRows</enum>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="cancelButton">
    <property name="geometry">
     <rect>
      <x>350</x>
@@ -169,7 +169,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QPushButton" name="save_processBtn">
+  <widget class="QPushButton" name="reset_processBtn">
    <property name="geometry">
     <rect>
      <x>1010</x>
@@ -179,20 +179,26 @@
     </rect>
    </property>
    <property name="text">
-    <string>Save Process</string>
+    <string>Reset Process</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="reset_processBtn">
+  <widget class="QCheckBox" name="resultCheckBox">
    <property name="geometry">
     <rect>
-     <x>900</x>
+     <x>460</x>
      <y>350</y>
-     <width>105</width>
-     <height>31</height>
+     <width>141</width>
+     <height>20</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
    <property name="text">
-    <string>Reset Process</string>
+    <string>Result Process</string>
    </property>
   </widget>
  </widget>

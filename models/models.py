@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 
 def list_to_lang(list_arg):
@@ -23,6 +24,13 @@ class HubJob:
     def __init__(self, title, process_graph):
         self.title = title
         self.process_graph = process_graph
+
+    def to_job(self):
+        job = Job()
+        job.process = Process()
+        job.process.process_graph = json.loads(self.process_graph)
+        job.title = self.title
+        return job
 
 
 class Job:

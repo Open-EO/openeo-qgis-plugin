@@ -64,19 +64,18 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         self.process_graph_to_table()
 
         self.sendButton.clicked.connect(self.send_job)
-        self.save_processBtn.clicked.connect(self.save_process)
+        self.cancelButton.clicked.connect(self.close)
         self.reset_processBtn.clicked.connect(self.reset_process)
 
-    def save_process(self):
-        pass
+        self.resultCheckBox.stateChanged.connect(self.update_result_node)
 
     def reset_process(self):
         pass
 
     def send_job(self):
-        status = self.backend.job_create(self.processgraph_buffer, title=self.titleText.text(), desc=self.descriptionText.text())
-        warning(self.iface, "Returned status: {}".format(str(status)))
-        # self.close()
+        self.backend.job_create(self.processgraph_buffer, title=self.titleText.text(), desc=self.descriptionText.text())
+        # warning(self.iface, "Returned status: {}".format(str(status)))
+        self.close()
 
     def init_process_table(self):
         self.processTableWidget.clear()
@@ -90,22 +89,43 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.Interactive)
 
-    def process_to_table(self, p_id, row):
-        """
-        Gets called if a new process is selected at the process graph table.
-        It loads all agruments with their type and an example (if exist) into the value
-        """
-        self.processTableWidget.clear()
+    def incompatible_process_to_table(self, p_id, row):
+
         self.cur_process = self.get_process_by_id(p_id)
 
         if not self.cur_process:
             return
 
-        pr = self.backend.get_process(self.cur_process["process_id"])
+        self.mark_pg_row(row)
 
-        if not pr:
-            return
+        self.init_process_table()
 
+        arguments = self.cur_process["arguments"]
+
+        self.processTableWidget.setRowCount(len(arguments))
+
+        par_row = 0
+        for key, val in arguments.items():
+            # warning(self.iface, str(key))
+            # if key != "data" and key != "imagery":
+            qitem = QTableWidgetItem(key)
+            qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+
+            self.processTableWidget.setItem(par_row, 0, qitem)
+
+            type = QTableWidgetItem("Unknown to backend")
+            type.setFlags(QtCore.Qt.ItemIsEnabled)
+            self.processTableWidget.setItem(par_row, 1, type)
+
+            if val:
+                val_item = QTableWidgetItem(json.dumps(val))
+            else:
+                val_item = QTableWidgetItem("")
+
+            self.processTableWidget.setItem(par_row, 2, val_item)
+            par_row += 1
+
+    def mark_pg_row(self, row):
         for pr_row in range(self.processgraphTableWidget.rowCount()):
             for pr_col in range(self.processgraphTableWidget.columnCount()):
                 if self.processgraphTableWidget.item(pr_row, pr_col):
@@ -114,16 +134,88 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
                     else:
                         self.processgraphTableWidget.item(pr_row, pr_col).setBackground(Qt.white)
 
+    def set_complex_edit_element(self, param, p_id, value, row):
+
+        if (p_id == "load_collection") and (str(param.name) == "id"):
+            id_combo = QComboBox()
+            all_collections = self.backend.get_collections()
+            for col in all_collections:
+                if "id" in col:
+                    id_combo.addItem(col['id'])
+            if value:
+                id_combo.setCurrentText(str(value))
+            self.processTableWidget.setCellWidget(row, 3, id_combo)
+            id_combo.currentTextChanged.connect(lambda *args, row=row,
+                                                       combo=id_combo: self.update_col_selection(combo, row))
+
+        # Edit stuff for special values
+        if ("geojson" in str(param.get_type())) or ("bounding-box" in str(param.get_type())):
+            editBtn = QPushButton(self.processgraphTableWidget)
+            editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'edit_icon.png')))
+            editBtn.setIconSize(QSize(25, 25))
+            self.processTableWidget.setCellWidget(row, 3, editBtn)
+            editBtn.clicked.connect(lambda *args, row=row: self.adapt_spatial(row))
+            return editBtn
+        elif "raster-cube" in str(param.get_type()):
+            id_combo = QComboBox()
+            id_combo.addItems(self.get_process_id_list(exception=p_id))
+            if "from_node" in value:
+                id_combo.setCurrentText(str(value["from_node"]))
+            self.processTableWidget.setCellWidget(row, 3, id_combo)
+            id_combo.currentTextChanged.connect(lambda *args, row=row,
+                                                       combo=id_combo: self.update_cube_selection(combo, row))
+        elif "temporal-interval" in str(param.get_type()):
+            editBtn = QPushButton(self.processgraphTableWidget)
+            editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'edit_icon.png')))
+            editBtn.setIconSize(QSize(25, 25))
+            self.processTableWidget.setCellWidget(row, 3, editBtn)
+            editBtn.clicked.connect(lambda *args, row=row: self.adapt_temporal(row))
+
+        if "bands" in str(param.name):
+            editBtn = QPushButton(self.processgraphTableWidget)
+            editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'edit_icon.png')))
+            editBtn.setIconSize(QSize(25, 25))
+            self.processTableWidget.setCellWidget(row, 3, editBtn)
+            editBtn.clicked.connect(lambda *args, row=row: self.adapt_bands(row))
+
+    def process_to_table(self, p_id, row):
+        """
+        Gets called if a new process is selected at the process graph table.
+        It loads all agruments with their type and an example (if exist) into the value
+        """
+        self.processTableWidget.clear()
+        self.cur_process = self.get_process_by_id(p_id)
+        self.cur_pid = p_id
+
+        if not self.cur_process:
+            return
+
+        # Set label with the process name and the bold font
+
+        pr = self.backend.get_process(self.cur_process["process_id"])
+
+        if not pr:
+            self.processLabel.setText("Process: {} (not compatible with the backend)".format(p_id))
+            myFont = QtGui.QFont()
+            myFont.setBold(True)
+
+            self.processLabel.setFont(myFont)
+            warning(self.iface, "Process '{}' not available at this backend".format(str(self.cur_process["process_id"])))
+            self.incompatible_process_to_table(p_id, row)
+            return
+
         self.processLabel.setText("Process: {}".format(p_id))
         myFont = QtGui.QFont()
         myFont.setBold(True)
         self.processLabel.setFont(myFont)
 
+        self.mark_pg_row(row)
+
         # info(self.iface, "New Process {}".format(process['parameters']))
         self.init_process_table()
         self.processTableWidget.setRowCount(len(pr.parameters))
 
-        row = 0
+        par_row = 0
         for param in pr.parameters:
             # if key != "data" and key != "imagery":
             qitem = QTableWidgetItem(param.name)
@@ -134,11 +226,11 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
                 boldFont.setBold(True)
                 qitem.setFont(boldFont)
 
-            self.processTableWidget.setItem(row, 0, qitem)
+            self.processTableWidget.setItem(par_row, 0, qitem)
 
             type = QTableWidgetItem(str(param.get_type()))
             type.setFlags(QtCore.Qt.ItemIsEnabled)
-            self.processTableWidget.setItem(row, 1, type)
+            self.processTableWidget.setItem(par_row, 1, type)
 
             if "arguments" in self.cur_process:
                 value = self.cur_process["arguments"]
@@ -149,52 +241,32 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
             else:
                 val_item = QTableWidgetItem("")
 
-            self.processTableWidget.setItem(row, 2, val_item)
+            self.processTableWidget.setItem(par_row, 2, val_item)
+            self.set_complex_edit_element(param, p_id, value, par_row)
 
-            if (pr.id == "load_collection") and (str(param.name) == "id"):
-                id_combo = QComboBox()
-                all_collections = self.backend.get_collections()
-                for col in all_collections:
-                    if "id" in col:
-                        id_combo.addItem(col['id'])
-                if value:
-                    id_combo.setCurrentText(value)
-                self.processTableWidget.setCellWidget(row, 3, id_combo)
-                id_combo.currentTextChanged.connect(lambda *args, row=row,
-                                                           combo=id_combo: self.update_col_selection(combo, row))
+            par_row += 1
 
-            # Edit stuff for special values
-            if ("geojson" in str(param.get_type())) or ("bounding-box" in str(param.get_type())):
-                editBtn = QPushButton(self.processgraphTableWidget)
-                editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'edit_icon.png')))
-                editBtn.setIconSize(QSize(25, 25))
-                self.processTableWidget.setCellWidget(row, 3, editBtn)
-                editBtn.clicked.connect(lambda *args, row=row: self.adapt_spatial(row))
-            elif "raster-cube" in str(param.get_type()):
-                id_combo = QComboBox()
-                id_combo.addItems(self.get_process_id_list(exception=p_id))
-                if "from_node" in value:
-                    id_combo.setCurrentText(value["from_node"])
-                self.processTableWidget.setCellWidget(row, 3, id_combo)
-                id_combo.currentTextChanged.connect(lambda *args, row=row,
-                                                           combo=id_combo: self.update_cube_selection(combo, row))
-            elif "temporal-interval" in str(param.get_type()):
-                editBtn = QPushButton(self.processgraphTableWidget)
-                editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'edit_icon.png')))
-                editBtn.setIconSize(QSize(25, 25))
-                self.processTableWidget.setCellWidget(row, 3, editBtn)
-                editBtn.clicked.connect(lambda *args, row=row: self.adapt_temporal(row))
+        if "result" in self.cur_process:
+            if self.cur_process["result"]:
+                self.resultCheckBox.setChecked(True)
+            else:
+                self.resultCheckBox.setChecked(False)
+        else:
+            self.resultCheckBox.setChecked(False)
 
-            if "bands" in str(param.name):
-                editBtn = QPushButton(self.processgraphTableWidget)
-                editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'edit_icon.png')))
-                editBtn.setIconSize(QSize(25, 25))
-                self.processTableWidget.setCellWidget(row, 3, editBtn)
-                editBtn.clicked.connect(lambda *args, row=row: self.adapt_bands(row))
-
-            row += 1
         self.processTableWidget.cellChanged.connect(lambda *args, p_id=p_id: self.set_process_by_id(p_id))
         self.processTableWidget.resizeRowsToContents()
+
+    def update_result_node(self):
+
+        if not self.cur_pid:
+            return
+
+        if self.resultCheckBox.isChecked():
+            self.processgraph_buffer[self.cur_pid]["result"] = True
+        else:
+            if "result" in self.processgraph_buffer[self.cur_pid]:
+                self.processgraph_buffer[self.cur_pid].pop("result")
 
     def update_cube_selection(self, combo, row):
         # selection = self.processTableWidget.item(row, 3).text()
@@ -215,16 +287,28 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         self.processTableWidget.setItem(row, 2, qitem)
 
     def limit_north(self):
-        return self.parent().limit_north()
+        if self.parent():
+            return self.parent().limit_north()
+        else:
+            return None
 
     def limit_west(self):
-        return self.parent().limit_west()
+        if self.parent():
+            return self.parent().limit_west()
+        else:
+            return None
 
     def limit_south(self):
-        return self.parent().limit_south()
+        if self.parent():
+            return self.parent().limit_south()
+        else:
+            return None
 
     def limit_east(self):
-        return self.parent().limit_east()
+        if self.parent():
+            return self.parent().limit_east()
+        else:
+            return None
 
     def get_process_id_list(self, exception=None):
         id_list = []
@@ -419,4 +503,3 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
                 qitem = QTableWidgetItem(str(bands))
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
                 self.processTableWidget.setItem(row, 2, qitem)
-

@@ -4,7 +4,7 @@ from distutils.version import LooseVersion
 from requests.auth import HTTPBasicAuth
 from typing import Union
 import os
-
+import sys
 
 class Connection:
 
@@ -344,9 +344,17 @@ class Connection:
         # auth = self.get_auth()
 
         auth_header = self.get_header()
+        #jsonData = json.loads(postdata)
+        # {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        auth_header["Content-type"] = "application/json"
+        auth_header["Accept"] = "text/plain"
 
-        return requests.post(self._url+path, json=postdata, headers=auth_header, timeout=5)
-        # {"url": self._url+path, "json": postdata, "headers": auth_header}
+        auth_header["User-Agent"] = "openeo-qgis-plugin/ {py}/{pv} {pl}".format(
+                py=sys.implementation.name, pv=".".join(map(str, sys.version_info[:3])),
+                pl=sys.platform)
+
+        return requests.post(self._url+path, data=postdata, headers=auth_header, timeout=5)
+        # return {"url": self._url+path, "json": postdata, "headers": auth_header, "returnvalue": resp}
 
     def delete(self, path):
         """

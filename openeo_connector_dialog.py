@@ -386,7 +386,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                                "was successful you will see it in the Status text. \n")
         # openEO Header Image
         self.image = QLabel()
-        self.image.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'openEO_plugin_header.png')))
+        self.image.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'images/openEO_plugin_header.png')))
 
         self.grid.setSpacing(4)
         self.grid.addWidget(self.title, 0, 0)
@@ -649,7 +649,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             #             self.jobsTableWidget.setCellWidget(row, 7, qitem)
 
             execBtn = QPushButton(self.jobsTableWidget)
-            execBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'execute_icon.png')))
+            execBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/execute_icon.png')))
             execBtn.setIconSize(QSize(21, 21))
 
             if job.status:
@@ -660,7 +660,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 if job.status == "finished":
                     self.jobsTableWidget.item(row, 2).setBackground(QColor(75, 254, 40, 160))
                     dispBtn = QPushButton(self.jobsTableWidget)
-                    dispBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'display_icon.png')))
+                    dispBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/display_icon.png')))
                     dispBtn.setIconSize(QSize(29, 29))
                     self.jobsTableWidget.setCellWidget(row, 4, dispBtn)
                     dispBtn.clicked.connect(lambda *args, row=row: self.job_display(row))
@@ -676,19 +676,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             execBtn.clicked.connect(lambda *args, row=row: self.job_execute(row))
 
             infoBtn2 = QPushButton(self.jobsTableWidget)
-            infoBtn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'edit_icon.png')))
+            infoBtn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/edit_icon.png')))
             infoBtn2.setIconSize(QSize(25, 25))
             self.jobsTableWidget.setCellWidget(row, 5, infoBtn2)
             infoBtn2.clicked.connect(lambda *args, row=row: self.adapt_job(row))
 
             infoBtn3 = QPushButton(self.jobsTableWidget)
-            infoBtn3.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
+            infoBtn3.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/info_icon.png')))
             infoBtn3.setIconSize(QSize(25, 25))
             self.jobsTableWidget.setCellWidget(row, 6, infoBtn3)
             infoBtn3.clicked.connect(lambda *args, row=row: self.job_info(row))
 
             infoBtn4 = QPushButton(self.jobsTableWidget)
-            infoBtn4.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'deleteFinalBtn.png')))
+            infoBtn4.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/deleteFinalBtn.png')))
             infoBtn4.setIconSize(QSize(25, 25))
             self.jobsTableWidget.setCellWidget(row, 7, infoBtn4)
             infoBtn4.clicked.connect(lambda *args, row=row: self.delete_job_final(row))
@@ -773,20 +773,20 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 self.servicesTableWidget.setItem(row, 2, qitem)
 
             displayBtn = QPushButton(self.servicesTableWidget)
-            displayBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'display_icon.png')))
+            displayBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/display_icon.png')))
             displayBtn.setIconSize(QSize(29, 29))
 
             self.servicesTableWidget.setCellWidget(row, 3, displayBtn)
             displayBtn.clicked.connect(lambda *args, row=row: self.service_execute(serv.url, serv.id))
 
             infoBtn2 = QPushButton(self.servicesTableWidget)
-            infoBtn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
+            infoBtn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/info_icon.png')))
             infoBtn2.setIconSize(QSize(25, 25))
             self.servicesTableWidget.setCellWidget(row, 4, infoBtn2)
             infoBtn2.clicked.connect(lambda *args, row=row: self.service_info(row))
 
             infoBtn3 = QPushButton(self.servicesTableWidget)
-            infoBtn3.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'deleteFinalBtn.png')))
+            infoBtn3.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/deleteFinalBtn.png')))
             infoBtn3.setIconSize(QSize(25, 25))
             self.servicesTableWidget.setCellWidget(row, 5, infoBtn3)
             infoBtn3.clicked.connect(lambda *args, row=row: self.delete_service_final(row))

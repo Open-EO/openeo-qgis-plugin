@@ -81,7 +81,7 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.reloadBtn.clicked.connect(self.refresh_layers)
         self.reloadBtn.setVisible(False)
-        self.reloadBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'reload_icon.png')))
+        self.reloadBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/reload_icon.png')))
 
         self.layersBox.setVisible(False)
 

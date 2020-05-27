@@ -220,7 +220,7 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         # Edit stuff for special values
         if ("geojson" in str(param.get_type())) or ("bounding-box" in str(param.get_type())):
             editBtn = QPushButton(self.processgraphTableWidget)
-            editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'edit_icon.png')))
+            editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/edit_icon.png')))
             editBtn.setIconSize(QSize(25, 25))
             self.processTableWidget.setCellWidget(row, 3, editBtn)
             editBtn.clicked.connect(lambda *args, row=row: self.adapt_spatial(row))
@@ -236,20 +236,20 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
                                                        combo=id_combo: self.update_cube_selection(combo, row))
         elif "temporal-interval" in str(param.get_type()):
             editBtn = QPushButton(self.processgraphTableWidget)
-            editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'edit_icon.png')))
+            editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/edit_icon.png')))
             editBtn.setIconSize(QSize(25, 25))
             self.processTableWidget.setCellWidget(row, 3, editBtn)
             editBtn.clicked.connect(lambda *args, row=row: self.adapt_temporal(row))
         elif "process-graph" in str(param.get_type()):
             editBtn = QPushButton(self.processgraphTableWidget)
-            editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'edit_icon.png')))
+            editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/edit_icon.png')))
             editBtn.setIconSize(QSize(25, 25))
             self.processTableWidget.setCellWidget(row, 3, editBtn)
             editBtn.clicked.connect(lambda *args, row=row: self.adapt_pg(row))
 
         if "bands" in str(param.name):
             editBtn = QPushButton(self.processgraphTableWidget)
-            editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'edit_icon.png')))
+            editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/edit_icon.png')))
             editBtn.setIconSize(QSize(25, 25))
             self.processTableWidget.setCellWidget(row, 3, editBtn)
             editBtn.clicked.connect(lambda *args, row=row: self.adapt_bands(row))
@@ -489,7 +489,7 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Edit
         self.editBtn = QPushButton(self.processgraphTableWidget)
-        self.editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'edit_icon.png')))
+        self.editBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/edit_icon.png')))
         self.editBtn.setIconSize(QSize(25, 25))
         self.processgraphTableWidget.setCellWidget(row, 3, self.editBtn)
         self.editBtn.clicked.connect(lambda *args, p_id=p_id, row=row: self.process_to_table(p_id, row))

@@ -114,10 +114,10 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
             return
 
         self.dlg = OpenEODialog(iface=self.iface, backend=backend)
-        self.dlg.infoBtn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
-        self.dlg.refreshButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'reload_icon.png')))
-        self.dlg.refreshButton_service.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'reload_icon.png')))
-        self.dlg.operationManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'user_manual_icon.png')))
+        self.dlg.infoBtn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/info_icon.png')))
+        self.dlg.refreshButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/reload_icon.png')))
+        self.dlg.refreshButton_service.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/reload_icon.png')))
+        self.dlg.operationManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/user_manual_icon.png')))
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()
         self.close()

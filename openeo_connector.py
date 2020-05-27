@@ -150,7 +150,7 @@ class OpenEO:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = os.path.join(os.path.dirname(__file__), 'icon_new.png')
+        icon_path = os.path.join(os.path.dirname(__file__), 'images/icon_new.png')
         self.add_action(
             icon_path,
             text=self.tr(u'OpenEO Connector'),
@@ -176,7 +176,7 @@ class OpenEO:
         if self.first_start == True:
             self.first_start = False
             self.dlg = LoginDialog(iface=self.iface)
-            self.dlg.logo.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'icon_new.png')))
+            self.dlg.logo.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'images/icon_new.png')))
 
         # show the dialog
         self.dlg.show()

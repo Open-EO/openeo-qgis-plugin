@@ -59,7 +59,7 @@
     <string/>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab_3">
     <property name="enabled">
@@ -334,40 +334,6 @@
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;&lt;a href=&quot;https://openeo.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;openeo.org&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="deleteButton">
-     <property name="geometry">
-      <rect>
-       <x>600</x>
-       <y>510</y>
-       <width>31</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>../../../../../../../../../../../../../../../../.designer/backup/delete_job.png</normaloff>../../../../../../../../../../../../../../../../.designer/backup/delete_job.png</iconset>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="deleteFinalButton">
-     <property name="geometry">
-      <rect>
-       <x>680</x>
-       <y>510</y>
-       <width>31</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>../../../../../../../../../../../../../../../../.designer/backup/deleteFinalBtn.png</normaloff>../../../../../../../../../../../../../../../../.designer/backup/deleteFinalBtn.png</iconset>
-     </property>
-    </widget>
     <widget class="QPushButton" name="loadHubBtn">
      <property name="geometry">
       <rect>
@@ -435,23 +401,6 @@ in Web Editor</string>
        <normaloff>../../../../../../../../../../../../../../../../.designer/backup/reload_icon.png</normaloff>../../../../../../../../../../../../../../../../.designer/backup/reload_icon.png</iconset>
      </property>
     </widget>
-    <widget class="QPushButton" name="deleteFinalButton_service">
-     <property name="geometry">
-      <rect>
-       <x>680</x>
-       <y>510</y>
-       <width>31</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>../../../../../../../../../../../../../../../../.designer/backup/deleteFinalBtn.png</normaloff>../../../../../../../../../../../../../../../../.designer/backup/deleteFinalBtn.png</iconset>
-     </property>
-    </widget>
     <widget class="QLabel" name="label_24">
      <property name="geometry">
       <rect>
@@ -463,23 +412,6 @@ in Web Editor</string>
      </property>
      <property name="text">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;&lt;a href=&quot;https://openeo.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;openeo.org&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="deleteButton_service">
-     <property name="geometry">
-      <rect>
-       <x>600</x>
-       <y>510</y>
-       <width>31</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>../../../../../../../../../../../../../../../../.designer/backup/delete_job.png</normaloff>../../../../../../../../../../../../../../../../.designer/backup/delete_job.png</iconset>
      </property>
     </widget>
    </widget>

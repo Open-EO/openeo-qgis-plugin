@@ -44,15 +44,39 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
         self.processes = None
 
         self.setupUi(self)
+        self.backends = []
         try:
-            backends = get_hub_backends()
-
-            self.backendEdit.addItems(backends)  # or Backends
+            self.backends = get_hub_backends()
+            self.set_backend_urls()
+            #self.backendEdit.addItems(backends)  # or Backends
         except:
             warning(self.iface, "The plugin was not able to connect to openEO Hub. Are you connected to the internet?")
 
         self.loginButton.clicked.connect(self.login)
         self.dlg = None
+
+        self.versionBox.stateChanged.connect(self.version_checkbox_changed)
+
+    def set_backend_urls(self, latest_version=True):
+        self.backendEdit.clear()
+        if latest_version:
+            for backend in self.backends:
+                self.backendEdit.addItem(backend.name)
+        else:
+            for backend in self.backends:
+                self.backendEdit.addItems(backend.get_all_urls())
+
+    def version_checkbox_changed(self):
+        self.set_backend_urls(latest_version=self.versionBox.isChecked())
+
+    def get_current_url(self):
+
+        if self.versionBox.isChecked():
+            for bckend in self.backends:
+                if bckend.name == self.backendEdit.currentText():
+                    return bckend.get_latest_version()
+
+        return self.backendEdit.currentText()
 
     def connect(self):
         """
@@ -60,7 +84,7 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
         If there are no credentials, it connects to the backend without authentication.
         This method also loads all collections and processes from the backend.
         """
-        url = self.backendEdit.currentText()
+        url = self.get_current_url()# self.backendEdit.currentText()
         pwd = self.passwordEdit.text()
         user = self.usernameEdit.text()
         if user == "":
@@ -92,11 +116,7 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
         self.dlg = OpenEODialog(iface=self.iface, backend=backend)
         self.dlg.infoBtn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'info_icon.png')))
         self.dlg.refreshButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'reload_icon.png')))
-        self.dlg.deleteButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'delete_job.png')))
-        self.dlg.deleteFinalButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'deleteFinalBtn.png')))
         self.dlg.refreshButton_service.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'reload_icon.png')))
-        self.dlg.deleteButton_service.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'delete_job.png')))
-        self.dlg.deleteFinalButton_service.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'deleteFinalBtn.png')))
         self.dlg.operationManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'user_manual_icon.png')))
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()

@@ -138,6 +138,12 @@ class Backend:
             self.services.append(serv)
         return self.services
 
+    def get_service(self, id):
+        serv_dict = self.connection.user_service(id)
+        serv = Service()
+        serv.from_metadata(serv_dict, self.connection.version)
+        return serv
+
     def get_collections(self):
         return self.collections
 
@@ -172,7 +178,29 @@ class Backend:
         return self.connection.service_create(process_graph=process)
 
     def service_info(self, service_id):
-        return self.connection.service_info(service_id=service_id)
+        service = self.get_service(service_id)
+        title = service.title
+        description = service.description
+        submission = service.created
+        type = service.type
+        cost = service.costs
+        process_graph = service.process.process_graph
+        processes = []
+        # Data & Extents & Processes
+        service_info = "Title: {}. \nDescription: {}. \nCreation Date: {} \nType: {} \nCost: {}.\n" \
+            .format(title, description, submission, type, cost)
+        for key, val in process_graph.items():
+            processes.append(key)
+            if "load_collection" == val["process_id"]:
+                data_set = process_graph[key]['arguments']['id']
+                temporal_extent = process_graph[key]['arguments']['temporal_extent']
+                spatial_extent = process_graph[key]['arguments']['spatial_extent']
+                service_info += "Data: {}. \nSpatial Extent: {}.\nTemporal Extent: {}." \
+                    .format(data_set, spatial_extent, temporal_extent) \
+                    .replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
+
+        service_info += "Processes: {}".format(str(processes)).replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
+        return service_info
 
     def service_delete(self, service_id):
         return self.connection.delete_service(service_id=service_id)

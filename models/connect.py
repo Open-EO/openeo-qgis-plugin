@@ -162,6 +162,20 @@ class Connection:
 
         return services
 
+    def user_service(self, id) -> dict:
+        """
+        Loads all jobs of the current user.
+        :return: jobs: Dict All jobs of the user
+        """
+        service = self.get('/services/{}'.format(id), auth=True)
+
+        if service:
+            service = self.parse_json_response(service)
+
+            return service
+
+        return service
+
     def job_start(self, job_id):
         """
         Starts the execution of a job at the backend.
@@ -192,6 +206,7 @@ class Connection:
         requested_info = "/services/{}".format(service_id)
         get_info = self.get(requested_info, stream=True)
         service_info = get_info.json()
+
 
         title = service_info['title']
         description = service_info['description']

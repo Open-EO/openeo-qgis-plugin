@@ -1,18 +1,18 @@
 # openeo-qgis-plugin
 QGIS Plugin to connect and use openEO compliant backends.
 
-Compatible with openeo API version 0.4.0 and above.
+Compatible with backends compialnt wit openeo API version 0.4.0 and above. Full functionality is only provided for version 1.0.0-rc2.
 
 Tested with QGIS 3.4.8-Madeira, but works with QGIS >= 3.0.0.
 
 ## About
 
-The openEO QGIS Plugin "OpenEO" allows for connecting to an openEO backend, managing the user jobs and load the results into a new QGIS Layer. It is also possible to create a new job, by defining a custom process graph and sending it to the backend. The process graph editor is in an early stage, so it is recommended to just copy the complete process graph into the process graph text field.  
+The openEO QGIS Plugin "OpenEO" allows connecting to an openEO backend, managing the user ([batch](https://openeo.org/documentation/1.0/glossary.html#data-processing-modes)) jobs and load the resulting images into a new QGIS Layer. It is also possible to adapt jobs by changing and adding processes. Even though it is generally possible to create own process graphs from scretch it is recommended to use the [openEO web editor](https://editor.openeo.org/).  
 
 ### Features
 
-* Listing all openeo compliant backends with minimum API version 0.4.0 from http://hub.openeo.org/ 
-* Connecting to an openeo compliant backend (openAPI version above 0.4.0)
+* Listing all openeo compliant backends with minimum API version 0.4.0 listet at the [openEO Hub](http://hub.openeo.org/) 
+* Connecting to an openeo compliant backend (openAPI version above 0.4.0, 1.0.0-rc2 recommended)
 * Listing all available collections ("Load Collection" combobox) and processes ("Add Process" combobox) including parameters (see table under the process combobox) of the backend
 * Spatial extent selection ("Add Spatial Extent" combobox) by: 
     * Current extent of the QGIS map canvas
@@ -21,12 +21,13 @@ The openEO QGIS Plugin "OpenEO" allows for connecting to an openEO backend, mana
     * Load Extent of a QGIS Layer
     * Load Extent from a Shapefile on the filesystem
     * Manual input of the spatial extent
-* Temporal Extent selection via calendar widgets ("Select Star and End Date" button)
-* Creating a "load_collection" process with the selected spatial filter, temporal filter and collection id ("Load" button)
-* Sending the process graph ("Process Graph" text field) to the backend to create a new job at the backend ("Create Job" button)
+* Temporal extent selection via calendar widgets ("Select Star and End Date" button)
+* Creating a new job at the backend ("Create Job" button)
+* Adapt existing jobs by adapting process arguments and add new processes to the process graph.
 * Open the official openeo web editor at the system browser ("Create New Job in Web Editor" button)
 * List all jobs of the user at the backend.
-* The jobs can be executed or the result displayed at the QGIS map. There is also a description or error message displayed at the job table.
+* The jobs can be executed and/or the result displayed at the QGIS map. There is also a description displayed at the job table.
+* List of openEO services of the user and possibility to show them in QGIS. 
    
 Need some additional features? Leave an issue at this repository!
 
@@ -59,7 +60,7 @@ This is the recommended way if you want to get the **most recent** version of th
 
 ## Usage
 
-First you have to connect to the server with your user credentials in the upper part of the Window. Then all existing jobs are displayed at the "Jobs" tab. There the jobs can be executed again or displayed in QGIS. In the "New Job" tab it is possible to create a new process graph and to send it to the backend to create a new job. The process graph editor is in an early stage, so it is recommended to just copy the complete process graph into the process graph text field. Nevertheless, the plugin supports the creation of an "load_collection" process via the "Load" button and the extent selection widgets on the left.  
+First you have to connect to the server with your user credentials in the upper part of the Window. Then all existing jobs are displayed at the "Jobs" tab. There the jobs can be executed and displayed in QGIS. Pressing the "pencil" button on an job entry, a job adaption window will be displayed and the job can be edited and sent as a new job to the backend.  
 
 The following Screenshots show how it looks like:
 

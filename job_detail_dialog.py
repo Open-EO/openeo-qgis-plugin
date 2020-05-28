@@ -1,28 +1,26 @@
 # -*- coding: utf-8 -*-
+"""
+/***************************************************************************
+ JobDetailDialog
 
+ This class is responsible for showing detailed metadata on an existing openEO job.
+
+        author            : 2020 by Bernhard Goesswein
+        email             : bernhard.goesswein@geo.tuwien.ac.at
+ ***************************************************************************/
+"""
 import os
-import json
-from os.path import expanduser
+
 
 from qgis.PyQt import uic
 from PyQt5.QtCore import Qt
-from qgis.utils import iface
 from PyQt5 import QtWidgets, QtCore
 
-from collections import OrderedDict
-from PyQt5.QtWidgets import QHBoxLayout, QApplication, QWidget, QMainWindow
-from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QPushButton, \
-    QApplication, QAction, QMainWindow, QFileDialog
-from qgis.core import QgsTextFormat, QgsVectorLayer, QgsRasterLayer, QgsProject
+from PyQt5.QtWidgets import QApplication
+from qgis.PyQt.QtWidgets import QTableWidgetItem, QApplication
 
-from PyQt5.QtGui import QIcon, QFont
-from .drawRect import DrawRectangle
-from .drawPoly import DrawPolygon
-
-from PyQt5.QtWidgets import QCalendarWidget
-from PyQt5.QtCore import QDate
+from PyQt5.QtGui import QFont
 from .job_adapt_dialog import JobAdaptDialog
-from .utils.logging import info, warning
 
 ########################################################################################################################
 ########################################################################################################################
@@ -32,16 +30,18 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'job_deta
 
 
 class JobDetailDialog(QtWidgets.QDialog, FORM_CLASS):
-
+    """
+    This class is responsible for showing detailed metadata on an existing openEO job.
+    """
     def __init__(self, parent=None, iface=None, job=None, backend=None):
-        """Constructor method
+        """
+        Constructor method: Initializing the button behaviours and the metadata fields.
+        :param parent: parent dialog of this dialog (e.g. OpenEODialog).
+        :param iface: Interface to show the dialog.
+        :param job: Job: Job that should be displayed in detail.
+        :param backend: Backend: Currently connected backend.
         """
         super(JobDetailDialog, self).__init__(parent)
-        # Set up the user interface from Designer through FORM_CLASS.
-        # After self.setupUi() you can access any designer object by doing
-        # self.<objectname>, and you can use autoconnect slots - see
-        # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
-        # #widgets-and-dialogs-with-auto-connect
 
         QApplication.setStyle("cleanlooks")
 
@@ -50,31 +50,27 @@ class JobDetailDialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.backend = backend
         self.job = job
-        # warning(self.iface, str(job))
         self.init_table()
         self.fill_table()
+
+        self.dlg = None
 
         self.cancelButton.clicked.connect(self.close)
         self.adaptButton.clicked.connect(self.adapt_job)
 
     def adapt_job(self):
+        """
+        Starts an adaption dialog to adapt the current job.
+        """
         self.dlg = JobAdaptDialog(iface=self.iface, job=self.job, backend=self.backend)
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()
-
-    def limit_north(self):
-        return self.parent().limit_north()
-
-    def limit_west(self):
-        return self.parent().limit_west()
-
-    def limit_south(self):
-        return self.parent().limit_south()
-
-    def limit_east(self):
-        return self.parent().limit_east()
+        self.close()
 
     def init_table(self):
+        """
+        Initializes the job infor table.
+        """
         self.jobInfoTableWidget.clear()
         self.jobInfoTableWidget.setColumnCount(2)
         self.jobInfoTableWidget.setHorizontalHeaderLabels(['Property', 'Value'])
@@ -85,11 +81,21 @@ class JobDetailDialog(QtWidgets.QDialog, FORM_CLASS):
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Interactive)
 
     def set_value_widget(self, value, row):
+        """
+        Sets the property value into the given row of the job table.
+        :param value: str: Property value of the row.
+        :param row: int: Row number to but the value in
+        """
         qitem = QTableWidgetItem(str(value))
         qitem.setFlags(QtCore.Qt.ItemIsEnabled)
         self.jobInfoTableWidget.setItem(row, 1, qitem)
 
     def set_property_widget(self, prop, row):
+        """
+        Sets the property name into the given row of the job table.
+        :param prop: str: Property name of the row.
+        :param row: int: Row number to but the value in
+        """
         qitem = QTableWidgetItem(str(prop))
         font = QFont()
         font.setBold(True)
@@ -98,7 +104,9 @@ class JobDetailDialog(QtWidgets.QDialog, FORM_CLASS):
         self.jobInfoTableWidget.setItem(row, 0, qitem)
 
     def fill_table(self):
-
+        """
+        Fills the table with the properties and their values.
+        """
         property_list = []
         if self.job.id:
             property_list.append(("Id", self.job.id))

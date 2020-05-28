@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
+"""
+/***************************************************************************
+ LoginDialog
 
+ This class is responsible for showing the login window and to let the user log in to an openEO backend.
+
+        author            : 2020 by Bernhard Goesswein
+        email             : bernhard.goesswein@geo.tuwien.ac.at
+ ***************************************************************************/
+"""
 import os
 
 from qgis.PyQt import uic
@@ -10,13 +19,12 @@ from PyQt5.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
 
-from qgis.PyQt.QtGui import QIcon, QPixmap
+from qgis.PyQt.QtGui import QIcon
 from .openeo_connector_dialog import OpenEODialog
 from .models.backend import Backend
-from .models.connect import Connection
 from .models.openeohub import get_hub_backends
 
-from .utils.logging import info, warning
+from .utils.logging import warning
 ########################################################################################################################
 ########################################################################################################################
 
@@ -25,16 +33,16 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'login_di
 
 
 class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
-
+    """
+    This class is responsible for showing the login window and to let the user log in to an openEO backend.
+    """
     def __init__(self, parent=None, iface=None):
-        """Constructor method
+        """
+        Constructor method: Initializing the button behaviours and the backend combobox.
+        :param parent: parent dialog of this dialog (e.g. OpenEODialog).
+        :param iface: Interface to show the dialog.
         """
         super(LoginDialog, self).__init__(parent)
-        # Set up the user interface from Designer through FORM_CLASS.
-        # After self.setupUi() you can access any designer object by doing
-        # self.<objectname>, and you can use autoconnect slots - see
-        # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
-        # #widgets-and-dialogs-with-auto-connect
 
         QApplication.setStyle("cleanlooks")
 
@@ -48,7 +56,6 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
         try:
             self.backends = get_hub_backends()
             self.set_backend_urls()
-            #self.backendEdit.addItems(backends)  # or Backends
         except:
             warning(self.iface, "The plugin was not able to connect to openEO Hub. Are you connected to the internet?")
 
@@ -58,6 +65,11 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
         self.versionBox.stateChanged.connect(self.version_checkbox_changed)
 
     def set_backend_urls(self, latest_version=True):
+        """
+        Loads the backend urls, already retrieved in the constructor, into the combo box. If latest_version is set, it
+        will show the backend names, otherwise it shows the urls of all versions.
+        :param latest_version: bool: show only latest versions or all of the backends.
+        """
         self.backendEdit.clear()
         if latest_version:
             for backend in self.backends:
@@ -67,10 +79,16 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.backendEdit.addItems(backend.get_all_urls())
 
     def version_checkbox_changed(self):
+        """
+        Adapt the backend combo box according to the version check box.
+        """
         self.set_backend_urls(latest_version=self.versionBox.isChecked())
 
     def get_current_url(self):
-
+        """
+        Returns the currently selected url, so either the latest version of the selected backend or just
+        the url in the backend url field.
+        """
         if self.versionBox.isChecked():
             for bckend in self.backends:
                 if bckend.name == self.backendEdit.currentText():
@@ -84,7 +102,7 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
         If there are no credentials, it connects to the backend without authentication.
         This method also loads all collections and processes from the backend.
         """
-        url = self.get_current_url()# self.backendEdit.currentText()
+        url = self.get_current_url()
         pwd = self.passwordEdit.text()
         user = self.usernameEdit.text()
         if user == "":
@@ -107,17 +125,20 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
         return backend
 
     def login(self):
-
+        """
+        Logs the user into the backend and starts the main openEO dialog, also closes this login dialog.
+        """
         backend = self.connect()
 
         if not backend:
             return
 
-        self.dlg = OpenEODialog(iface=self.iface, backend=backend)
+        self.dlg = OpenEODialog(interface=self.iface, backend=backend)
         self.dlg.infoBtn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/info_icon.png')))
         self.dlg.refreshButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/reload_icon.png')))
         self.dlg.refreshButton_service.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/reload_icon.png')))
-        self.dlg.operationManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/user_manual_icon.png')))
+        self.dlg.operationManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
+                                                               'images/user_manual_icon.png')))
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()
         self.close()

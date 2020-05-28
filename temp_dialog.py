@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
+"""
+/***************************************************************************
+ TempDialog
 
+ This class is responsible for choosing temporal extent for a openEO job.
+
+        author            : 2020 by Bernhard Goesswein
+        email             : bernhard.goesswein@geo.tuwien.ac.at
+ ***************************************************************************/
+"""
 import os
-import json
 
 from qgis.PyQt import uic
 
-from .utils.logging import info, warning
+from .utils.logging import warning
 
 from PyQt5 import QtWidgets
 
-from PyQt5.QtWidgets import QHBoxLayout, QApplication, QWidget, QMainWindow
-from PyQt5.QtWidgets import QCalendarWidget
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QDate
 
 ########################################################################################################################
@@ -19,19 +26,19 @@ from PyQt5.QtCore import QDate
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'temp_dialog.ui'))
 
-PROCESSES_TEMPORAL = ["load_collection", "filter_temporal"]
-
 
 class TempDialog(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self, parent=None, iface=None, minimum_date=None, maximum_date=None, max_date=None, extent=None):
-        """Constructor method
+    """
+    This class is responsible for choosing temporal extent for a openEO job.
+    """
+    def __init__(self, parent=None, iface=None, extent=None):
+        """
+        Constructor method: Initializing the button behaviours and the Table entries.
+        :param parent: parent dialog of this dialog (e.g. OpenEODialog).
+        :param iface: Interface to show the dialog.
+        :param extent: dict: Current extent of the job.
         """
         super(TempDialog, self).__init__(parent)
-        # Set up the user interface from Designer through FORM_CLASS.
-        # After self.setupUi() you can access any designer object by doing
-        # self.<objectname>, and you can use autoconnect slots - see
-        # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
-        # #widgets-and-dialogs-with-auto-connect
 
         QApplication.setStyle("cleanlooks")
 
@@ -42,37 +49,31 @@ class TempDialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.setupUi(self)
 
-        self.minimum_date = minimum_date
-        self.maximum_date = maximum_date
-        self.max_date = max_date
-
         self.extent = extent
 
         self.date_selection(extent)
 
-        # self.comboProcessBox.currentTextChanged.connect(self.update_selection)
-
-        # self.init_processes()
-
-        # self.update_selection()
-        #self.date_selection(cur_dates)
         self.init_calendars()
-        #self.StartDateEdit.clicked[QDate].connect(self.pick_start)
-        #self.EndDateEdit.clicked[QDate].connect(self.pick_end)
 
-
-        # self.selectDate.clicked.connect(self.add_temporal)
-        #self.refreshButton_service.clicked.connect(self.refresh_services)
-        #self.refreshButton_service.clicked.connect(self.refresh_services)
         self.buttonBox.accepted.connect(self.accept_dialog)
 
+        self.start_date_extension = None
+        self.end_date_extension = None
+
     def accept_dialog(self):
+        """
+        Dialog is finished and the chosen temporal extent gets sent to the parent (main) adaption dialog.
+        """
         if self.EndDateEdit.date() < self.StartDateEdit.date():
             warning(self.iface, "End date is placed before the start date!")
-        self.parent().change_example_temporal(extent=[self.show_start(), self.show_end()])
+        self.parent().receive_temporal_extent(extent=[self.show_start(), self.show_end()])
 
     def date_selection(self, dates):
-        # 2018-10-10T00:00:00Z
+        """
+        Initializes the date selection by setting the current dates.
+        :param dates: list: List of two date strings, first the start date and second the
+                            end date of the temporal extent.
+        """
         if dates:
             start_date = dates[0]
             end_date = dates[1]
@@ -91,24 +92,12 @@ class TempDialog(QtWidgets.QDialog, FORM_CLASS):
             self.StartDateEdit.setDate(QDate.fromString(start_date, "yyyy-MM-dd"))
             self.EndDateEdit.setDate(QDate.fromString(end_date, "yyyy-MM-dd"))
 
-    # def init_processes(self):
-    #     example_job = self.pg_graph
-    #     for key, _ in example_job.items():
-    #         if example_job[key]["process_id"] in PROCESSES_TEMPORAL:
-    #             self.comboProcessBox.addItem("{} - {}".format(example_job[key]["process_id"], key))
-
     def init_calendars(self):
-
-        if self.minimum_date:
-            self.startCalendarWidget.setMinimumDate(self.minimum_date)
-            self.StartDateEdit.setMinimumDate(self.minimum_date)
-
-        if self.max_date == None:
-            self.endCalendarWidget.setMaximumDate(QDate.currentDate())
-            self.EndDateEdit.setMaximumDate(QDate.currentDate())
-        elif self.maximum_date:
-            self.endCalendarWidget.setMaximumDate(self.maximum_date)
-            self.EndDateEdit.setMaximumDate(self.maximum_date)
+        """
+        Initializes the calendar
+        """
+        self.endCalendarWidget.setMaximumDate(QDate.currentDate())
+        self.EndDateEdit.setMaximumDate(QDate.currentDate())
 
         self.startCalendarWidget.setSelectedDate(self.StartDateEdit.date())
         self.endCalendarWidget.setSelectedDate(self.EndDateEdit.date())
@@ -117,33 +106,31 @@ class TempDialog(QtWidgets.QDialog, FORM_CLASS):
         self.endCalendarWidget.clicked[QDate].connect(self.pick_end)
 
     def pick_start(self):
-        fS = self.startCalendarWidget.selectedDate()
-        # fS = QDate.fromString(startDate, "yyyy-MM-dd")
-        self.StartDateEdit.setDate(fS)
+        """
+        Starts picking the date
+        """
+        fs = self.startCalendarWidget.selectedDate()
+        self.StartDateEdit.setDate(fs)
 
     def pick_end(self):
-        fE = self.endCalendarWidget.selectedDate()
-        #fE = QDate.fromString(endDate, "yyyy-MM-dd")
-        self.EndDateEdit.setDate(fE)
+        """
+        Ends picking the date
+        """
+        fe = self.endCalendarWidget.selectedDate()
+        self.EndDateEdit.setDate(fe)
 
     def show_start(self):
+        """
+        Returns the start date correctly formatted.
+        """
         if self.StartDateEdit.dateChanged:
-            Start = self.StartDateEdit.date()
-            sD = Start.toString("yyyy-MM-dd")+self.start_date_extension
-            return sD
-        # elif self.selectDate.clicked:
-        #     self.pick_start()
-        #     Start = self.StartDateEdit.date()
-        #     sD = Start.toString("yyyy-MM-dd")+self.start_date_extension
-        #     return sD
+            start = self.StartDateEdit.date()
+            return start.toString("yyyy-MM-dd")+self.start_date_extension
 
     def show_end(self):
+        """
+        Returns the end date correctly formatted.
+        """
         if self.EndDateEdit.dateChanged:
-            End = self.EndDateEdit.date()
-            eD = End.toString("yyyy-MM-dd")+self.end_date_extension
-            return eD
-        # elif self.selectDate.clicked:
-        #     self.pick_end()
-        #     End = self.EndDateEdit.date()
-        #     eD = End.toString("yyyy-MM-dd")+self.end_date_extension
-        #     return eD
+            end = self.EndDateEdit.date()
+            return end.toString("yyyy-MM-dd")+self.end_date_extension

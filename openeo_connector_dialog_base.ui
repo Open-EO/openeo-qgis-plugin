@@ -337,7 +337,7 @@
     <widget class="QPushButton" name="loadHubBtn">
      <property name="geometry">
       <rect>
-       <x>350</x>
+       <x>10</x>
        <y>510</y>
        <width>121</width>
        <height>31</height>
@@ -351,7 +351,7 @@
     <widget class="QPushButton" name="moveButton">
      <property name="geometry">
       <rect>
-       <x>480</x>
+       <x>520</x>
        <y>510</y>
        <width>111</width>
        <height>31</height>
@@ -367,6 +367,19 @@
      <property name="text">
       <string>Create New Job 
 in Web Editor</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="createjobBtn">
+     <property name="geometry">
+      <rect>
+       <x>290</x>
+       <y>510</y>
+       <width>121</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Create new Job</string>
      </property>
     </widget>
    </widget>

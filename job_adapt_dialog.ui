@@ -94,7 +94,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Resend Job</string>
+    <string>Send Job</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="titleText">
@@ -172,14 +172,14 @@
   <widget class="QPushButton" name="reset_processBtn">
    <property name="geometry">
     <rect>
-     <x>1010</x>
+     <x>10</x>
      <y>350</y>
      <width>105</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>Reset Process</string>
+    <string>Undo Changes</string>
    </property>
   </widget>
   <widget class="QCheckBox" name="resultCheckBox">
@@ -232,6 +232,19 @@
      <width>261</width>
      <height>30</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="rawgraphBtn">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>350</y>
+     <width>101</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Raw Graph</string>
    </property>
   </widget>
  </widget>

@@ -17,7 +17,7 @@ from qgis.PyQt import uic
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 
-from PyQt5.QtWidgets import QApplication, QComboBox
+from PyQt5.QtWidgets import QApplication, QComboBox, QMessageBox, QDialog, QHBoxLayout, QTextEdit
 from qgis.PyQt.QtWidgets import QTableWidgetItem, QPushButton, QApplication
 
 from PyQt5.QtGui import QIcon, QFont
@@ -70,6 +70,9 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.processgraph_buffer = None
 
+        # Raw graph
+        self.rawgraphBtn.clicked.connect(self.raw_graph)
+
         # Init Process graph
         if self.job.process.process_graph:
             self.processgraph_buffer = deepcopy(self.job.process.process_graph)
@@ -106,6 +109,9 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         self.processesComboBox.currentTextChanged.connect(self.process_selected)
         self.processIdText.setText("")
 
+        self.rawgraph_window = None
+        self.raw_pg_box = None
+
     def process_selected(self):
         """
         Gets called if a process in the "add process" combobox is selected.
@@ -121,6 +127,40 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
             p_id = "{}{}".format(self.processesComboBox.currentText().lower(), str(counter))
         self.processIdText.setText(p_id)
         self.new_process_to_table(self.processesComboBox.currentText())
+
+    def raw_graph(self):
+        """
+        Shows the raw process graph window, to copy paste graphs.
+        """
+        self.rawgraph_window = QDialog(parent=self)
+        hbox = QHBoxLayout()
+        self.raw_pg_box = QTextEdit()
+        self.raw_pg_box.setText(json.dumps(self.processgraph_buffer, indent=4))
+        self.raw_pg_box.setReadOnly(False)
+        hbox.addWidget(self.raw_pg_box)
+        apply_btn = QPushButton('Apply')
+        hbox.addWidget(apply_btn)
+        close_btn = QPushButton('Close')
+        hbox.addWidget(close_btn)
+        apply_btn.clicked.connect(self.receive_process_graph)
+        close_btn.clicked.connect(self.rawgraph_window.close)
+
+        self.rawgraph_window.setMinimumHeight(600)
+        self.rawgraph_window.setMinimumWidth(400)
+        self.rawgraph_window.setLayout(hbox)
+        self.rawgraph_window.setWindowTitle('Service Information')
+        self.rawgraph_window.show()
+
+    def receive_process_graph(self):
+        """
+        Apply changes of the raw process graph window to the current adapted job.
+        """
+        try:
+            self.processgraph_buffer = json.loads(self.raw_pg_box.toPlainText())
+            self.process_graph_to_table()
+            self.rawgraph_window.close()
+        except:
+            warning(self.iface, "Can not load process graph! Not correct JSON!")
 
     def add_new_process(self):
         """
@@ -155,6 +195,7 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             self.processgraph_buffer[self.cur_node] = self.job.process.process_graph[self.cur_node]
 
+        self.process_graph_to_table()
         self.process_to_table(self.cur_node, self.cur_row)
 
     def send_job(self):
@@ -263,7 +304,7 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         :param row: int: Row number of the argument on the process table.
         """
         # Special processes to handle
-        if (p_id == "load_collection") and (str(param.name) == "id"):
+        if ((p_id == "load_collection") and (str(param.name) == "id")) or ("collection-id" in str(param.get_type())):
             id_combo = QComboBox()
             all_collections = self.backend.get_collections()
             for col in all_collections:
@@ -272,8 +313,8 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
             if value:
                 id_combo.setCurrentText(str(value))
             self.processTableWidget.setCellWidget(row, 3, id_combo)
-            id_combo.currentTextChanged.connect(lambda *args, row=row,
-                                                       combo=id_combo: self.update_col_selection(combo, row))
+            id_combo.currentTextChanged.connect(lambda *args, srow=row,
+                                                       scombo=id_combo: self.update_col_selection(scombo, srow))
 
         # Edit stuff for special values
         if ("geojson" in str(param.get_type())) or ("bounding-box" in str(param.get_type())):
@@ -281,7 +322,7 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
             edit_btn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/edit_icon.png')))
             edit_btn.setIconSize(QSize(25, 25))
             self.processTableWidget.setCellWidget(row, 3, edit_btn)
-            edit_btn.clicked.connect(lambda *args, row=row: self.adapt_spatial(row))
+            edit_btn.clicked.connect(lambda *args, rrow=row: self.adapt_spatial(rrow))
             return edit_btn
         elif "raster-cube" in str(param.get_type()):
             id_combo = QComboBox()
@@ -503,15 +544,16 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         Initializes the process graph table by setting the column settings and headers.
         """
         self.processgraphTableWidget.clear()
-        self.processgraphTableWidget.setColumnCount(4)
-        self.processgraphTableWidget.setHorizontalHeaderLabels(['Id', 'Process', 'Predecessor', 'Edit'])
+        self.processgraphTableWidget.setColumnCount(5)
+        self.processgraphTableWidget.setHorizontalHeaderLabels(['Id', 'Process', 'Predecessor', 'Edit', 'Del'])
         header = self.processgraphTableWidget.horizontalHeader()
         self.processgraphTableWidget.setSortingEnabled(True)
         self.processgraphTableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Interactive)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.Interactive)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Interactive)
         self.processgraphTableWidget.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
 
     def set_process_graph_widget(self, node_id, process, row):
@@ -545,6 +587,27 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         edit_btn.setIconSize(QSize(25, 25))
         self.processgraphTableWidget.setCellWidget(row, 3, edit_btn)
         edit_btn.clicked.connect(lambda *args, n_id=node_id, p_row=row: self.process_to_table(n_id, p_row))
+
+        # Delete
+        edit_btn = QPushButton(self.processgraphTableWidget)
+        edit_btn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/deleteFinalBtn.png')))
+        edit_btn.setIconSize(QSize(25, 25))
+        self.processgraphTableWidget.setCellWidget(row, 4, edit_btn)
+        edit_btn.clicked.connect(lambda *args, n_id=node_id: self.delete_node(n_id))
+
+    def delete_node(self, node_id):
+        """
+        Deletes a node from the process graph
+        :param node_id: str: Identifier of the node to be deleted.
+        """
+        reply = QMessageBox.question(self, "Are you sure?",
+                                     "Do you really want to remove node {}".format(str(node_id)),
+                                     QMessageBox.Yes, QMessageBox.Cancel)
+
+        if reply == QMessageBox.Yes:
+            if node_id in self.processgraph_buffer:
+                self.processgraph_buffer.pop(node_id)
+                self.process_graph_to_table()
 
     def process_graph_to_table(self):
         """
@@ -591,7 +654,10 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
                     value = self.processTableWidget.item(row, 2).text()
 
                 if arg_name and value:
-                    self.processgraph_buffer[node_id]["arguments"][arg_name] = json.loads(value)
+                    try:
+                        self.processgraph_buffer[node_id]["arguments"][arg_name] = json.loads(value)
+                    except:
+                        self.processgraph_buffer[node_id]["arguments"][arg_name] = value
 
     def get_collection_id(self):
         """

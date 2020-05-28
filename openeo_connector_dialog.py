@@ -44,6 +44,7 @@ from .models.result import Result
 from .models.processgraph import Processgraph
 from .models.openeohub import get_hub_jobs
 from .utils.logging import info, warning
+from .models.models import Job, Process
 
 from .job_detail_dialog import JobDetailDialog
 from .job_adapt_dialog import JobAdaptDialog
@@ -121,6 +122,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Adapt Job from Hub
         self.loadHubBtn.clicked.connect(self.show_jobs_from_hub_dialog)
+
+        # Create Job
+        self.createjobBtn.clicked.connect(self.create_job)
 
         # Jobs Tab
         self.init_jobs()
@@ -227,6 +231,20 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.hub_jobs_window.close()
 
         job = self.example_hub_jobs[selected_row].to_job()
+
+        self.dlg = JobAdaptDialog(iface=self.iface, job=job, backend=self.backend)
+        self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.dlg.show()
+
+    def create_job(self):
+        """
+        Creates a new job to get adapted by a new dialog window.
+        """
+        job = Job()
+        process = Process()
+        process.process_graph = {"load_collection1": {"process_id": "load_collection", "arguments": {}}}
+
+        job.process = process
 
         self.dlg = JobAdaptDialog(iface=self.iface, job=job, backend=self.backend)
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)

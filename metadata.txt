@@ -6,7 +6,7 @@
 name=OpenEO
 qgisMinimumVersion=3.0
 description=Plugin to access openEO compliant backends.
-version=0.4
+version=0.9
 author=Bernhard Goesswein, Nina Gnann
 email=bernhard.goesswein@geo.tuwien.ac.at
 

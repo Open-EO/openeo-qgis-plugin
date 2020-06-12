@@ -59,7 +59,7 @@ class Connection:
         :return: header: Dict
         """
         if self.token:
-            return {'Authorization': 'Bearer {}'.format(self.token)}
+            return {'Authorization': 'Bearer basic//{}'.format(self.token)}
         else:
             return {}
 

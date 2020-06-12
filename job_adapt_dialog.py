@@ -174,8 +174,12 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         arguments = {}
 
         for pr_row in range(self.processTableWidget.rowCount()):
-            arguments[self.processTableWidget.item(pr_row, 0).text()] = \
+            try:
+                arguments[self.processTableWidget.item(pr_row, 0).text()] = \
                                                         json.loads(self.processTableWidget.item(pr_row, 2).text())
+            except json.decoder.JSONDecodeError:
+                # TODO: Warn if the argument is required!
+                arguments[self.processTableWidget.item(pr_row, 0).text()] = None
 
         self.processgraph_buffer[p_id] = {"arguments": arguments, "process_id": process_id}
         self.process_graph_to_table()

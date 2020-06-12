@@ -384,12 +384,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.jobsTableWidget.setSortingEnabled(True)
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Interactive)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Interactive)
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Interactive)
-        header.setSectionResizeMode(5, QtWidgets.QHeaderView.Interactive)
-        header.setSectionResizeMode(6, QtWidgets.QHeaderView.Interactive)
-        header.setSectionResizeMode(7, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents)
 
     def init_services(self):
         """
@@ -442,7 +442,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 self.jobsTableWidget.setItem(row, 0, qitem)
 
             exec_btn = QPushButton(self.jobsTableWidget)
-            exec_btn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/execute_icon.png')))
+            exec_btn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/execute_icon.svg')))
             exec_btn.setIconSize(QSize(21, 21))
 
             if job.status:
@@ -453,7 +453,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 if job.status == "finished":
                     self.jobsTableWidget.item(row, 2).setBackground(QColor(75, 254, 40, 160))
                     disp_btn = QPushButton(self.jobsTableWidget)
-                    disp_btn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/display_icon.png')))
+                    disp_btn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/display_icon.svg')))
                     disp_btn.setIconSize(QSize(29, 29))
                     self.jobsTableWidget.setCellWidget(row, 4, disp_btn)
                     disp_btn.clicked.connect(lambda *args, row=row: self.job_display(row))
@@ -531,7 +531,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 self.servicesTableWidget.setItem(row, 2, qitem)
 
             disp_btn = QPushButton(self.servicesTableWidget)
-            disp_btn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/display_icon.png')))
+            disp_btn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/display_icon.svg')))
             disp_btn.setIconSize(QSize(29, 29))
 
             self.servicesTableWidget.setCellWidget(row, 3, disp_btn)

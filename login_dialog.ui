@@ -47,7 +47,7 @@
     <rect>
      <x>10</x>
      <y>0</y>
-     <width>121</width>
+     <width>391</width>
      <height>21</height>
     </rect>
    </property>
@@ -66,7 +66,7 @@
     <rect>
      <x>10</x>
      <y>120</y>
-     <width>91</width>
+     <width>391</width>
      <height>21</height>
     </rect>
    </property>
@@ -85,7 +85,7 @@
     <rect>
      <x>10</x>
      <y>70</y>
-     <width>91</width>
+     <width>391</width>
      <height>20</height>
     </rect>
    </property>
@@ -139,6 +139,9 @@
      <height>71</height>
     </rect>
    </property>
+   <property name="whatsThis">
+    <string extracomment="Show all available versions of the backends or only the latest (compatible) versions"/>
+   </property>
    <property name="text">
     <string/>
    </property>
@@ -152,11 +155,14 @@
   <widget class="QCheckBox" name="versionBox">
    <property name="geometry">
     <rect>
-     <x>258</x>
+     <x>8</x>
      <y>50</y>
-     <width>141</width>
+     <width>391</width>
      <height>20</height>
     </rect>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::RightToLeft</enum>
    </property>
    <property name="text">
     <string>Only Latest versions</string>

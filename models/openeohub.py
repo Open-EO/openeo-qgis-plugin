@@ -2,7 +2,6 @@ import requests
 from distutils.version import LooseVersion
 from .models import HubJob
 
-
 class HubBackend:
 
     name = None
@@ -26,8 +25,11 @@ class HubBackend:
 
     def fetch_version_urls(self):
         ver_urls = {}
+        try:
+            backend_versions = requests.get(self.url, timeout=1)
+        except:
+            return ver_urls
 
-        backend_versions = requests.get(self.url, timeout=5)
         if backend_versions.status_code == 200:
             backend_versions = backend_versions.json()
             if "versions" in backend_versions:

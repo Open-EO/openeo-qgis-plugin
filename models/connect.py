@@ -327,7 +327,7 @@ class Connection:
         #if job_status.status_code == 201:
         #    return job_status
 
-        return job_status
+        return self.parse_json_response(job_status)
 
     def service_create(self, process_graph):
         """
@@ -454,7 +454,7 @@ class Connection:
         if response.status_code == 200 or response.status_code == 201:
             return response.json()
         else:
-            return None
+            return response.json()
 
 
 class ComparableVersion:

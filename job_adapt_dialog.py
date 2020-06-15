@@ -22,7 +22,7 @@ from qgis.PyQt.QtWidgets import QTableWidgetItem, QPushButton, QApplication
 
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, QSize
-from .utils.logging import warning
+from .utils.logging import warning, error
 
 from .spatial_dialog import SpatialDialog
 from .temp_dialog import TempDialog
@@ -86,6 +86,10 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
             self.sendButton.setText("Adapt")
             self.sendButton.clicked.connect(self.send_pg)
             self.processgraph_buffer = json.loads(subgraph)["process_graph"]
+            self.titleText.hide()
+            self.label_8.hide()
+            self.label_10.hide()
+            self.descriptionText.hide()
         else:
             if job.description:
                 self.descriptionText.setText(job.description)
@@ -206,8 +210,12 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         """
         Sends the currently defined process graph as a new job to the backend.
         """
-        self.backend.job_create(self.processgraph_buffer, title=self.titleText.text(), desc=self.descriptionText.text())
-        self.close()
+        job_status = self.backend.job_create(self.processgraph_buffer, title=self.titleText.text(),
+                                             desc=self.descriptionText.text())
+        if job_status:
+            error(self.iface, "Job creation failed: {}".format(str(self.backend.error_msg_from_resp(job_status))))
+        else:
+            self.close()
 
     def send_pg(self):
         """
@@ -485,7 +493,7 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             self.resultCheckBox.setChecked(False)
 
-        self.processTableWidget.cellChanged.connect(lambda *args, n_id=node_id: self.set_process_by_node_id(n_id))
+        self.processTableWidget.cellChanged.connect(self.set_process_by_cur_node)
         self.processTableWidget.resizeRowsToContents()
 
     def update_result_node(self):
@@ -553,10 +561,10 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         header = self.processgraphTableWidget.horizontalHeader()
         self.processgraphTableWidget.setSortingEnabled(True)
         self.processgraphTableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Interactive)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.Interactive)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.Interactive)
         self.processgraphTableWidget.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
 
@@ -638,9 +646,15 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
 
         return self.processgraph_buffer[node_id]
 
-    def set_process_by_node_id(self, node_id):
+    def set_process_by_cur_node(self):
         """
         Stores the current process of the process table into the process graph.
+        """
+        self.set_process_by_node_id(self.cur_node)
+
+    def set_process_by_node_id(self, node_id):
+        """
+        Stores the process identified by the node_id of the process table into the process graph.
         :param node_id: str: Identifier of the node to be stored in the process graph.
         """
         process = self.get_process_by_node_id(node_id)

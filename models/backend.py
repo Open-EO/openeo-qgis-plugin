@@ -211,6 +211,30 @@ class Backend:
     def job_create(self, process, title=None, desc=None):
         return self.connection.job_create(process_graph=process, title=title, desc=desc)
 
+    def error_msg_from_resp(self, json_resp):
+        # error_id = "unknown"
+        error_code = "unknown"
+        error_message = "unknown"
+        error_url = None
+        # if "id" in json_resp:
+        #     error_id = json_resp["id"]
+        if "code" in json_resp:
+            error_code = json_resp["code"]
+        if "message" in json_resp:
+            error_message = json_resp["message"]
+        if "url" in json_resp:
+            error_url = json_resp["url"]
+
+        msg = "{}: {}".format(error_code, error_message)
+
+        if error_url:
+            msg += "(more details: {})".format(error_url)
+
+        if error_code == "unknown" and error_message == "unknown" and not error_url:
+            return str(json_resp)
+
+        return msg
+
     def job_start(self, job_id):
         return self.connection.job_start(job_id=job_id)
 

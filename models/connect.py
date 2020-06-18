@@ -182,8 +182,8 @@ class Connection:
         :param: job_id: Identifier of the job
         :return: jobs: Dict All jobs of the user
         """
-        request = self.post("/jobs/{}/results".format(job_id), postdata=None)
-        return request.status_code
+        resp = self.post("/jobs/{}/results".format(job_id), postdata=None)
+        return resp
 
     def job_info(self, job_id):
         """
@@ -196,6 +196,16 @@ class Connection:
         job_info = get_info.json()
 
         return job_info
+
+    def get_file_formats(self):
+        """
+        Returns information about a created job.
+        :param: job_id: Identifier of the job
+        :return: job_info_id: Strings containing details about the created jobs.
+        """
+        requested_info = "/file_formats"
+        get_info = self.get(requested_info, stream=True)
+        return get_info.json()
 
     def service_info(self, service_id):
         """

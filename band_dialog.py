@@ -89,4 +89,4 @@ class BandDialog(QtWidgets.QDialog, FORM_CLASS):
         for index in range(self.bandsListWidget.count()):
             if self.bandsListWidget.item(index).checkState() == Qt.Checked:
                 band_list.append(self.bandsListWidget.item(index).text())
-        self.parent().receive_bands(str(band_list))
+        self.parent().receive_bands(band_list)

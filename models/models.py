@@ -210,6 +210,11 @@ class Process:
     def __str__(self):
         return str(self.id)
 
+    def is_arg_mandatory(self, arg_name):
+        for param in self.parameters:
+            if param.name == arg_name:
+                return not param.optional
+
     def get_return_type(self):
         schema = self.returns["schema"]
         if "subtype" in schema:

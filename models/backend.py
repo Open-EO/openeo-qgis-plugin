@@ -129,6 +129,13 @@ class Backend:
             self.jobs.append(job)
         return self.jobs
 
+    def get_job(self, job_id):
+        jobs = self.get_jobs()
+        for job in jobs:
+            if job.id == job_id:
+                return job
+        return None
+
     def get_services(self):
         self.services = []
         services = self.connection.user_services()
@@ -147,6 +154,17 @@ class Backend:
     def get_collections(self):
         return self.collections
 
+    def get_temporal_extent_col(self, collection_id):
+        data = self.connection.get_collection(collection_id)
+
+        try:
+            extent = data.get("extent")
+            extent = extent.get("temporal")
+            extent = extent.get("interval")
+            return extent
+        except:
+            return None
+
     def get_bands(self, collection_id):
         bands = []
 
@@ -154,13 +172,48 @@ class Backend:
 
         if data:
             if self.connection.version.at_least("1.0.0"):
-                band_info = data['summaries']['eo:bands']
-                for b in band_info:
-                    bands.append(b["name"])
+                if "eo:bands" in data['summaries']:
+                    band_info = data['summaries']['eo:bands']
+
+                    for b in band_info:
+                        bands.append(b["name"])
+                if "sar:bands" in data['summaries']:
+                    band_info = data['summaries']['sar:bands']
+
+                    for b in band_info:
+                        bands.append(b["name"])
             else:
                 bands = data['properties']['cube:dimensions']['bands']['values']
 
         return bands
+
+    def get_dimensions(self, collection_id):
+        dimensions = []
+
+        if not collection_id:
+            return []
+
+        data = self.connection.get_collection(collection_id)
+
+        if data:
+            if self.connection.version.at_least("1.0.0"):
+                if "cube:dimensions" in data:
+                    for dim, _ in data["cube:dimensions"].items():
+                        dimensions.append(dim)
+
+        return dimensions
+
+    def get_output_formats(self):
+        file_formats = []
+
+        data = self.connection.get_file_formats()
+
+        if data:
+            if "output" in data:
+                for key, _ in data.get("output").items():
+                    file_formats.append(key)
+
+        return file_formats
 
     def get_processes(self):
         return self.processes

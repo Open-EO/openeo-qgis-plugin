@@ -43,7 +43,7 @@ from PyQt5.QtGui import QColor, QIcon, QPixmap
 from .models.result import Result
 from .models.processgraph import Processgraph
 from .models.openeohub import get_hub_jobs
-from .utils.logging import info, warning
+from .utils.logging import info, warning, error
 from .models.models import Job, Process
 
 from .job_detail_dialog import JobDetailDialog
@@ -331,7 +331,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.infoWindow2.setWindowTitle('Process Information')
         self.infoWindow2.show()
 
-    def job_info(self, row):
+    def job_info(self, job_id):
         """
         Returns detailed information about a submitted batch job in a PopUp-Window, such as:
         - Start time
@@ -342,8 +342,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         :param row: Integer number of the row the button is clicked.
         """
 
-        job = self.jobs_table[row]
-        job = self.backend.detailed_job(job.id)
+        job = self.backend.detailed_job(job_id)
 
         self.dlg = JobDetailDialog(iface=self.iface, job=job, backend=self.backend)
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -422,6 +421,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             jobs = []
 
         self.init_jobs()
+        self.jobsTableWidget.setSortingEnabled(False)
         self.jobsTableWidget.setRowCount(len(jobs))
         row = 0
         self.jobs_table = {}
@@ -456,9 +456,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     disp_btn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/display_icon.svg')))
                     disp_btn.setIconSize(QSize(29, 29))
                     self.jobsTableWidget.setCellWidget(row, 4, disp_btn)
-                    disp_btn.clicked.connect(lambda *args, row=row: self.job_display(row))
+                    disp_btn.clicked.connect(lambda *args, job_id=job.id: self.job_display(job_id))
                     iface.actionZoomIn().trigger()
-
                 elif job.status == "running":
                     self.jobsTableWidget.item(row, 2).setBackground(QColor(254, 178, 76, 200))
 
@@ -466,25 +465,25 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     self.jobsTableWidget.item(row, 2).setBackground(QColor(254, 100, 100, 200))
 
             self.jobsTableWidget.setCellWidget(row, 3, exec_btn)
-            exec_btn.clicked.connect(lambda *args, jrow=row: self.job_execute(jrow))
+            exec_btn.clicked.connect(lambda *args, job_id=job.id: self.job_execute(job_id))
 
             info_btn2 = QPushButton(self.jobsTableWidget)
             info_btn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/edit_icon.png')))
             info_btn2.setIconSize(QSize(25, 25))
             self.jobsTableWidget.setCellWidget(row, 5, info_btn2)
-            info_btn2.clicked.connect(lambda *args, jrow=row: self.adapt_job(jrow))
+            info_btn2.clicked.connect(lambda *args, job_id=job.id: self.adapt_job(job_id))
 
             info_btn3 = QPushButton(self.jobsTableWidget)
             info_btn3.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/info_icon.png')))
             info_btn3.setIconSize(QSize(25, 25))
             self.jobsTableWidget.setCellWidget(row, 6, info_btn3)
-            info_btn3.clicked.connect(lambda *args, jrow=row: self.job_info(jrow))
+            info_btn3.clicked.connect(lambda *args, job_id=job.id: self.job_info(job_id))
 
             info_btn4 = QPushButton(self.jobsTableWidget)
             info_btn4.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/deleteFinalBtn.png')))
             info_btn4.setIconSize(QSize(25, 25))
             self.jobsTableWidget.setCellWidget(row, 7, info_btn4)
-            info_btn4.clicked.connect(lambda *args, jrow=row: self.delete_job_final(jrow))
+            info_btn4.clicked.connect(lambda *args, job_id=job.id: self.delete_job_final(job_id))
 
             self.refreshButton.setEnabled(True)
             self.refreshButton_service.setEnabled(True)
@@ -492,6 +491,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.jobs_table[row] = job
 
             row += 1
+
+        self.jobsTableWidget.setSortingEnabled(True)
 
     def refresh_services(self):
         """
@@ -505,6 +506,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             services = []
 
         self.init_services()
+        self.servicesTableWidget.setSortingEnabled(False)
         self.servicesTableWidget.setRowCount(len(services))
         row = 0
         self.services_table = {}
@@ -552,6 +554,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             self.services_table[row] = serv
 
             row += 1
+        self.servicesTableWidget.setSortingEnabled(True)
 
     def service_execute(self, url, s_id):
         """
@@ -569,40 +572,41 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             warning(self.iface, 'invalid layer')
 
-    def job_execute(self, row):
+    def job_execute(self, job_id):
         """
         Executes the job of the given row of the job table.
         This method is called after the "Execute" button is clicked at the job table.
         :param row: Integer number of the row the button is clicked.
         """
-        job_id = self.jobs_table[row].id
+        resp = self.backend.job_start(job_id)
 
-        self.backend.job_start(job_id)
+        #if resp.status_code:
+        #error(self.iface, str(resp))
+        # warning(self.iface, str(resp))
         self.refresh_jobs()
 
-    def adapt_job(self, row):
+    def adapt_job(self, job_id):
         """
         Opens an adaption dialog of the job on the given row of the job table.
         This method is called after the "Adapt" button is clicked at the job table.
         :param row: Integer number of the row the button is clicked.
         """
-        job = self.jobs_table[row]
-        job = self.backend.detailed_job(job.id)
+        job_id
+        job = self.backend.detailed_job(job_id)
 
         self.dlg = JobAdaptDialog(iface=self.iface, job=job, backend=self.backend)
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()
 
-    def job_display(self, row):
+    def job_display(self, job_id):
         """
         Displays the job of the given row of the job table on a new QGis Layer.
         This method is called after the "Display" button is clicked at the job table.
         :param row: Integer number of the row the button is clicked.
         """
-        job = self.jobs_table[row]
-
-        process_graph_job = self.backend.job_pg_info(job.id)
-        download_dir = self.backend.job_result_download(job.id)
+        job = self.backend.get_job(job_id)
+        process_graph_job = self.backend.job_pg_info(job_id)
+        download_dir = self.backend.job_result_download(job_id)
         if download_dir:
             for ddir in download_dir:
                 info(self.iface, "Downloaded to {}".format(ddir))
@@ -625,19 +629,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.refresh_jobs()
 
-    def delete_job_final(self, row):
+    def delete_job_final(self, job_id):
         """
         Opens an deletion dialog of the job on the given row of the job table.
         This method is called after the "Delete" button is clicked at the job table.
         :param row: Integer number of the row the button is clicked.
         """
-        job_name = self.jobs_table[row].title
-        sure = self.yes_no_dialog("Are you sure you want to delete Job '{}'?".format(job_name))
+        job = self.backend.get_job(job_id)
+        sure = self.yes_no_dialog("Are you sure you want to delete Job '{}'?".format(job.title))
 
         if not sure:
             return
 
-        job_id = self.jobs_table[row].id
         self.backend.job_delete(job_id)
         self.refresh_jobs()
 

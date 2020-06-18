@@ -21,7 +21,7 @@ from PyQt5.QtWidgets import QApplication, QComboBox, QMessageBox, QDialog, QHBox
 from qgis.PyQt.QtWidgets import QTableWidgetItem, QPushButton, QApplication
 
 from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt, QSize, QDate
 from .utils.logging import warning, error
 
 from .spatial_dialog import SpatialDialog
@@ -105,6 +105,8 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         self.resultCheckBox.stateChanged.connect(self.update_result_node)
 
         self.newprocessButton.clicked.connect(self.add_new_process)
+        self.saveprocessButton.clicked.connect(self.set_process_by_cur_node)
+        self.cloneprocessButton.clicked.connect(self.clone_process)
 
         self.processesComboBox.addItem("Select a process")
         for key, val in self.backend.get_processes().items():
@@ -139,7 +141,7 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         self.rawgraph_window = QDialog(parent=self)
         hbox = QHBoxLayout()
         self.raw_pg_box = QTextEdit()
-        self.raw_pg_box.setText(json.dumps(self.processgraph_buffer, indent=4))
+        self.raw_pg_box.setText(json.dumps({"process_graph": self.processgraph_buffer}, indent=4))
         self.raw_pg_box.setReadOnly(False)
         hbox.addWidget(self.raw_pg_box)
         apply_btn = QPushButton('Apply')
@@ -155,12 +157,19 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         self.rawgraph_window.setWindowTitle('Service Information')
         self.rawgraph_window.show()
 
+    def is_cur_node_new_process(self):
+        return self.cur_node not in self.processgraph_buffer
+
+    def enable_save_changes_button(self):
+        if not self.is_cur_node_new_process():
+            self.saveprocessButton.setEnabled(True)
+
     def receive_process_graph(self):
         """
         Apply changes of the raw process graph window to the current adapted job.
         """
         try:
-            self.processgraph_buffer = json.loads(self.raw_pg_box.toPlainText())
+            self.processgraph_buffer = json.loads(self.raw_pg_box.toPlainText()).get("process_graph")
             self.process_graph_to_table()
             self.rawgraph_window.close()
         except:
@@ -170,26 +179,53 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         """
         Add the new process to the current process graph, selected and edited by the new process combobox.
         """
-        p_id = self.processIdText.text()
-        if not p_id:
+        node_id = self.processIdText.text()
+        if not node_id:
             return
 
         process_id = self.processesComboBox.currentText()
         arguments = {}
 
-        for pr_row in range(self.processTableWidget.rowCount()):
-            try:
-                arguments[self.processTableWidget.item(pr_row, 0).text()] = \
-                                                        json.loads(self.processTableWidget.item(pr_row, 2).text())
-            except json.decoder.JSONDecodeError:
-                # TODO: Warn if the argument is required!
-                arguments[self.processTableWidget.item(pr_row, 0).text()] = None
+        # pr_meta = self.backend.get_process(process_id)
 
-        self.processgraph_buffer[p_id] = {"arguments": arguments, "process_id": process_id}
+        for pr_row in range(self.processTableWidget.rowCount()):
+
+            if self.processTableWidget.item(pr_row, 0):
+                arg_name = self.processTableWidget.item(pr_row, 0).text()
+
+            if self.processTableWidget.item(pr_row, 2):
+                value = self.processTableWidget.item(pr_row, 2).text()
+
+            if arg_name and value:
+                try:
+                    arguments[arg_name] = json.loads(value)
+                except:
+                    arguments[arg_name] = value
+
+            # try:
+            #     if self.processTableWidget.item(pr_row, 2).text():
+            #         arguments[self.processTableWidget.item(pr_row, 0).text()] = \
+            #                                             json.loads(self.processTableWidget.item(pr_row, 2).text())
+            # except json.decoder.JSONDecodeError:
+            #     if "string" in self.processTableWidget.item(pr_row, 2).text().strip():
+            #         arguments[self.processTableWidget.item(pr_row, 0).text()] = \
+            #             str(self.processTableWidget.item(pr_row, 2).text())
+            #     elif pr_meta.is_arg_mandatory(self.processTableWidget.item(pr_row, 0).text()):
+            #         warning(self.iface, "Could not store mandatory argument {} of process {} "
+            #                 .format(self.processTableWidget.item(pr_row, 0).text(), node_id))
+                # arguments[self.processTableWidget.item(pr_row, 0).text()] = None
+
+        self.processgraph_buffer[node_id] = {"arguments": arguments, "process_id": process_id}
+
+        if self.resultCheckBox.isChecked():
+            self.processgraph_buffer[node_id]["result"] = True
+            self.resultCheckBox.setChecked(False)
+
         self.process_graph_to_table()
-        self.processesComboBox.setCurrentText("Select a process")
-        self.processIdText.setText("")
-        self.processTableWidget.clear()
+        self.clear_process_add_fields()
+        # self.processTableWidget.clear()
+        self.processTableWidget.setRowCount(0)
+        self.processLabel.setText("")
 
     def reset_process(self):
         """
@@ -231,15 +267,16 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         :param process_graph: Dict: sub process graph to be set.
         :param row: Int: Row of the currently selected process argument.
         """
-        qitem = QTableWidgetItem(json.dumps({"process_graph": process_graph}))
-        qitem.setFlags(QtCore.Qt.ItemIsEnabled)
-        self.processTableWidget.setItem(row, 2, qitem)
+
+        self.processTableWidget.item(row, 2).setText(json.dumps({"process_graph": process_graph}))
 
         arg_name = self.processTableWidget.item(row, 0).text()
         value = self.processTableWidget.item(row, 2).text()
 
         if arg_name and value:
-            self.processgraph_buffer[self.cur_node]["arguments"][arg_name] = json.loads(value)
+            if self.cur_node:
+                if self.cur_node in self.processgraph_buffer:
+                    self.processgraph_buffer[self.cur_node]["arguments"][arg_name] = json.loads(value)
 
     def init_process_table(self):
         """
@@ -293,6 +330,8 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
 
             self.processTableWidget.setItem(par_row, 2, val_item)
             par_row += 1
+        self.cloneprocessButton.setEnabled(True)
+        self.saveprocessButton.setEnabled(False)
 
     def mark_pg_row(self, row):
         """
@@ -326,9 +365,21 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
                 id_combo.setCurrentText(str(value))
             self.processTableWidget.setCellWidget(row, 3, id_combo)
             id_combo.currentTextChanged.connect(lambda *args, srow=row,
-                                                       scombo=id_combo: self.update_col_selection(scombo, srow))
+                                                       scombo=id_combo: self.update_combobox_selection(scombo, srow))
 
-        # Edit stuff for special values
+        # Edit stuff for special values regarding parameter names
+        if str(param.name) == "dimension":
+            dim_combo = QComboBox()
+            all_dimensions = self.backend.get_dimensions(self.get_collection_id())
+            for dim in all_dimensions:
+                dim_combo.addItem(dim)
+            if value in [dim_combo.itemText(i) for i in range(dim_combo.count())]:
+                dim_combo.setCurrentText(str(value))
+            self.processTableWidget.setCellWidget(row, 3, dim_combo)
+            dim_combo.currentTextChanged.connect(lambda *args, srow=row,
+                                                       scombo=dim_combo: self.update_combobox_selection(scombo, srow))
+
+        # Edit stuff for special values regarding types
         if ("geojson" in str(param.get_type())) or ("bounding-box" in str(param.get_type())):
             edit_btn = QPushButton(self.processgraphTableWidget)
             edit_btn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/edit_icon.png')))
@@ -340,8 +391,9 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
             id_combo = QComboBox()
             id_combo.addItem("Select")
             id_combo.addItems(self.get_process_id_list(exception=p_id))
-            if "from_node" in value:
-                id_combo.setCurrentText(str(value["from_node"]))
+            if value:
+                if "from_node" in value:
+                    id_combo.setCurrentText(str(value["from_node"]))
             self.processTableWidget.setCellWidget(row, 3, id_combo)
             id_combo.currentTextChanged.connect(lambda *args, irow=row,
                                                 combo=id_combo: self.update_cube_selection(combo, irow))
@@ -357,6 +409,16 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
             edit_btn.setIconSize(QSize(25, 25))
             self.processTableWidget.setCellWidget(row, 3, edit_btn)
             edit_btn.clicked.connect(lambda *args, irow=row: self.adapt_pg(irow))
+        elif str(param.get_type()) == "output-format":
+            format_combo = QComboBox()
+            all_formats = self.backend.get_output_formats()
+            for formt in all_formats:
+                format_combo.addItem(formt)
+            if value in [format_combo.itemText(i) for i in range(format_combo.count())]:
+                format_combo.setCurrentText(str(value))
+            self.processTableWidget.setCellWidget(row, 3, format_combo)
+            format_combo.currentTextChanged.connect(lambda *args, srow=row,
+                                                        scombo=format_combo: self.update_combobox_selection(scombo, srow))
 
         # Special parameter names
         if "bands" in str(param.name):
@@ -365,6 +427,13 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
             edit_btn.setIconSize(QSize(25, 25))
             self.processTableWidget.setCellWidget(row, 3, edit_btn)
             edit_btn.clicked.connect(lambda *args, irow=row: self.adapt_bands(irow))
+
+        if self.subgraph:
+            if not self.processTableWidget.item(row, 3):
+                edit_btn = QPushButton(self.processgraphTableWidget)
+                edit_btn.setText("Proc-Param")
+                self.processTableWidget.setCellWidget(row, 3, edit_btn)
+                edit_btn.clicked.connect(lambda *args, irow=row: self.set_process_param(irow))
 
     def new_process_to_table(self, process_id):
         """
@@ -408,6 +477,9 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
 
             val_item = QTableWidgetItem("")
 
+            if "process-graph" in str(param.get_type()):
+                val_item = QTableWidgetItem('{ "process_graph": {} }')
+
             self.processTableWidget.setItem(par_row, 2, val_item)
             self.set_complex_edit_element(param, process_id, "", par_row)
 
@@ -415,6 +487,11 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.resultCheckBox.setChecked(False)
         self.processTableWidget.resizeRowsToContents()
+        self.cloneprocessButton.setEnabled(False)
+
+    def clear_process_add_fields(self):
+        self.processesComboBox.setCurrentText("Select a process")
+        self.processIdText.setText("")
 
     def process_to_table(self, node_id, row):
         """
@@ -422,6 +499,7 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         :param node_id: str: Identifier of the node
         :param row: int: Row of the process graph table of the process to load.
         """
+        self.clear_process_add_fields()
         self.processTableWidget.clear()
         self.cur_process = self.get_process_by_node_id(node_id)
         self.cur_node = node_id
@@ -477,6 +555,8 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
                     value = ""
             if value:
                 val_item = QTableWidgetItem(json.dumps(value))
+            elif isinstance(value, int):
+                val_item = QTableWidgetItem(json.dumps(0))
             else:
                 val_item = QTableWidgetItem("")
 
@@ -493,8 +573,10 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         else:
             self.resultCheckBox.setChecked(False)
 
-        self.processTableWidget.cellChanged.connect(self.set_process_by_cur_node)
+        self.processTableWidget.cellChanged.connect(self.enable_save_changes_button)
         self.processTableWidget.resizeRowsToContents()
+        self.cloneprocessButton.setEnabled(True)
+        self.saveprocessButton.setEnabled(False)
 
     def update_result_node(self):
         """
@@ -502,6 +584,8 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         """
         if not self.cur_node:
             return
+
+        self.saveprocessButton.setEnabled(True)
 
         if self.resultCheckBox.isChecked():
             self.processgraph_buffer[self.cur_node]["result"] = True
@@ -520,22 +604,18 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         if selection == "Select":
             return
 
-        qitem = QTableWidgetItem(json.dumps({'from_node': str(selection)}))
-        qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+        self.processTableWidget.item(row, 2).setText(json.dumps({'from_node': str(selection)}))
 
-        self.processTableWidget.setItem(row, 2, qitem)
-
-    def update_col_selection(self, combo, row):
+    def update_combobox_selection(self, combo, row):
         """
         Updates the collection setting in the process definition regarding to the combo box.
         :param: combo: ComboBoxWidget: The combobox with the collection id.
         :param: row: int: Row of the argument in the process table.
         """
-        selection = combo.currentText()
-        qitem = QTableWidgetItem(selection)
-        qitem.setFlags(QtCore.Qt.ItemIsEnabled)
 
-        self.processTableWidget.setItem(row, 2, qitem)
+        selection = combo.currentText()
+
+        self.processTableWidget.item(row, 2).setText(selection)
 
     def get_process_id_list(self, exception=None):
         """
@@ -588,7 +668,9 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         # Predecessor
         qitem3 = QTableWidgetItem("")
         if "data" in process["arguments"]:
-            if "from_node" in process["arguments"]["data"]:
+            if not process["arguments"]["data"]:
+                qitem3 = QTableWidgetItem("")
+            elif "from_node" in process["arguments"]["data"]:
                 qitem3 = QTableWidgetItem(process["arguments"]["data"]["from_node"])
         qitem3.setFlags(QtCore.Qt.ItemIsEnabled)
         self.processgraphTableWidget.setItem(row, 2, qitem3)
@@ -646,11 +728,64 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
 
         return self.processgraph_buffer[node_id]
 
+    def set_process_param(self, row):
+        cur_text = self.processTableWidget.item(row, 2).text()
+        var_name = self.processTableWidget.item(row, 0).text()
+        param_text = json.dumps({"from_parameter": var_name})
+        if cur_text != param_text:
+            self.processTableWidget.item(row, 2).setText(param_text)
+        else:
+            self.processTableWidget.item(row, 2).setText("")
+
+    def clone_process(self):
+
+        if not self.cur_process:
+            return
+
+        cur_values = self.get_cur_process_table_json()
+
+        self.processesComboBox.setCurrentText(cur_values["process_id"])
+        self.process_selected()
+        row_count = self.processTableWidget.rowCount()
+
+        for row in range(row_count):
+            arg_name = self.processTableWidget.item(row, 0).text()
+            # warning(self.iface, "cur_values: {}".format(str(cur_values)))
+            if arg_name.strip() in cur_values.get("arguments"):
+                self.processTableWidget.item(row, 2).setText(json.dumps(cur_values.get("arguments")[arg_name]))
+
+        self.cloneprocessButton.setEnabled(False)
+        self.saveprocessButton.setEnabled(False)
+
     def set_process_by_cur_node(self):
         """
         Stores the current process of the process table into the process graph.
         """
         self.set_process_by_node_id(self.cur_node)
+        self.saveprocessButton.setEnabled(False)
+
+    def get_cur_process_table_json(self):
+        node_id = self.cur_node
+        process = self.get_process_by_node_id(node_id)
+
+        row_count = self.processTableWidget.rowCount()
+
+        for row in range(row_count):
+            if process:
+                arg_name = None
+                value = None
+                if self.processTableWidget.item(row, 0):
+                    arg_name = self.processTableWidget.item(row, 0).text()
+
+                if self.processTableWidget.item(row, 2):
+                    value = self.processTableWidget.item(row, 2).text()
+
+                if arg_name and value:
+                    try:
+                        process["arguments"][arg_name] = json.loads(value)
+                    except:
+                        process["arguments"][arg_name] = value
+        return process
 
     def set_process_by_node_id(self, node_id):
         """
@@ -687,11 +822,20 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         if not process_graph:
             return None
 
+        col_id = None
+
         for p_id, proc in process_graph.items():
             if proc["process_id"] == "load_collection":
-                return proc["arguments"]["id"]
+                col_id = proc["arguments"].get("id")
 
-        return None
+        if not col_id:
+            row_count = self.processTableWidget.rowCount()
+
+            for row in range(row_count):
+                if self.processTableWidget.item(row, 1).text().strip() == "collection-id":
+                    col_id = self.processTableWidget.item(row, 2).text().strip()
+
+        return col_id
 
     def adapt_pg(self, row):
         """
@@ -716,7 +860,11 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
             sel_bands = []
 
         cur_collection = self.get_collection_id()
-        all_bands = self.backend.get_bands(cur_collection)
+
+        if cur_collection:
+            all_bands = self.backend.get_bands(cur_collection)
+        else:
+            all_bands = []
 
         self.band_dialog = BandDialog(iface=self.iface, parent=self,
                                       bands=sel_bands, all_bands=all_bands)
@@ -754,7 +902,32 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
             extent = ast.literal_eval(extent)
         except:
             extent = []
-        self.temp_dialog = TempDialog(iface=self.iface, parent=self, extent=list(extent))
+
+        col_max = None
+        col_min = None
+
+        cur_col_id = self.get_collection_id()
+        if cur_col_id:
+            col_extent = self.backend.get_temporal_extent_col(cur_col_id)
+
+            for interval in col_extent:
+                if interval[0]:
+                    interval_sdate = QDate.fromString(interval[0][0:10], 'yyyy-MM-dd')
+                    if not col_min:
+                        col_min = interval_sdate
+                    else:
+                        if col_min > interval_sdate:
+                            col_min = interval_sdate
+                if interval[1]:
+                    interval_edate = QDate.fromString(interval[1][0:10], 'yyyy-MM-dd')
+                    if not col_max:
+                        col_max = interval_edate
+                    else:
+                        if col_max < interval_edate:
+                            col_max = interval_edate
+
+        self.temp_dialog = TempDialog(iface=self.iface, parent=self,
+                                      extent=list(extent), col_min=col_min, col_max=col_max)
 
         self.temp_dialog.show()
         self.temp_dialog.raise_()
@@ -777,6 +950,10 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         Receive the spatial extent from an external dialog and setting it at the value in the process table.
         :param extent: dict: Spatial extent dictionary
         """
+
+        if isinstance(extent, str):
+            extent = json.loads(extent)
+
         row_count = self.processTableWidget.rowCount()
         for row in range(row_count):
             type_text = self.processTableWidget.item(row, 1).text()

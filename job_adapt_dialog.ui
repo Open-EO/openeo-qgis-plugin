@@ -211,7 +211,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>New Process</string>
+    <string>Add Process</string>
    </property>
   </widget>
   <widget class="QComboBox" name="processesComboBox">
@@ -245,6 +245,38 @@
    </property>
    <property name="text">
     <string>Raw Graph</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="saveprocessButton">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>1103</x>
+     <y>350</y>
+     <width>101</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save Changes</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="cloneprocessButton">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>990</x>
+     <y>350</y>
+     <width>101</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Clone Process</string>
    </property>
   </widget>
  </widget>

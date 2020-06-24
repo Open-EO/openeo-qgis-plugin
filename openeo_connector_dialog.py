@@ -26,28 +26,31 @@ import os
 import json
 import webbrowser
 import copy
+import time, threading
+from hashlib import md5
 
 from qgis.PyQt import uic, QtGui, QtWidgets
 from qgis.PyQt.QtWidgets import QTreeWidgetItem, QTableWidgetItem, QMessageBox
 import qgis.PyQt.QtCore as QtCore
-from qgis.core import QgsRasterLayer, QgsProject
+from qgis.core import QgsRasterLayer, QgsProject, QgsTask, QgsApplication, QgsMessageLog
 from qgis.utils import iface
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QTextEdit, QListWidget, QListWidgetItem, QApplication, \
     QLabel, QGridLayout, QVBoxLayout, QDialog, QLineEdit
 
-from PyQt5.QtCore import Qt, QSize, QSettings
+from PyQt5.QtCore import Qt, QSize, QSettings, QTimer
 from PyQt5.QtGui import QColor, QIcon, QPixmap
 
 from .models.result import Result
 from .models.processgraph import Processgraph
 from .models.openeohub import get_hub_jobs
 from .utils.logging import info, warning, error
-from .models.models import Job, Process
+from .models.models import Job, Process, Service
 
 from .job_detail_dialog import JobDetailDialog
 from .job_adapt_dialog import JobAdaptDialog
+from .service_create_dialog import ServiceCreateDialog
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
@@ -76,6 +79,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         QApplication.setStyle("cleanlooks")
 
+        self.jobs_hash = ""
         self.iface = interface
         self.processgraph = Processgraph()
         self.called = False
@@ -87,7 +91,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.setupUi(self)
 
         self.operationManualBtn.clicked.connect(self.user_manual)
-        #TODO
         self.operationManualBtn.hide()
 
         self.collectionBox.currentTextChanged.connect(self.col_info)
@@ -125,6 +128,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Create Job
         self.createjobBtn.clicked.connect(self.create_job)
+        self.createserviceBtn.clicked.connect(self.create_service)
+        self.servicewebBtn.clicked.connect(self.web_view)
 
         # Jobs Tab
         self.init_jobs()
@@ -177,6 +182,22 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.infoWindow2 = None
 
         self.infoWindow5 = None
+
+        # Start autorefreshing thread
+        # self.task1 = TestTask('Scheduled Task', self.iface)
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.refresh_task)
+        self.timer.start(3000)
+        # QgsMessageLog.logMessage("Start Timer!", "name")
+
+    def closeEvent(self, event):
+        self.timer.stop()
+
+    def refresh_task(self):
+        if self.tabWidget.currentIndex() == 1:
+            self.refresh_jobs()
+        elif self.tabWidget.currentIndex() == 2:
+            self.refresh_services()
 
     def web_view(self):
         """
@@ -232,7 +253,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         job = self.example_hub_jobs[selected_row].to_job()
 
-        self.dlg = JobAdaptDialog(iface=self.iface, job=job, backend=self.backend)
+        self.dlg = JobAdaptDialog(iface=self.iface, job=job, backend=self.backend, main_dia=self)
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()
 
@@ -246,7 +267,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         job.process = process
 
-        self.dlg = JobAdaptDialog(iface=self.iface, job=job, backend=self.backend)
+        self.dlg = JobAdaptDialog(iface=self.iface, job=job, backend=self.backend, main_dia=self)
+        self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.dlg.show()
+
+    def create_service(self):
+        """
+        Creates a new service from job by a new dialog window.
+        """
+        self.dlg = ServiceCreateDialog(iface=self.iface, backend=self.backend)
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()
 
@@ -409,6 +438,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.Interactive)
         header.setSectionResizeMode(5, QtWidgets.QHeaderView.Interactive)
 
+    def jobs_changed(self, jobs):
+        jobs_str = str([str(item) for item in jobs])
+        # QgsMessageLog.logMessage(json.dumps(jobs_str), "something")
+
+        new_jobs_hash = md5(jobs_str.encode()).hexdigest()
+
+        if new_jobs_hash == self.jobs_hash:
+            return False
+        else:
+            self.jobs_hash = new_jobs_hash
+            return True
+
     def refresh_jobs(self):
         """
         Refreshes the job table, so fetches all jobs of the user from the backend and lists them in the table.
@@ -419,6 +460,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         if not isinstance(jobs, list):
             jobs = []
+
+        if not self.jobs_changed(jobs):
+            return
 
         self.init_jobs()
         self.jobsTableWidget.setSortingEnabled(False)
@@ -576,7 +620,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         Executes the job of the given row of the job table.
         This method is called after the "Execute" button is clicked at the job table.
-        :param row: Integer number of the row the button is clicked.
+        :param job_id: Integer number of the job id the button is clicked.
         """
         resp = self.backend.job_start(job_id)
 
@@ -589,12 +633,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         Opens an adaption dialog of the job on the given row of the job table.
         This method is called after the "Adapt" button is clicked at the job table.
-        :param row: Integer number of the row the button is clicked.
+        :param job_id: Integer number of the job id the button is clicked.
         """
-        job_id
+
         job = self.backend.detailed_job(job_id)
 
-        self.dlg = JobAdaptDialog(iface=self.iface, job=job, backend=self.backend)
+        self.dlg = JobAdaptDialog(iface=self.iface, job=job, backend=self.backend, main_dia=self)
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()
 
@@ -602,7 +646,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         Displays the job of the given row of the job table on a new QGis Layer.
         This method is called after the "Display" button is clicked at the job table.
-        :param row: Integer number of the row the button is clicked.
+        :param job_id: Integer number of the job id the button is clicked.
         """
         job = self.backend.get_job(job_id)
         process_graph_job = self.backend.job_pg_info(job_id)

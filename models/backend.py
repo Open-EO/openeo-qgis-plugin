@@ -227,8 +227,8 @@ class Backend:
         else:
             return None
 
-    def service_create(self, process):
-        return self.connection.service_create(process_graph=process)
+    def service_create(self, process, s_type, title="", description=""):
+        return self.connection.service_create(process_graph=process, s_type=s_type, title=title, description=description)
 
     def service_info(self, service_id):
         service = self.get_service(service_id)
@@ -257,6 +257,9 @@ class Backend:
 
     def service_delete(self, service_id):
         return self.connection.delete_service(service_id=service_id)
+
+    def get_service_types(self):
+        return self.connection.get_service_types()
 
     def service_pg_info(self, service_id):
         return self.connection.pg_info_service(service_id=service_id)
@@ -357,6 +360,9 @@ class Backend:
                                 cost) \
                         .replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
                     return job_info_id
+
+    def job_log(self, job_id):
+        return self.connection.job_log(job_id=job_id)
 
     def job_result_download(self, job_id):
         req = self.connection.job_result(job_id=job_id)

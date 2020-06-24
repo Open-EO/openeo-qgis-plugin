@@ -207,6 +207,11 @@ class Connection:
         get_info = self.get(requested_info, stream=True)
         return get_info.json()
 
+    def get_service_types(self):
+        requested_info = "/service_types"
+        get_info = self.get(requested_info, stream=True)
+        return get_info.json()
+
     def service_info(self, service_id):
         """
         Returns information about a created service.
@@ -270,6 +275,20 @@ class Connection:
                 if "href" in download_url:
                     download_url = download_url["href"]
                     return download_url
+        return None
+
+    def job_log(self, job_id):
+        """
+        Downloads the log info of the job and returns it
+        :param: job_id: Identifier of the job
+        :return: path: String, log info
+        """
+        log_url = "/jobs/{}/logs".format(job_id)
+        r = self.get(log_url, stream=True)
+
+        if r.status_code == 200:
+            return self.parse_json_response(r)
+
         return None
 
     def job_result(self, job_id):
@@ -339,23 +358,24 @@ class Connection:
 
         return self.parse_json_response(job_status)
 
-    def service_create(self, process_graph):
+    def service_create(self, process_graph, s_type, title="", description=""):
         """
         Sends the process graph to the backend and creates a new job.
         :param: process_graph: Dict, Process Graph of the new job
         :return: status: String, Status of the job creation
         """
-        pg = {
-            "process_graph": process_graph
-        }
-        #print(process_graph)
+        pg = {"process": {"process_graph": process_graph}, "type": s_type}
 
-        service_status = self.post("/jobs", postdata=pg)
+        if title:
+            pg["title"] = title
+        if description:
+            pg["description"] = description
 
-        #if job_status.status_code == 201:
-        #    return job_status
+        service_data = json.dumps(pg)
 
-        return service_status
+        service_status = self.post("/services", postdata=service_data)
+
+        return self.parse_json_response(service_status)
 
     def post(self, path, postdata):
         """

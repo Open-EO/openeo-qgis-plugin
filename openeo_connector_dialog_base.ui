@@ -419,6 +419,41 @@ in Web Editor</string>
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;&lt;a href=&quot;https://openeo.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;openeo.org&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
+    <widget class="QPushButton" name="servicewebBtn">
+     <property name="geometry">
+      <rect>
+       <x>510</x>
+       <y>510</y>
+       <width>121</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+       <underline>false</underline>
+      </font>
+     </property>
+     <property name="text">
+      <string>Create New Service 
+in Web Editor</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="createserviceBtn">
+     <property name="geometry">
+      <rect>
+       <x>290</x>
+       <y>510</y>
+       <width>121</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Create New Service 
+from Job</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QPushButton" name="operationManualBtn">

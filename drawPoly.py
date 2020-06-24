@@ -59,7 +59,7 @@ class DrawPolygon(QgsMapTool):
             if self.rb.numberOfVertices() > 2:
                 self.status = 0
                 self.selectionDone.emit()
-                geometry = self.rb.asGeometry().orientedMinimumBoundingBox()
+                geometry = self.rb.asGeometry()
                 self.parent.draw_poly(geometry)
             else:
                 self.reset()

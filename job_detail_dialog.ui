@@ -39,19 +39,6 @@
     <string>Cancel</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="adaptButton">
-   <property name="geometry">
-    <rect>
-     <x>190</x>
-     <y>320</y>
-     <width>84</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Adapt</string>
-   </property>
-  </widget>
  </widget>
  <resources/>
  <connections/>

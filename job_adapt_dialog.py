@@ -118,6 +118,17 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         self.rawgraph_window = None
         self.raw_pg_box = None
 
+    def hide(self):
+        super(JobAdaptDialog, self).hide()
+
+        if self.main_dia:
+            self.main_dia.hide()
+
+    def show(self):
+        if self.main_dia:
+            self.main_dia.show()
+        super(JobAdaptDialog, self).show()
+
     def process_selected(self):
         """
         Gets called if a process in the "add process" combobox is selected.
@@ -493,6 +504,12 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         self.processesComboBox.setCurrentText("Select a process")
         self.processIdText.setText("")
 
+    def clear_process_table(self):
+        self.clear_process_add_fields()
+        self.processTableWidget.clear()
+        self.init_process_table()
+        self.processTableWidget.setRowCount(0)
+
     def process_to_table(self, node_id, row):
         """
         Loads a process from the process graph table to the process table.
@@ -702,6 +719,8 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
             if node_id in self.processgraph_buffer:
                 self.processgraph_buffer.pop(node_id)
                 self.process_graph_to_table()
+
+            self.clear_process_table()
 
     def process_graph_to_table(self):
         """

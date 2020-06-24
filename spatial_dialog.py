@@ -27,7 +27,7 @@ from qgis.core import QgsVectorLayer
 from PyQt5.QtGui import QIcon
 from .drawRect import DrawRectangle
 from .drawPoly import DrawPolygon
-
+from .utils.logging import warning, error
 ########################################################################################################################
 ########################################################################################################################
 
@@ -196,6 +196,8 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
             if iface.activeLayer():
                 QMainWindow.hide(self)
                 self.parent().hide()
+                if self.parent().parent():
+                    self.parent().parent().hide()
                 self.drawRectangle = DrawRectangle(iface.mapCanvas(), self)
                 iface.mapCanvas().setMapTool(self.drawRectangle)
             else:
@@ -208,6 +210,8 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.drawBtn.setVisible(True)
                 QMainWindow.hide(self)
                 self.parent().hide()
+                if self.parent().parent():
+                    self.parent().parent().hide()
                 self.drawPolygon = DrawPolygon(iface.mapCanvas(), self)
                 iface.mapCanvas().setMapTool(self.drawPolygon)
             else:
@@ -263,47 +267,48 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
         :param geometry: Polygon geometry from QQGIS
         """
         if iface.activeLayer():
-            crs = iface.activeLayer().crs().authid()
-            polygons_bounding_tuples = geometry
-            polygons_bounding_json_string = polygons_bounding_tuples[0].asJson(
-                1)  # this returns only the 4 desired points, rounded
-            polygons_bounding_json = json.loads(polygons_bounding_json_string)
-            values = []
-
-            for points in polygons_bounding_json['coordinates']:
-                values.append(points)
-
-            point1 = values[0][0]  # longitude first position, latitude second position
-            point1_long = point1[0]
-            point1_lat = point1[1]
-            point2 = values[0][1]
-            point2_long = point2[0]
-            point2_lat = point2[1]
-            point3 = values[0][2]
-            point3_long = point3[0]
-            point3_lat = point3[1]
-            point4 = values[0][3]
-            point4_long = point4[0]
-            point4_lat = point4[1]
-
-            self.processgraphSpatialExtent.setText(str(values))
-
-            long = []
-            lat = []
-
-            long.append([point1_long, point2_long, point3_long, point4_long])
-
-            long_min = min(long[0])
-            long_max = max(long[0])
-            lat.append([point1_lat, point2_lat, point3_lat, point4_lat])
-            lat_min = min(lat[0])
-            lat_max = max(lat[0])
-
-            spatial_extent = {"west": long_min, "east": long_max, "north": lat_max,
-                              "south": lat_min, "crs": crs}
-
-            str_format = str(spatial_extent).replace("'", '"')
-            self.processgraphSpatialExtent.setText(str_format)
+            # warning(self.iface, str(geometry.asJson()))
+            # crs = iface.activeLayer().crs().authid()
+            # polygons_bounding_tuples = geometry
+            # polygons_bounding_json_string = polygons_bounding_tuples[0].asJson(
+            #     1)  # this returns only the 4 desired points, rounded
+            # polygons_bounding_json = json.loads(polygons_bounding_json_string)
+            # values = []
+            #
+            # for points in polygons_bounding_json['coordinates']:
+            #     values.append(points)
+            #
+            # point1 = values[0][0]  # longitude first position, latitude second position
+            # point1_long = point1[0]
+            # point1_lat = point1[1]
+            # point2 = values[0][1]
+            # point2_long = point2[0]
+            # point2_lat = point2[1]
+            # point3 = values[0][2]
+            # point3_long = point3[0]
+            # point3_lat = point3[1]
+            # point4 = values[0][3]
+            # point4_long = point4[0]
+            # point4_lat = point4[1]
+            #
+            # self.processgraphSpatialExtent.setText(str(values))
+            #
+            # long = []
+            # lat = []
+            #
+            # long.append([point1_long, point2_long, point3_long, point4_long])
+            #
+            # long_min = min(long[0])
+            # long_max = max(long[0])
+            # lat.append([point1_lat, point2_lat, point3_lat, point4_lat])
+            # lat_min = min(lat[0])
+            # lat_max = max(lat[0])
+            #
+            # spatial_extent = {"west": long_min, "east": long_max, "north": lat_max,
+            #                   "south": lat_min, "crs": crs}
+            #
+            # str_format = str(spatial_extent).replace("'", '"')
+            self.processgraphSpatialExtent.setText(geometry.asJson())
             self.parent().show()
             QMainWindow.show(self)
 
@@ -356,6 +361,18 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
         vlayer = QgsVectorLayer(root[0])
         crs = vlayer.crs().authid()
         if vlayer.isValid():
+        # Trying to get the exact extend of the shapefile
+        #     geo_json = {}
+        #     for feature in vlayer.getFeatures():
+        #         # warning(self.iface, feature.geometry().asJson())
+        #         if not geo_json:
+        #             geo_json = json.loads(feature.geometry().asJson())
+        #         else:
+        #             coords = geo_json.get("coordinates")
+        #             if coords and isinstance(coords, list):
+        #                 geo_json.get("coordinates").extend(json.loads(feature.geometry().asJson()))
+
+        # self.processgraphSpatialExtent.setText(json.dumps(geo_json))
             extent = vlayer.extent()
             east = round(extent.xMaximum(), 1)
             north = round(extent.yMaximum(), 1)
@@ -366,4 +383,4 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
             str_format = str(spatial_extent).replace("'", '"')
             self.processgraphSpatialExtent.setText(str_format)
         else:
-            return "Layer failed to load!"
+            error(self.iface, "Failed to load shapefile layer!")

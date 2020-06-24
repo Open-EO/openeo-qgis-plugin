@@ -49,6 +49,9 @@ class JobDetailDialog(QtWidgets.QDialog, FORM_CLASS):
         self.setupUi(self)
 
         self.backend = backend
+
+        self.log_info = self.backend.job_log(job.id)
+
         self.job = job
         self.init_table()
         self.fill_table()
@@ -56,16 +59,16 @@ class JobDetailDialog(QtWidgets.QDialog, FORM_CLASS):
         self.dlg = None
 
         self.cancelButton.clicked.connect(self.close)
-        self.adaptButton.clicked.connect(self.adapt_job)
+        # self.adaptButton.clicked.connect(self.adapt_job)
 
-    def adapt_job(self):
-        """
-        Starts an adaption dialog to adapt the current job.
-        """
-        self.dlg = JobAdaptDialog(iface=self.iface, job=self.job, backend=self.backend)
-        self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.dlg.show()
-        self.close()
+    # def adapt_job(self):
+    #     """
+    #     Starts an adaption dialog to adapt the current job.
+    #     """
+    #     self.dlg = JobAdaptDialog(iface=self.iface, job=self.job, backend=self.backend)
+    #     self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
+    #     self.dlg.show()
+    #     self.close()
 
     def init_table(self):
         """
@@ -140,6 +143,11 @@ class JobDetailDialog(QtWidgets.QDialog, FORM_CLASS):
 
         if self.job.budget:
             property_list.append(("Budget", self.job.budget))
+
+        if self.log_info:
+            property_list.append(("Log Entries:", "see below"))
+            for log in self.log_info.get("logs"):
+                property_list.append((log.get("code"), log.get("message")))
 
         self.jobInfoTableWidget.setRowCount(len(property_list))
         row = 0

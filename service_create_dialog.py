@@ -61,6 +61,9 @@ class ServiceCreateDialog(QtWidgets.QDialog, FORM_CLASS):
         self.cur_job = None
 
         self.jobs = backend.get_jobs()
+        if not isinstance(self.jobs, list):
+            warning(self.iface, "Error loading Jobs from the backend (Response status code not 200)")
+            self.jobs = []
 
         self.processgraph_buffer = {}
 

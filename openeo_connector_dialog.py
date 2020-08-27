@@ -459,6 +459,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         jobs = self.backend.get_jobs()
 
         if not isinstance(jobs, list):
+            warning(self.iface, "Error loading Jobs from the backend (Response status code not 200)")
             jobs = []
 
         if not self.jobs_changed(jobs):

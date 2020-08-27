@@ -105,10 +105,11 @@ class Backend:
 
         self.jobs = []
         jobs = self.connection.user_jobs()
-        for job_meta in jobs:
-            job = Job()
-            job.from_metadata(job_meta, self.connection.version)
-            self.jobs.append(job)
+        if jobs:
+            for job_meta in jobs:
+                job = Job()
+                job.from_metadata(job_meta, self.connection.version)
+                self.jobs.append(job)
 
         self.services = []
         services = self.connection.user_services()
@@ -123,17 +124,21 @@ class Backend:
     def get_jobs(self):
         self.jobs = []
         jobs = self.connection.user_jobs()
-        for job_meta in jobs:
-            job = Job()
-            job.from_metadata(job_meta, self.connection.version)
-            self.jobs.append(job)
-        return self.jobs
+
+        if jobs:
+            for job_meta in jobs:
+                job = Job()
+                job.from_metadata(job_meta, self.connection.version)
+                self.jobs.append(job)
+            return self.jobs
+        return jobs
 
     def get_job(self, job_id):
         jobs = self.get_jobs()
-        for job in jobs:
-            if job.id == job_id:
-                return job
+        if jobs:
+            for job in jobs:
+                if job.id == job_id:
+                    return job
         return None
 
     def get_services(self):

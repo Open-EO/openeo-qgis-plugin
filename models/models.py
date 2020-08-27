@@ -75,9 +75,15 @@ class Job:
             if "progress" in metadata:
                 self.progress = metadata["progress"]
             if "created" in metadata:
-                self.created = datetime.strptime(metadata["created"], '%Y-%m-%dT%H:%M:%SZ')
+                try:
+                    self.created = datetime.strptime(metadata["created"].replace("Z", ""), '%Y-%m-%dT%H:%M:%S')
+                except ValueError:
+                    self.created = None
             if "updated" in metadata:
-                self.updated = datetime.strptime(metadata["updated"], '%Y-%m-%dT%H:%M:%SZ')
+                try:
+                    self.updated = datetime.strptime(metadata["updated"].replace("Z", ""), '%Y-%m-%dT%H:%M:%S')
+                except ValueError:
+                    self.updated = None
             if "plan" in metadata:
                 self.plan = metadata["plan"]
             if "costs" in metadata:
@@ -99,9 +105,15 @@ class Job:
             if "progress" in metadata:
                 self.progress = metadata["progress"]
             if "submitted" in metadata:
-                self.created = datetime.strptime(metadata["submitted"], '%Y-%m-%dT%H:%M:%SZ')
+                try:
+                    self.created = datetime.strptime(metadata["submitted"].replace("Z", ""), '%Y-%m-%dT%H:%M:%S')
+                except ValueError:
+                    self.created = None
             if "updated" in metadata:
-                self.updated = datetime.strptime(metadata["updated"], '%Y-%m-%dT%H:%M:%SZ')
+                try:
+                    self.updated = datetime.strptime(metadata["updated"].replace("Z", ""), '%Y-%m-%dT%H:%M:%S')
+                except ValueError:
+                    self.updated = None
             if "plan" in metadata:
                 self.plan = metadata["plan"]
             if "costs" in metadata:

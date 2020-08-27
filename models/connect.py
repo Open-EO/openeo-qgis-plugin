@@ -135,8 +135,10 @@ class Connection:
         """
         jobs = self.get('/jobs', auth=True)
 
-        # return jobs.request.headers
+        if jobs.status_code > 299:
+            return None
 
+        # print("Job response status: {}".format(jobs.status_code))
         if jobs:
             jobs = self.parse_json_response(jobs)
 

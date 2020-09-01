@@ -355,10 +355,36 @@ class Connection:
 
         job_status = self.post("/jobs", postdata=batch_job)
 
-        #if job_status.status_code == 201:
-        #    return job_status
+        if job_status.status_code != 201:
+            return job_status
 
-        return self.parse_json_response(job_status)
+        return None # self.parse_json_response(job_status)
+
+    def job_adapt(self, job_id, process_graph, title=None, desc=None):
+        """
+        Sends the process graph to the backend and adapts an existing job.
+        :param: job_id: Int, Identifier of the exisitng job
+        :param: process_graph: Dict, New Process Graph for the job
+        :param: title: Str, New title for the job
+        :param: desc: Str, New description for the job
+        :return: status: String, Status of the job creation
+        """
+
+        batch_job = {"process": {"process_graph": process_graph}}
+        if title:
+            batch_job["title"] = title
+        if desc:
+            batch_job["description"] = desc
+
+        #print(process_graph)
+        batch_job = json.dumps(batch_job)
+
+        job_status = self.patch("/jobs/{}".format(job_id), patchdata=batch_job)
+
+        if job_status.status_code != 204:
+             return job_status
+
+        return None
 
     def service_create(self, process_graph, s_type, title="", description=""):
         """
@@ -425,15 +451,23 @@ class Connection:
         auth = self.get_auth()
         return requests.delete(self._url+path, headers=auth_header, auth=auth, timeout=5)
 
-    def patch(self, path):
+    def patch(self, path, patchdata):
         """
         Makes a RESTful PATCH request to the back end.
         :param path: URL of the request (without root URL e.g. "/data")
         :return: response: Response
         """
         auth_header = self.get_header()
-        auth = self.get_auth()
-        return requests.patch(self._url+path, headers=auth_header, auth=auth, timeout=5)
+        # jsonData = json.loads(postdata)
+        # {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        auth_header["Content-type"] = "application/json"
+        auth_header["Accept"] = "text/plain"
+
+        auth_header["User-Agent"] = "openeo-qgis-plugin/ {py}/{pv} {pl}".format(
+            py=sys.implementation.name, pv=".".join(map(str, sys.version_info[:3])),
+            pl=sys.platform)
+        # auth = self.get_auth()
+        return requests.patch(self._url+path, data=patchdata, headers=auth_header, timeout=5)
 
     def put(self, path, header={}, data=None):
         """

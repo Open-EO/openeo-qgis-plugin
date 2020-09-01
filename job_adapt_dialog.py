@@ -83,6 +83,7 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
 
         if subgraph:
             self.setWindowTitle("Adapt Parameter")
+            self.adaptButton.hide()
             self.sendButton.setText("Adapt")
             self.sendButton.clicked.connect(self.send_pg)
             self.processgraph_buffer = json.loads(subgraph)["process_graph"]
@@ -96,6 +97,10 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
             if job.title:
                 self.titleText.setText(job.title)
             self.sendButton.clicked.connect(self.send_job)
+            if job.id:
+                self.adaptButton.clicked.connect(self.adapt_job)
+            else:
+                self.adaptButton.hide()
 
         self.process_graph_to_table()
 
@@ -252,6 +257,19 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.process_graph_to_table()
         self.process_to_table(self.cur_node, self.cur_row)
+
+    def adapt_job(self):
+        """
+        Adapts the currently selected job at the backend.
+        """
+        if self.job:
+            job_status = self.backend.job_adapt(self.job.id, self.processgraph_buffer, title=self.titleText.text(),
+                                             desc=self.descriptionText.text())
+            if job_status:
+                error(self.iface, "Job creation failed: {}".format(str(self.backend.error_msg_from_resp(job_status))))
+            else:
+
+                self.close()
 
     def send_job(self):
         """

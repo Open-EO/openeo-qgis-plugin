@@ -272,6 +272,9 @@ class Backend:
     def job_create(self, process, title=None, desc=None):
         return self.connection.job_create(process_graph=process, title=title, desc=desc)
 
+    def job_adapt(self, job_id, process, title=None, desc=None):
+        return self.connection.job_adapt(job_id=job_id, process_graph=process, title=title, desc=desc)
+
     def error_msg_from_resp(self, json_resp):
         # error_id = "unknown"
         error_code = "unknown"

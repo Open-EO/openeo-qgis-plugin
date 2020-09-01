@@ -369,7 +369,7 @@ class Backend:
     def job_log(self, job_id):
         return self.connection.job_log(job_id=job_id)
 
-    def job_result_download(self, job_id):
+    def job_result_download(self, job_id, directory=None):
         req = self.connection.job_result(job_id=job_id)
 
         download_urls = {}
@@ -387,6 +387,9 @@ class Backend:
                         download_urls[job_id + "_"+counter] = u
                     counter = counter + 1
 
-        target = tempfile.gettempdir()
+        if not directory:
+            target = tempfile.gettempdir()
+        else:
+            target = directory
 
         return self.connection.download_url(download_urls, target)

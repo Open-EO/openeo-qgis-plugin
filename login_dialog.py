@@ -109,7 +109,7 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
             user = None
         if pwd == "":
             pwd = None
-
+        
         backend = Backend(url=url)
 
         if not backend:

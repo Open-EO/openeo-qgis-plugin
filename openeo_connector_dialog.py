@@ -37,7 +37,7 @@ from qgis.utils import iface
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QTextEdit, QListWidget, QListWidgetItem, QApplication, \
-    QLabel, QGridLayout, QVBoxLayout, QDialog, QLineEdit
+    QLabel, QGridLayout, QVBoxLayout, QDialog, QLineEdit, QFileDialog
 
 from PyQt5.QtCore import Qt, QSize, QSettings, QTimer
 from PyQt5.QtGui import QColor, QIcon, QPixmap
@@ -187,7 +187,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         # self.task1 = TestTask('Scheduled Task', self.iface)
         self.timer = QTimer()
         self.timer.timeout.connect(self.refresh_task)
-        self.timer.start(3000)
+        self.timer.start(8000)
         # QgsMessageLog.logMessage("Start Timer!", "name")
 
     def closeEvent(self, event):
@@ -405,9 +405,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         """
         self.jobsTableWidget.clear()
 
-        self.jobsTableWidget.setColumnCount(8)
-        self.jobsTableWidget.setHorizontalHeaderLabels(['Job Title', 'Created', 'Status', 'Execute', 'Display', 'Adapt',
-                                                        'Information', 'Delete'])
+        self.jobsTableWidget.setColumnCount(9)
+        self.jobsTableWidget.setHorizontalHeaderLabels(['Job Title', 'Created', 'Status', 'Execute', 'Display',
+                                                        'Download', 'Adapt', 'Information', 'Delete'])
         header = self.jobsTableWidget.horizontalHeader()
         self.jobsTableWidget.setSortingEnabled(True)
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
@@ -418,6 +418,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(8, QtWidgets.QHeaderView.ResizeToContents)
 
     def init_services(self):
         """
@@ -502,6 +503,11 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     disp_btn.setIconSize(QSize(29, 29))
                     self.jobsTableWidget.setCellWidget(row, 4, disp_btn)
                     disp_btn.clicked.connect(lambda *args, job_id=job.id: self.job_display(job_id))
+                    disp_btn = QPushButton(self.jobsTableWidget)
+                    disp_btn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/download.png')))
+                    disp_btn.setIconSize(QSize(29, 29))
+                    disp_btn.clicked.connect(lambda *args, job_id=job.id: self.job_download(job_id))
+                    self.jobsTableWidget.setCellWidget(row, 5, disp_btn)
                     iface.actionZoomIn().trigger()
                 elif job.status == "running":
                     self.jobsTableWidget.item(row, 2).setBackground(QColor(254, 178, 76, 200))
@@ -515,19 +521,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
             info_btn2 = QPushButton(self.jobsTableWidget)
             info_btn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/edit_icon.png')))
             info_btn2.setIconSize(QSize(25, 25))
-            self.jobsTableWidget.setCellWidget(row, 5, info_btn2)
+            self.jobsTableWidget.setCellWidget(row, 6, info_btn2)
             info_btn2.clicked.connect(lambda *args, job_id=job.id: self.adapt_job(job_id))
 
             info_btn3 = QPushButton(self.jobsTableWidget)
             info_btn3.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/info_icon.png')))
             info_btn3.setIconSize(QSize(25, 25))
-            self.jobsTableWidget.setCellWidget(row, 6, info_btn3)
+            self.jobsTableWidget.setCellWidget(row, 7, info_btn3)
             info_btn3.clicked.connect(lambda *args, job_id=job.id: self.job_info(job_id))
 
             info_btn4 = QPushButton(self.jobsTableWidget)
             info_btn4.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/deleteFinalBtn.png')))
             info_btn4.setIconSize(QSize(25, 25))
-            self.jobsTableWidget.setCellWidget(row, 7, info_btn4)
+            self.jobsTableWidget.setCellWidget(row, 8, info_btn4)
             info_btn4.clicked.connect(lambda *args, job_id=job.id: self.delete_job_final(job_id))
 
             self.refreshButton.setEnabled(True)
@@ -642,6 +648,18 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.dlg = JobAdaptDialog(iface=self.iface, job=job, backend=self.backend, main_dia=self)
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()
+
+    def job_download(self, job_id):
+        """
+        Downloads the job result of the given row in the job table on a new QGis Layer.
+        This method is called after the "Display" button is clicked at the job table.
+        :param job_id: Integer number of the job id the button is clicked.
+        """
+
+        target = QFileDialog.getExistingDirectory(self, 'Where to save the resulting files?')
+        if target:
+            self.backend.job_result_download(job_id, target)
+            info(self.iface, "Successfully Downloaded to {}".format(target))
 
     def job_display(self, job_id):
         """

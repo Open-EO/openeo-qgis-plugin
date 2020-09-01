@@ -147,7 +147,7 @@ class JobDetailDialog(QtWidgets.QDialog, FORM_CLASS):
         if self.log_info:
             property_list.append(("Log Entries:", "see below"))
             for log in self.log_info.get("logs"):
-                property_list.append((log.get("code"), log.get("message")))
+                property_list.append((log.get("level"), "{}".format(log.get("message"))))
 
         self.jobInfoTableWidget.setRowCount(len(property_list))
         row = 0

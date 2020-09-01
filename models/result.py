@@ -33,12 +33,13 @@ class Result():
 
             layer.setCrs(crs)
 
+            if not layer.isValid():
+                print("Layer failed to load!")
+                return False
+
             QgsProject.instance().addMapLayer(layer)
 
-        if layer.isValid() is True:
-            print("Layer was loaded successfully!")
-        else:
-            print("Unable to read basename and file path - Your string is probably invalid")
+            return True
 
     def get_extent(self, d):
         for k, v in d.items():

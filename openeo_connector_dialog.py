@@ -686,6 +686,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         job = self.backend.get_job(job_id)
         process_graph_job = self.backend.job_pg_info(job_id)
         download_dir = self.backend.job_result_download(job_id)
+        failed_files = []
         if download_dir:
             for ddir in download_dir:
                 info(self.iface, "Downloaded to {}".format(ddir))
@@ -703,8 +704,13 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                 else:
                     title = "NoTitle"
 
-                result.display(layer_name="{}-{}".format(title, job.created.strftime("%Y-%m-%d_%H-%M-%S")))
+                if not result.display(layer_name="{}-{}".format(title, job.created.strftime("%Y-%m-%d_%H-%M-%S"))):
+                    failed_files.append(ddir)
                 iface.zoomToActiveLayer()
+
+        if failed_files:
+            warning(self.iface, "The following result files could not be loaded to layer: {}"
+                    .format(str(failed_files).replace("[", "").replace("]", "")))
 
         self.refresh_jobs()
 

@@ -187,6 +187,14 @@ class Connection:
         resp = self.post("/jobs/{}/results".format(job_id), postdata=None)
         return resp
 
+    def job_cancel(self, job_id):
+        """
+        Cancels the execution of a job at the backend.
+        :param: job_id: Identifier of the job
+        """
+        resp = self.delete("/jobs/{}/results".format(job_id))
+        return resp
+
     def job_info(self, job_id):
         """
         Returns information about a created job.

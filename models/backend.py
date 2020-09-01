@@ -302,6 +302,9 @@ class Backend:
     def job_start(self, job_id):
         return self.connection.job_start(job_id=job_id)
 
+    def job_stop(self, job_id):
+        return self.connection.job_cancel(job_id=job_id)
+
     def job_info(self, job_id):
         return self.connection.job_info(job_id=job_id)
 

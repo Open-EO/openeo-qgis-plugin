@@ -489,7 +489,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
             exec_btn = QPushButton(self.jobsTableWidget)
             exec_btn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/execute_icon.svg')))
-            exec_btn.setIconSize(QSize(21, 21))
 
             if job.status:
                 qitem = QTableWidgetItem(job.status)
@@ -511,12 +510,19 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
                     iface.actionZoomIn().trigger()
                 elif job.status == "running":
                     self.jobsTableWidget.item(row, 2).setBackground(QColor(254, 178, 76, 200))
-
+                    exec_btn.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/stop-button.png')))
+                elif job.status == "canceled":
+                    self.jobsTableWidget.item(row, 2).setBackground(QColor(254, 178, 76, 200))
                 elif job.status == "error":
                     self.jobsTableWidget.item(row, 2).setBackground(QColor(254, 100, 100, 200))
 
+            exec_btn.setIconSize(QSize(21, 21))
             self.jobsTableWidget.setCellWidget(row, 3, exec_btn)
-            exec_btn.clicked.connect(lambda *args, job_id=job.id: self.job_execute(job_id))
+
+            if job.status == "running":
+                exec_btn.clicked.connect(lambda *args, job_id=job.id: self.job_stop(job_id))
+            else:
+                exec_btn.clicked.connect(lambda *args, job_id=job.id: self.job_execute(job_id))
 
             info_btn2 = QPushButton(self.jobsTableWidget)
             info_btn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/edit_icon.png')))
@@ -634,6 +640,16 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         #if resp.status_code:
         #error(self.iface, str(resp))
         # warning(self.iface, str(resp))
+        self.refresh_jobs()
+
+    def job_stop(self, job_id):
+        """
+        Stops the execution of the job of the given row of the job table.
+        This method is called after the "Stop" button is clicked at the job table.
+        :param job_id: Integer number of the job id the button is clicked.
+        """
+        resp = self.backend.job_stop(job_id)
+
         self.refresh_jobs()
 
     def adapt_job(self, job_id):

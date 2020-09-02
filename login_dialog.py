@@ -137,7 +137,11 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
         self.dlg.infoBtn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/info_icon.png')))
         self.dlg.refreshButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/reload_icon.png')))
         self.dlg.refreshButton_service.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/reload_icon.png')))
-        self.dlg.operationManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
+        self.dlg.jobsManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
+                                                               'images/user_manual_icon.png')))
+        self.dlg.servicesManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
+                                                               'images/user_manual_icon.png')))
+        self.dlg.explorativeManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
                                                                'images/user_manual_icon.png')))
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()

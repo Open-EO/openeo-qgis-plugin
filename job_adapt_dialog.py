@@ -9,6 +9,7 @@
         email             : bernhard.goesswein@geo.tuwien.ac.at
  ***************************************************************************/
 """
+import webbrowser
 import os
 import json
 from copy import deepcopy
@@ -73,6 +74,8 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         # Raw graph
         self.rawgraphBtn.clicked.connect(self.raw_graph)
 
+        self.manualButton.clicked.connect(self.user_manual)
+
         # Init Process graph
         if self.job.process.process_graph:
             self.processgraph_buffer = deepcopy(self.job.process.process_graph)
@@ -91,6 +94,9 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
             self.label_8.hide()
             self.label_10.hide()
             self.descriptionText.hide()
+            self.manualButton.hide()
+            self.jobGroupBox.setTitle("Subgraph Editor")
+            self.manageGroupBox.setTitle("Manage Subgraph")
         else:
             if job.description:
                 self.descriptionText.setText(job.description)
@@ -133,6 +139,15 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         if self.main_dia:
             self.main_dia.show()
         super(JobAdaptDialog, self).show()
+
+    def user_manual(self):
+        """
+        Shows the user manual window.
+        """
+        try:
+            webbrowser.open("https://openeo.org/documentation/1.0/qgis/#adapting-existing-jobs")
+        except:
+            pass
 
     def process_selected(self):
         """

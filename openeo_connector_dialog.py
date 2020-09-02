@@ -90,8 +90,10 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.setupUi(self)
 
-        self.operationManualBtn.clicked.connect(self.user_manual)
-        self.operationManualBtn.hide()
+        self.jobsManualBtn.clicked.connect(self.job_manual)
+        self.servicesManualBtn.clicked.connect(self.service_manual)
+        self.explorativeManualBtn.clicked.connect(self.explorative_manual)
+
 
         self.collectionBox.currentTextChanged.connect(self.col_info)
 
@@ -118,10 +120,6 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.infoBtn2.clicked.connect(self.pr_info)
         self.infoBtn2.setEnabled(True)
-
-        # Bands
-        self.label_16.hide()
-        self.label_16.setEnabled(False)
 
         # Adapt Job from Hub
         self.loadHubBtn.clicked.connect(self.show_jobs_from_hub_dialog)
@@ -254,6 +252,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         job = self.example_hub_jobs[selected_row].to_job()
 
         self.dlg = JobAdaptDialog(iface=self.iface, job=job, backend=self.backend, main_dia=self)
+        self.dlg.manualButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
+                                                                 'images/info_icon.png')))
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()
 
@@ -268,6 +268,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         job.process = process
 
         self.dlg = JobAdaptDialog(iface=self.iface, job=job, backend=self.backend, main_dia=self)
+        self.dlg.manualButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
+                                                                 'images/info_icon.png')))
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()
 
@@ -279,37 +281,32 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()
 
-    def user_manual(self):
+    def job_manual(self):
         """
         Shows the user manual window.
         """
-        self.umWindow = QDialog(parent=self)
+        try:
+            webbrowser.open("https://openeo.org/documentation/1.0/qgis/#job-management")
+        except:
+            pass
 
-        # User Manual Text
-        text = QLabel()
-        user_manual_text = open(os.path.join(os.path.dirname(__file__), './user_manual_text.txt')).read()
-        text.setText(str(user_manual_text))
-        # Title
-        title = QLabel()
-        title.setText("User Manual \n ")
-        start_text = QLabel()
-        start_text.setText("1. At first, please focus on the upper part (header) of the openEO Plugin. "
-                           "There, you can choose a back-end and enter your login credentials. \nBy clicking "
-                           "the “Connect”-Button, you will be connected with the chosen back-end. \nIf the connection "
-                           "was successful you will see it in the Status text. \n")
-        # openEO Header Image
-        image = QLabel()
-        image.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'images/openEO_plugin_header.png')))
+    def service_manual(self):
+            """
+            Shows the user manual window.
+            """
+            try:
+                webbrowser.open("https://openeo.org/documentation/1.0/qgis/#service-management")
+            except:
+                pass
 
-        grid = QGridLayout()
-        grid.setSpacing(4)
-        grid.addWidget(title, 0, 0)
-        grid.addWidget(start_text, 1, 0)
-        grid.addWidget(image, 2, 0)
-        grid.addWidget(text, 4, 0)
-        self.umWindow.setLayout(grid)
-        self.umWindow.setWindowTitle('User Manual')
-        self.umWindow.show()
+    def explorative_manual(self):
+            """
+            Shows the user manual window.
+            """
+            try:
+                webbrowser.open("https://openeo.org/documentation/1.0/qgis/#exploring-a-backend")
+            except:
+                pass
 
     def col_info(self):
         """
@@ -432,12 +429,12 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         header = self.servicesTableWidget.horizontalHeader()
         self.servicesTableWidget.setSortingEnabled(True)
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Interactive)
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Interactive)
-        header.setSectionResizeMode(5, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
 
     def jobs_changed(self, jobs):
         jobs_str = str([str(item) for item in jobs])
@@ -662,6 +659,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         job = self.backend.detailed_job(job_id)
 
         self.dlg = JobAdaptDialog(iface=self.iface, job=job, backend=self.backend, main_dia=self)
+        self.dlg.manualButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
+                                                                 'images/info_icon.png')))
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()
 
@@ -674,8 +673,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         target = QFileDialog.getExistingDirectory(self, 'Where to save the resulting files?')
         if target:
-            self.backend.job_result_download(job_id, target)
-            info(self.iface, "Successfully Downloaded to {}".format(target))
+            paths = self.backend.job_result_download(job_id, target)
+            info(self.iface, "Successfully Downloaded to {}".format(paths))
 
     def job_display(self, job_id):
         """
@@ -767,10 +766,15 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.processTableWidget.clear()
         pr = self.backend.get_process(str(self.processBox.currentText()))
 
+        myFont = QtGui.QFont()
+        myFont.setBold(True)
+        self.label_9.setFont(myFont)
+
         if not pr:
+            self.label_9.setText("Returns:")
             return
 
-        self.returnLabel.setText(str(pr.get_return_type()))
+        self.label_9.setText("Returns: {}".format(str(pr.get_return_type())))
 
         self.processTableWidget.setRowCount(len(pr.parameters))
         self.processTableWidget.setColumnCount(3)

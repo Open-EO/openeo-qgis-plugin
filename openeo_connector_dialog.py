@@ -135,6 +135,9 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.tab_3.setEnabled(False)
 
+        self.jobCheckBox.stateChanged.connect(self.update_job_enable_checkbox)
+        self.serviceCheckBox.stateChanged.connect(self.update_serv_enable_checkbox)
+
         self.backend = copy.deepcopy(backend)
 
         collection_result = self.backend.get_collections()
@@ -183,13 +186,42 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Start autorefreshing thread
         # self.task1 = TestTask('Scheduled Task', self.iface)
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.refresh_task)
-        self.timer.start(8000)
+
         # QgsMessageLog.logMessage("Start Timer!", "name")
+        self.timer = None
+        self.start_timer()
 
     def closeEvent(self, event):
         self.timer.stop()
+
+    def update_job_enable_checkbox(self):
+
+        if self.jobCheckBox.isChecked():
+            self.serviceCheckBox.setChecked(True)
+            self.start_timer()
+        else:
+            self.serviceCheckBox.setChecked(False)
+            self.stop_timer()
+
+    def update_serv_enable_checkbox(self):
+
+        if self.serviceCheckBox.isChecked():
+            self.jobCheckBox.setChecked(True)
+            self.start_timer()
+        else:
+            self.jobCheckBox.setChecked(False)
+            self.stop_timer()
+
+    def start_timer(self):
+        if not self.timer:
+            self.timer = QTimer()
+            self.timer.timeout.connect(self.refresh_task)
+            self.timer.start(8000)
+
+    def stop_timer(self):
+        if self.timer:
+            self.timer.stop()
+            self.timer = None
 
     def refresh_task(self):
         if self.tabWidget.currentIndex() == 1:

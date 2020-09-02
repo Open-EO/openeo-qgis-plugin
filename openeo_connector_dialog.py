@@ -435,8 +435,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.jobsTableWidget.clear()
 
         self.jobsTableWidget.setColumnCount(9)
-        self.jobsTableWidget.setHorizontalHeaderLabels(['Job Title', 'Created', 'Status', 'Execute', 'Display',
-                                                        'Download', 'Adapt', 'Information', 'Delete'])
+        self.jobsTableWidget.setHorizontalHeaderLabels(['Title', 'Created', 'Status', 'Exec', 'Disp',
+                                                        'Save', 'Adapt', 'Info', 'Del'])
         header = self.jobsTableWidget.horizontalHeader()
         self.jobsTableWidget.setSortingEnabled(True)
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)

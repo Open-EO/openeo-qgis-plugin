@@ -212,4 +212,5 @@ class OpenEO:
                                                                'images/user_manual_icon.png')))
         # self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.dlg.show()
+        self.first_start = True
         # self.close()

@@ -36,7 +36,7 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
     """
     This class is responsible for showing the login window and to let the user log in to an openEO backend.
     """
-    def __init__(self, parent=None, iface=None):
+    def __init__(self, parent=None, iface=None, openeo=None):
         """
         Constructor method: Initializing the button behaviours and the backend combobox.
         :param parent: parent dialog of this dialog (e.g. OpenEODialog).
@@ -45,6 +45,8 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
         super(LoginDialog, self).__init__(parent)
 
         QApplication.setStyle("cleanlooks")
+
+        self.openeo = openeo
 
         self.iface = iface
         self.called = False
@@ -128,21 +130,22 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
         """
         Logs the user into the backend and starts the main openEO dialog, also closes this login dialog.
         """
-        backend = self.connect()
-
-        if not backend:
-            return
-
-        self.dlg = OpenEODialog(interface=self.iface, backend=backend)
-        self.dlg.infoBtn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/info_icon.png')))
-        self.dlg.refreshButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/reload_icon.png')))
-        self.dlg.refreshButton_service.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/reload_icon.png')))
-        self.dlg.jobsManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
-                                                               'images/user_manual_icon.png')))
-        self.dlg.servicesManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
-                                                               'images/user_manual_icon.png')))
-        self.dlg.explorativeManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
-                                                               'images/user_manual_icon.png')))
-        self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.dlg.show()
-        self.close()
+        self.openeo.login()
+        # backend = self.connect()
+        #
+        # if not backend:
+        #     return
+        #
+        # self.dlg = OpenEODialog(interface=self.iface, backend=backend)
+        # self.dlg.infoBtn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/info_icon.png')))
+        # self.dlg.refreshButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/reload_icon.png')))
+        # self.dlg.refreshButton_service.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/reload_icon.png')))
+        # self.dlg.jobsManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
+        #                                                        'images/user_manual_icon.png')))
+        # self.dlg.servicesManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
+        #                                                        'images/user_manual_icon.png')))
+        # self.dlg.explorativeManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
+        #                                                        'images/user_manual_icon.png')))
+        # # self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
+        # self.dlg.show()
+        # # self.close()

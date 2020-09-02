@@ -31,6 +31,7 @@ from PyQt5.QtCore import Qt
 from .resources import *
 # Import the code for the dialog
 from .login_dialog import LoginDialog
+from .openeo_connector_dialog import OpenEODialog
 import os.path
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
@@ -175,7 +176,7 @@ class OpenEO:
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
         if self.first_start:
             self.first_start = False
-            self.dlg = LoginDialog(iface=self.iface)
+            self.dlg = LoginDialog(iface=self.iface, openeo=self)
             self.dlg.logo.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'images/icon_new.png')))
             self.dlg.logo.setFixedSize(139, 89)
 
@@ -188,3 +189,27 @@ class OpenEO:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             pass
+
+    def login(self):
+        """
+        Logs the user into the backend and starts the main openEO dialog, also closes this login dialog.
+        """
+        backend = self.dlg.connect()
+
+        if not backend:
+            return
+
+        self.dlg.close()
+        self.dlg = OpenEODialog(interface=self.iface, backend=backend)
+        self.dlg.infoBtn2.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/info_icon.png')))
+        self.dlg.refreshButton.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/reload_icon.png')))
+        self.dlg.refreshButton_service.setIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images/reload_icon.png')))
+        self.dlg.jobsManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
+                                                               'images/user_manual_icon.png')))
+        self.dlg.servicesManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
+                                                               'images/user_manual_icon.png')))
+        self.dlg.explorativeManualBtn.setIcon(QIcon(os.path.join(os.path.dirname(__file__),
+                                                               'images/user_manual_icon.png')))
+        # self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.dlg.show()
+        # self.close()

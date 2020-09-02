@@ -1004,7 +1004,11 @@ class JobAdaptDialog(QtWidgets.QDialog, FORM_CLASS):
         """
 
         if isinstance(extent, str):
-            extent = json.loads(extent)
+            try:
+                extent = json.loads(extent)
+            except json.decoder.JSONDecodeError:
+                warning(self.iface, "Something went wrong during setting the extent!")
+                return
 
         row_count = self.processTableWidget.rowCount()
         for row in range(row_count):

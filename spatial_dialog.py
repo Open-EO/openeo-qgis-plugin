@@ -174,7 +174,7 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
         """
         iface.actionPan().trigger()
         if iface.activeLayer():
-            crs = iface.activeLayer().crs().authid()
+            crs = self.format_crs_str(iface.activeLayer().crs().authid())
             extent = iface.mapCanvas().extent()
             self.east = round(extent.xMaximum(), 2)
             self.north = round(extent.yMaximum(), 2)
@@ -229,7 +229,7 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
         :param y2: y coordinate of second point
         """
         if iface.activeLayer():
-            crs = iface.activeLayer().crs().authid()
+            crs = self.format_crs_str(iface.activeLayer().crs().authid())
 
             spatial_extent = {}
             if x1 <= x2:
@@ -324,6 +324,12 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
             QMainWindow.show(self)
             self.iface.messageBar().pushMessage("Please open a new layer to get extent from.", duration=5)
 
+    def format_crs_str(self, crs_str):
+        if "EPSG" in crs_str:
+            return int(crs_str.split(":")[-1])
+        else:
+            return crs_str
+
     def use_active_layer(self):
         """
         Loads coordinates extent of the active layer.
@@ -333,7 +339,7 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
         chosen_layer = str(self.layersBox.currentText())
         for layer in layers:
             if str(layer.name()) == chosen_layer:
-                crs = layer.crs().authid()
+                crs = self.format_crs_str(layer.crs().authid())
                 ex_layer = layer.extent()
                 east = round(ex_layer.xMaximum(), 1)
                 north = round(ex_layer.yMaximum(), 1)
@@ -359,7 +365,7 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
         root = QFileDialog.getOpenFileName(self, "Select a file", home, filter_type)
 
         vlayer = QgsVectorLayer(root[0])
-        crs = vlayer.crs().authid()
+        crs = self.format_crs_str(vlayer.crs().authid())
         if vlayer.isValid():
         # Trying to get the exact extend of the shapefile
         #     geo_json = {}
@@ -373,6 +379,7 @@ class SpatialDialog(QtWidgets.QDialog, FORM_CLASS):
         #                 geo_json.get("coordinates").extend(json.loads(feature.geometry().asJson()))
 
         # self.processgraphSpatialExtent.setText(json.dumps(geo_json))
+            # QgsVectorFileWriter.writeAsVectorFormat(vlayer, "F:\polygon.gpkg", "UTF-8", vlayer.crs(), "GeoJSON")
             extent = vlayer.extent()
             east = round(extent.xMaximum(), 1)
             north = round(extent.yMaximum(), 1)

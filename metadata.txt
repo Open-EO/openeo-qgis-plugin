@@ -29,7 +29,7 @@ homepage=https://github.com/Open-EO/openeo-qgis-plugin
 category=Plugins
 icon=icon_new.png
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False

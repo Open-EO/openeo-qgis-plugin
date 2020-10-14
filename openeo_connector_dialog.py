@@ -435,7 +435,7 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.jobsTableWidget.clear()
 
         self.jobsTableWidget.setColumnCount(9)
-        self.jobsTableWidget.setHorizontalHeaderLabels(['Title', 'Created', 'Status', 'Exec', 'Disp',
+        self.jobsTableWidget.setHorizontalHeaderLabels(['Title', 'Updated', 'Status', 'Exec', 'Disp',
                                                         'Save', 'Adapt', 'Info', 'Del'])
         header = self.jobsTableWidget.horizontalHeader()
         self.jobsTableWidget.setSortingEnabled(True)
@@ -502,8 +502,14 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         self.jobs_table = {}
         for job in jobs:
 
-            if job.created:
-                qitem = QTableWidgetItem(job.created.strftime("%Y-%m-%d_%H-%M-%S"))
+            if job.updated:
+                str_date = job.updated.strftime("%Y-%m-%d_%H-%M-%S")
+                qitem = QTableWidgetItem(str_date)
+                qitem.setFlags(QtCore.Qt.ItemIsEnabled)
+                self.jobsTableWidget.setItem(row, 1, qitem)
+            elif job.created:
+                str_date = job.created.strftime("%Y-%m-%d_%H-%M-%S")
+                qitem = QTableWidgetItem(str_date)
                 qitem.setFlags(QtCore.Qt.ItemIsEnabled)
                 self.jobsTableWidget.setItem(row, 1, qitem)
 

@@ -2,6 +2,9 @@ import requests
 from distutils.version import LooseVersion
 from .models import HubJob
 
+HUB_URL = "https://hub.openeo.org"
+
+
 class HubBackend:
 
     name = None
@@ -32,19 +35,26 @@ class HubBackend:
 
         if backend_versions.status_code == 200:
             backend_versions = backend_versions.json()
+
             if "versions" in backend_versions:
                 for bcknd in backend_versions["versions"]:
                     if "api_version" in bcknd:
-                        if LooseVersion("0.4.0") <= LooseVersion(bcknd["api_version"]):
-                            if "url" in bcknd:
-                                ver_urls[bcknd["api_version"]] = str(bcknd["url"])
+                        try:
+                            if LooseVersion("0.4.0") <= LooseVersion(bcknd["api_version"]):
+                                if "url" in bcknd:
+                                    ver_urls[bcknd["api_version"]] = str(bcknd["url"])
+                        except:
+                            continue
             elif ".well-known" in str(self.url):
                 for versions in backend_versions.values():
                     for version in versions:
                         if "api_version" in version:
-                            if LooseVersion("0.4.0") <= LooseVersion(version["api_version"]):
-                                if "url" in version:
-                                    ver_urls[version["api_version"]] = str(version["url"])
+                            try:
+                                if LooseVersion("0.4.0") <= LooseVersion(version["api_version"]):
+                                    if "url" in version:
+                                        ver_urls[version["api_version"]] = str(version["url"])
+                            except:
+                                continue
             elif isinstance(self.url, dict):
                 for ver, item in self.url.items():
                     ver_urls[ver] = str(item)
@@ -56,7 +66,7 @@ class HubBackend:
 def get_hub_backends():
 
     try:
-        backendURL = requests.get('http://hub.openeo.org/api/backends', timeout=5)
+        backendURL = requests.get('{}/api/backends'.format(HUB_URL), timeout=5)
     except:
         backendsALL = {}
 
@@ -74,10 +84,11 @@ def get_hub_backends():
 
     return backends
 
+
 def get_hub_jobs():
 
     try:
-        example_jobs_URL = requests.get('http://hub.openeo.org/api/process_graphs', timeout=5)
+        example_jobs_URL = requests.get('{}/api/process_graphs'.format(HUB_URL), timeout=5)
     except:
         example_jobs_URL = []
 

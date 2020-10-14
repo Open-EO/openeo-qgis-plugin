@@ -59,7 +59,8 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
             self.backends = get_hub_backends()
             self.set_backend_urls()
         except:
-            warning(self.iface, "The plugin was not able to connect to openEO Hub. Are you connected to the internet?")
+            warning(self.iface, "The plugin was not able to connect to openEO Hub. "
+                                "Are you connected to the internet?")
 
         self.loginButton.clicked.connect(self.login)
         self.dlg = None

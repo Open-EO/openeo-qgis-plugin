@@ -6,6 +6,7 @@ from typing import Union
 import os
 import sys
 
+
 class Connection:
 
     def __init__(self):
@@ -13,6 +14,7 @@ class Connection:
         self._url = None
         self.version = None
         self.username = None
+        self.password = None
 
     def connect(self, url, username=None, password=None) -> bool:
         """
@@ -28,6 +30,7 @@ class Connection:
 
         self.token = "Undefined"
         self.username = username
+        self.password = password
 
         if username and password:
             try:
@@ -515,6 +518,10 @@ class Connection:
 
         try:
             resp = requests.get(self._url + path, headers=auth_header, stream=stream, timeout=5)
+
+            if resp.status_code == 401:
+                self.connect(self._url, username=self.username, password=self.password)
+
             return resp
         except:
             return None

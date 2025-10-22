@@ -1,7 +1,10 @@
-from .connect import Connection
+#from .connect import Connection
+import openeo
 from .models import Process, Service, Job
 import tempfile
-
+from typing import Union
+from distutils.version import LooseVersion
+from qgis.utils import iface
 
 # def param_json_to_obj(val, version, name=None):
 #     param = Parameter()
@@ -82,11 +85,9 @@ class Backend:
     def __init__(self, url, username=None, password=None):
 
         self.url = url
-        self.connection = Connection()
+        self.connection = openeo.connect(url=url)
         if username or password:
             self.login(username, password)
-        else:
-            self.connection.connect(url=url)
 
         processes = self.connection.list_processes()
 
@@ -94,32 +95,38 @@ class Backend:
 
         for p in processes:
             process = Process()
-            process.from_metadata(p, self.connection.version)
+            process.from_metadata(p, self.get_connection_version())
             # process = process_json_to_obj(p, self.connection.version)
 
             if process:
                 self.processes[process.id] = process
 
         self.collections = self.connection.list_collections()
-        self.metadata = self.connection.backend_info()
+        #it is assumed that the call to backend_info() is to get a list of availale file formats
+        self.metadata = self.connection.list_file_formats()
 
         self.jobs = []
-        jobs = self.connection.user_jobs()
+        jobs = self.connection.list_jobs()
         if jobs:
             for job_meta in jobs:
                 job = Job()
-                job.from_metadata(job_meta, self.connection.version)
+                job.from_metadata(job_meta, self.get_connection_version())
                 self.jobs.append(job)
 
-        self.services = []
-        services = self.connection.user_services()
-        for serv_meta in services:
-            serv = Service()
-            serv.from_metadata(serv_meta, self.connection.version)
-            self.services.append(serv)
+        #TODO: get services omitted until openeo get_federation_missing is fixed
+        #self.services = []
+        #services = self.connection.list_services() #list services of authenticated user
+        #for serv_meta in services:
+        #    serv = Service()
+        #    serv.from_metadata(serv_meta, self.get_connection_version())
+        #    self.services.append(serv)
 
     def login(self, username, password=None):
-        return self.connection.connect(self.url, username=username, password=password)
+        try:
+            return self.connection.authenticate_basic(username=username, password=password)
+        except AttributeError:
+            iface.messageBar().pushMessage("Error", "login failed. connection missing")
+            return self.connection
 
     def get_jobs(self):
         self.jobs = []
@@ -128,7 +135,7 @@ class Backend:
         if jobs:
             for job_meta in jobs:
                 job = Job()
-                job.from_metadata(job_meta, self.connection.version)
+                job.from_metadata(job_meta, self.get_connection_version())
                 self.jobs.append(job)
             return self.jobs
         return jobs
@@ -143,17 +150,17 @@ class Backend:
 
     def get_services(self):
         self.services = []
-        services = self.connection.user_services()
+        services = self.connection.list_services()
         for serv_meta in services:
             serv = Service()
-            serv.from_metadata(serv_meta, self.connection.version)
+            serv.from_metadata(serv_meta, self.get_connection_version())
             self.services.append(serv)
         return self.services
 
     def get_service(self, id):
         serv_dict = self.connection.user_service(id)
         serv = Service()
-        serv.from_metadata(serv_dict, self.connection.version)
+        serv.from_metadata(serv_dict, self.get_connection_version())
         return serv
 
     def get_collections(self):
@@ -176,7 +183,7 @@ class Backend:
         data = self.connection.get_collection(collection_id)
 
         if data:
-            if self.connection.version.at_least("1.0.0"):
+            if self.get_connection_version().at_least("1.0.0"):
                 if "eo:bands" in data['summaries']:
                     band_info = data['summaries']['eo:bands']
 
@@ -201,7 +208,7 @@ class Backend:
         data = self.connection.get_collection(collection_id)
 
         if data:
-            if self.connection.version.at_least("1.0.0"):
+            if self.get_connection_version().at_least("1.0.0"):
                 if "cube:dimensions" in data:
                     for dim, _ in data["cube:dimensions"].items():
                         dimensions.append(dim)
@@ -311,7 +318,7 @@ class Backend:
     def detailed_job(self, job_id):
         job_info = self.connection.job_info(job_id=job_id)
         job = Job()
-        job.from_metadata(job_info, self.connection.version)
+        job.from_metadata(job_info, self.get_connection_version())
         return job
 
     def job_delete(self, job_id):
@@ -338,7 +345,7 @@ class Backend:
             cost = job_info['costs']
         processes = []
         # Data & Extents & Processes
-        if self.connection.version.at_least("1.0.0"):
+        if self.get_connection_version().at_least("1.0.0"):
             if "process" in job_info:
                 for key, val in job_info['process']["process_graph"].items():
                     if val["process_id"] == "load_collection":
@@ -380,7 +387,7 @@ class Backend:
 
         download_urls = {}
 
-        if self.connection.version.at_least("1.0.0"):
+        if self.get_connection_version().at_least("1.0.0"):
             if "assets" in req:
                 download_urls = req["assets"]
         else:
@@ -399,3 +406,95 @@ class Backend:
             target = directory
 
         return self.connection.download_url(download_urls, target)
+    
+    def get_connection_version(self):
+        capabilities = self.connection.capabilities()
+        return ComparableVersion(capabilities.api_version())
+        
+
+
+class ComparableVersion:
+    """
+    Helper to compare a version (e.g. API version) against another (threshold) version
+
+        >>> v = ComparableVersion('1.2.3')
+        >>> v.at_least('1.2.1')
+        True
+        >>> v.at_least('1.10.2')
+        False
+        >>> v > "2.0"
+        False
+
+    To express a threshold condition you sometimes want the reference value on
+    the left hand side or right hand side. There are two groups of methods
+    to handle each case:
+
+    - right hand side referencing methods. These read more intuitively. For example:
+
+        `a.at_least(b)`: a is equal or higher than b
+        `a.below(b)`: a is lower than b
+
+    - left hand side referencing methods. These allow "currying" a threshold value
+      in a reusable condition callable. For example:
+
+        `a.or_higher(b)`: b is equal or higher than a
+        `a.accept_lower(b)`: b is lower than a
+    """
+
+    def __init__(self, version: Union[str, 'ComparableVersion']):
+        if isinstance(version, ComparableVersion):
+            self._version = version._version
+        else:
+            self._version = LooseVersion(version)
+
+    def __str__(self):
+        return str(self._version)
+
+    def to_string(self):
+        return str(self)
+
+    def __ge__(self, other: Union[str, 'ComparableVersion']):
+        return self._version >= ComparableVersion(other)._version
+
+    def __gt__(self, other: Union[str, 'ComparableVersion']):
+        return self._version > ComparableVersion(other)._version
+
+    def __le__(self, other: Union[str, 'ComparableVersion']):
+        return self._version <= ComparableVersion(other)._version
+
+    def __lt__(self, other: Union[str, 'ComparableVersion']):
+        return self._version < ComparableVersion(other)._version
+
+    # Right hand side referencing expressions.
+    def at_least(self, other: Union[str, 'ComparableVersion']):
+        """Self is at equal or higher than other."""
+        return self >= other
+
+    def above(self, other: Union[str, 'ComparableVersion']):
+        """Self is higher than other."""
+        return self > other
+
+    def at_most(self, other: Union[str, 'ComparableVersion']):
+        """Self is equal or lower than other."""
+        return self <= other
+
+    def below(self, other: Union[str, 'ComparableVersion']):
+        """Self is lower than other."""
+        return self < other
+
+    # Left hand side referencing expressions.
+    def or_higher(self, other: Union[str, 'ComparableVersion']):
+        """Other is equal or higher than self."""
+        return ComparableVersion(other) >= self
+
+    def or_lower(self, other: Union[str, 'ComparableVersion']):
+        """Other is equal or lower than self"""
+        return ComparableVersion(other) <= self
+
+    def accept_lower(self, other: Union[str, 'ComparableVersion']):
+        """Other is lower than self."""
+        return ComparableVersion(other) < self
+
+    def accept_higher(self, other: Union[str, 'ComparableVersion']):
+        """Other is higher than self."""
+        return ComparableVersion(other) > self

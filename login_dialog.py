@@ -113,7 +113,10 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
         if pwd == "":
             pwd = None
         
-        backend = Backend(url=url)
+        if pwd and user:
+            backend = Backend(url=url,username=user,password=pwd)
+        else:
+            backend = Backend(url=url)
 
         if not backend:
             warning(self.iface, "Connection failed, the backend might not be available at the moment!")

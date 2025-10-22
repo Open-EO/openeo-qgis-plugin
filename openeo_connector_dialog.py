@@ -592,7 +592,8 @@ class OpenEODialog(QtWidgets.QDialog, FORM_CLASS):
         This method also generates the "Execute" and "Display" buttons.
         """
 
-        services = self.backend.get_services()
+        #services = self.backend.get_services() #TODO: get services omitted until openeo get_federation_missing is fixed
+        services = []
 
         if not isinstance(services, list):
             services = []

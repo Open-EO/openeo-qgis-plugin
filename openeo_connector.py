@@ -190,11 +190,15 @@ class OpenEO:
             # substitute with your code.
             pass
 
-    def login(self):
+    def login(self, oidc=False):
         """
         Logs the user into the backend and starts the main openEO dialog, also closes this login dialog.
         """
-        backend = self.dlg.connect()
+        backend = None
+        if oidc:
+            backend = self.dlg.connect_oidc()
+        else:
+            backend = self.dlg.connect()
 
         if not backend:
             return

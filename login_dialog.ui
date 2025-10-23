@@ -103,6 +103,12 @@
     <layout class="QVBoxLayout" name="verticalLayout_3">
      <item>
       <widget class="QLabel" name="logo">
+       <property name="maximumSize">
+        <size>
+         <width>100</width>
+         <height>75</height>
+        </size>
+       </property>
        <property name="whatsThis">
         <string extracomment="Show all available versions of the backends or only the latest (compatible) versions"/>
        </property>
@@ -110,10 +116,17 @@
         <string/>
        </property>
        <property name="pixmap">
-        <pixmap>../../../../../../../../../../../../../../../../.designer/backup/icon_new.png</pixmap>
+        <pixmap>images/icon_new.png</pixmap>
        </property>
        <property name="scaledContents">
         <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="oidc_loginButton">
+       <property name="text">
+        <string>OIDC Login</string>
        </property>
       </widget>
      </item>

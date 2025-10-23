@@ -1,5 +1,11 @@
 #from .connect import Connection
 import openeo
+import threading
+import io
+import re
+import time
+import sys
+import webbrowser
 from .models import Process, Service, Job
 import tempfile
 from typing import Union
@@ -82,12 +88,17 @@ from qgis.utils import iface
 
 class Backend:
 
-    def __init__(self, url, username=None, password=None):
+    def __init__(self, url, username=None, password=None, oidc=False):
 
         self.url = url
         self.connection = openeo.connect(url=url)
+        self.credentials = False
         if username or password:
             self.login(username, password)
+            self.credentials = True
+        if oidc:
+            self.login_oidc()
+            self.credentials = True
 
         processes = self.connection.list_processes()
 
@@ -105,25 +116,71 @@ class Backend:
         #it is assumed that the call to backend_info() is to get a list of availale file formats
         self.metadata = self.connection.list_file_formats()
 
-        self.jobs = []
-        jobs = self.connection.list_jobs()
-        if jobs:
-            for job_meta in jobs:
-                job = Job()
-                job.from_metadata(job_meta, self.get_connection_version())
-                self.jobs.append(job)
+        if self.credentials:
+            self.jobs = []
+            jobs = self.connection.list_jobs()
+            if jobs:
+                for job_meta in jobs:
+                    job = Job()
+                    job.from_metadata(job_meta, self.get_connection_version())
+                    self.jobs.append(job)
 
-        #TODO: get services omitted until openeo get_federation_missing is fixed
-        #self.services = []
-        #services = self.connection.list_services() #list services of authenticated user
-        #for serv_meta in services:
-        #    serv = Service()
-        #    serv.from_metadata(serv_meta, self.get_connection_version())
-        #    self.services.append(serv)
+            #TODO: get services omitted until openeo get_federation_missing is fixed
+            #self.services = []
+            #services = self.connection.list_services() #list services of authenticated user
+            #for serv_meta in services:
+            #    serv = Service()
+            #    serv.from_metadata(serv_meta, self.get_connection_version())
+            #    self.services.append(serv)
 
     def login(self, username, password=None):
         try:
             return self.connection.authenticate_basic(username=username, password=password)
+        except AttributeError:
+            iface.messageBar().pushMessage("Error", "login failed. connection missing")
+            return self.connection
+    
+    def login_oidc(self):
+        def run_auth(capture_buffer):
+            # Redirect stdout for this thread only
+            old_stdout = sys.stdout
+            sys.stdout = capture_buffer
+            try:
+                self.connection.authenticate_oidc()
+            finally:
+                sys.stdout = old_stdout
+
+        capture_buffer = io.StringIO()
+        
+        try:
+            # open a browser window when prompted
+            auth_thread = threading.Thread(target=run_auth, args=(capture_buffer,))
+            auth_thread.start()
+
+            # Monitor output buffer for URL as it appears
+            url_found = None
+            while auth_thread.is_alive():
+                output = capture_buffer.getvalue()
+                urls = re.findall(r'https?:\/\/[^\s]+', output)
+                if urls:
+                    url_found = urls[0]
+                    break
+                time.sleep(0.1)  # short wait before checking again
+
+            if url_found:
+                msg = f"Opening browser to: {url_found}"
+                iface.messageBar().pushMessage(msg)
+                print(msg)
+                webbrowser.open(url_found)
+            else:
+                iface.messageBar().pushMessage("Error", "No URL found before auth finished.")
+                print("No URL found before auth finished.")
+
+            auth_thread.join()
+            iface.messageBar().pushMessage("Error", "Auth process completed.")
+            print("Auth process completed.")
+
+            return self.connection.authenticate_oidc()
         except AttributeError:
             iface.messageBar().pushMessage("Error", "login failed. connection missing")
             return self.connection

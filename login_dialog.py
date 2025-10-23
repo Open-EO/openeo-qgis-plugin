@@ -63,6 +63,7 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
                                 "Are you connected to the internet?")
 
         self.loginButton.clicked.connect(self.login)
+        self.oidc_loginButton.clicked.connect(self.login_oidc)
         self.dlg = None
 
         self.versionBox.stateChanged.connect(self.version_checkbox_changed)
@@ -129,6 +130,26 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
             return None
 
         return backend
+    
+    def connect_oidc(self):
+        """
+        Connect to the backend via oidc.
+        This method also loads all collections and processes from the backend.
+        """
+        url = self.get_current_url()
+        backend = Backend(url=url, oidc=True)
+        
+        if not backend:
+            warning(self.iface, "Connection failed, the backend might not be available at the moment!")
+            return None
+
+        auth = backend.login_oidc()
+        if not auth:
+            warning(self.iface, "Authentication failed!")
+            return None
+
+        return backend
+
 
     def login(self):
         """
@@ -153,3 +174,9 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
         # # self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)
         # self.dlg.show()
         # # self.close()
+    
+    def login_oidc(self):
+        """
+        Logs the user into the backend with oidc and starts the main openEO dialog, also closes this login dialog.
+        """
+        self.openeo.login(oidc=True)

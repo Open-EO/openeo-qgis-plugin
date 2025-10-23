@@ -8,9 +8,9 @@
 
 """
 
-__author__ = 'bernhard.goesswein@geo.tuwien.ac.at'
-__date__ = '2019-07-18'
-__copyright__ = 'Copyright 2019, Bernhard Goesswein'
+__author__ = 'c.niebl@moregeo.it'
+__date__ = '2025-10-23'
+__copyright__ = 'Copyright 2025, Caro Niebl, Bernhard Goesswein, Nina Gnann'
 
 import unittest
 

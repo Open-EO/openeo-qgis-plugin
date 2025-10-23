@@ -3,10 +3,10 @@
 #
 # Plugin to access openEO compliant backends.
 #							 -------------------
-#		begin				: 2019-07-18
+#		begin				: 2025-10-23
 #		git sha				: $Format:%H$
-#		copyright			: (C) 2019 by Bernhard Goesswein
-#		email				: bernhard.goesswein@geo.tuwien.ac.at
+#		copyright			: (C) 2025 by Caro Niebl, Bernhard Goesswein, Nina Gnann
+#		email				: c.niebl@moregeo.it
 # ***************************************************************************/
 #
 #/***************************************************************************
@@ -65,7 +65,7 @@ PEP8EXCLUDE=pydev,resources.py,conf.py,third_party,ui
 #	* Windows:
 #	  AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins'
 
-QGISDIR=/home/bgoesswe/.local/share/QGIS/QGIS3/profiles/default/python/plugins/
+QGISDIR=/home/caro/.local/share/QGIS/QGIS3/profiles/default/python/plugins/
 
 #################################################
 # Normally you would not need to edit below here

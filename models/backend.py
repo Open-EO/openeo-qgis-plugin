@@ -307,26 +307,36 @@ class Backend:
         return msg
 
     def job_start(self, job_id):
-        return self.connection.job_start(job_id=job_id)
+        job = self.connection.job(job_id)
+        return job.start()
 
     def job_stop(self, job_id):
-        return self.connection.job_cancel(job_id=job_id)
+        job = self.connection.job(job_id)
+        return job.stop()
 
     def job_info(self, job_id):
-        return self.connection.job_info(job_id=job_id)
+        job = self.connection.job(job_id)
+        return job.describe()
 
     def detailed_job(self, job_id):
-        job_info = self.connection.job_info(job_id=job_id)
         job = Job()
-        job.from_metadata(job_info, self.get_connection_version())
+        job.from_metadata(self.job_info(job_id), self.get_connection_version())
         return job
 
     def job_delete(self, job_id):
-        return self.connection.delete_job(job_id=job_id)
+        job = self.connection.job(job_id)
+        return job.delete()
 
     def job_pg_info(self, job_id):
-        job_info = self.connection.pg_info_job(job_id=job_id)
-        return job_info
+        job_info = self.job_info(job_id)
+        process_graph_job = {}
+        if 'process_graph' in job_info:
+            process_graph_job = job_info['process_graph']
+        elif "process":
+            if "process_graph" in job_info["process"]:
+                process_graph_job = job_info["process"]['process_graph']
+        return process_graph_job
+    
         title = ""
         description = ""
         submission = ""
@@ -379,11 +389,20 @@ class Backend:
                         .replace("'", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "")
                     return job_info_id
 
-    def job_log(self, job_id):
-        return self.connection.job_log(job_id=job_id)
+    def job_log(self, job_id, offset=None, level=None):
+        job = self.connection.job(job_id)
+        return job.logs(offset=offset, level=level)
 
     def job_result_download(self, job_id, directory=None):
-        req = self.connection.job_result(job_id=job_id)
+        job = self.connection.job(job_id)
+        #req = job.download_result(job_id=job_id)
+
+        if not directory:
+            target = tempfile.gettempdir()
+        else:
+            target = directory
+        
+        return job.download_result(target)
 
         download_urls = {}
 

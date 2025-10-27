@@ -25,6 +25,10 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
+import sip
+from qgis.utils import iface
+from qgis.core import QgsApplication, QgsDataItemProvider, QgsSettings, QgsDataProvider, QgsDataItem, QgsDataCollectionItem
+
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
@@ -62,6 +66,12 @@ class OpenEO:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&OpenEO connector')
+
+        self.PLUGIN_NAME = "OpenEO plugin"
+        self.PLUGIN_ENTRY_NAME = "OpenEO plugin"
+        self.list_items_provider = My_item_provider(self)
+        QgsApplication.instance().dataItemProviderRegistry().addProvider(self.list_items_provider)
+
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
@@ -198,3 +208,62 @@ class OpenEO:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             pass
+
+    ######
+    # experimental qgis browser manipulation code
+    ######
+    def add_node_test(self):
+        data_item_provider = QgsDataItemProvider()
+        return
+    
+class My_item_provider(QgsDataItemProvider):
+    def __init__(self, plugin):
+        QgsDataItemProvider.__init__(self)
+        self.root_item = None
+        self.plugin = plugin
+    def name(self):
+        return "OpenEO"
+
+    def capabilities(self):
+        return QgsDataProvider.Net #dont understand that yet
+    
+    def createDataItem(self, path, parentItem):
+        if not parentItem:
+            ri = OpenEORootItem(plugin=self.plugin)
+            sip.transferto(ri, None)
+            self.root_item = ri
+            return ri
+        else:
+            return None
+    
+class OpenEORootItem(QgsDataCollectionItem):
+    def __init__(self, plugin, name=None, parent=None):
+        name = plugin.PLUGIN_NAME if not name else name
+        provider_key = plugin.PLUGIN_ENTRY_NAME
+        QgsDataCollectionItem.__init__(self, parent, name, provider_key)
+        self.plugin = plugin
+        #self.setIcon(QIcon(icon_filepath("edr.png")))
+        self.items = []
+    def createChildren(self):
+        del self.items[:]
+        settings = QgsSettings()
+        items = []
+        item = OpenEOListItem(self.plugin, self)
+        item.setState(QgsDataItem.Populated)
+        item.refresh()
+        sip.transferto(item, self)
+        items.append(item)
+        self.items.append(item)
+        return items
+    
+    def refresh_items(self):
+        self.depopulate()
+        self.createChildren()
+    #def reload_collections(self):
+    #    self.plugin.ens
+
+class OpenEOListItem(OpenEORootItem):
+    def __init__(self, plugin, name, parent):
+        OpenEORootItem.__init__(self, plugin, name, parent)
+        self.plugin = plugin
+        self.name = name

@@ -244,11 +244,12 @@ class OpenEORootItem(QgsDataCollectionItem):
         self.plugin = plugin
         #self.setIcon(QIcon(icon_filepath("edr.png")))
         self.items = []
+
     def createChildren(self):
         del self.items[:]
         settings = QgsSettings()
         items = []
-        item = OpenEOListItem(self.plugin, self)
+        item = OpenEOListItem(self.plugin, "test", self)
         item.setState(QgsDataItem.Populated)
         item.refresh()
         sip.transferto(item, self)
@@ -259,11 +260,25 @@ class OpenEORootItem(QgsDataCollectionItem):
     def refresh_items(self):
         self.depopulate()
         self.createChildren()
-    #def reload_collections(self):
-    #    self.plugin.ens
+    
+    def actions(self, parent):
+        dirname = os.path.join(os.path.dirname(__file__), "images")
+        action_new_connection = QAction(QIcon(os.path.join(dirname, "icon.png")), "create new OpenEO connection", parent)
+        action_new_connection.triggered.connect(self.example_action)
+        actions = [action_new_connection]
+        return actions
+    
+    def example_action(self):
+        print("todo")
+        return
 
 class OpenEOListItem(OpenEORootItem):
     def __init__(self, plugin, name, parent):
         OpenEORootItem.__init__(self, plugin, name, parent)
         self.plugin = plugin
         self.name = name
+
+    def createChildren(self):
+        settings = QgsSettings()
+        items = []
+        return items

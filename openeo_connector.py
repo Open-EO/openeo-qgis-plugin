@@ -22,7 +22,7 @@
  ***************************************************************************/
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtGui import QIcon, QPixmap
 from qgis.PyQt.QtWidgets import QAction
 
 import sip
@@ -33,7 +33,11 @@ from qgis.core import QgsApplication, QgsDataItemProvider, QgsSettings, QgsDataP
 from .resources import *
 # Import the code for the dialog
 from .openeo_connector_dialog import OpenEODialog
+from .connect_dialog import Connect_dialog
 import os.path
+
+import string
+import random
 
 
 class OpenEO:
@@ -212,15 +216,13 @@ class OpenEO:
     ######
     # experimental qgis browser manipulation code
     ######
-    def add_node_test(self):
-        data_item_provider = QgsDataItemProvider()
-        return
     
 class My_item_provider(QgsDataItemProvider):
     def __init__(self, plugin):
         QgsDataItemProvider.__init__(self)
         self.root_item = None
         self.plugin = plugin
+
     def name(self):
         return "OpenEO"
 
@@ -243,42 +245,117 @@ class OpenEORootItem(QgsDataCollectionItem):
         QgsDataCollectionItem.__init__(self, parent, name, provider_key)
         self.plugin = plugin
         #self.setIcon(QIcon(icon_filepath("edr.png")))
+        self.saved_connections = [] #TODO: add this to QgsSettings for more persistence later
         self.items = []
 
     def createChildren(self):
         del self.items[:]
         settings = QgsSettings()
         items = []
-        item = OpenEOListItem(self.plugin, "test", self)
-        item.setState(QgsDataItem.Populated)
-        item.refresh()
-        sip.transferto(item, self)
-        items.append(item)
-        self.items.append(item)
+        for connection in self.saved_connections:  
+            item = connection
+            item.setState(QgsDataItem.Populated)
+            item.refresh()
+            sip.transferto(item, self)
+            items.append(item)
         return items
     
     def refresh_items(self):
         self.depopulate()
         self.createChildren()
+
+    def add_connection(self):
+        self.dlg = Connect_dialog(iface=self.plugin.iface, openeo=self)
+        self.dlg.logo.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'images/icon_new.png')))
+        self.dlg.logo.setFixedSize(139, 89)
+        self.dlg.show()
+        result = self.dlg.exec_()
+
+        # See if OK was pressed
+        if result:
+            # Do something useful here - delete the line containing pass and
+            # substitute with your code.
+            pass
+        
+    def connect(self):
+        backend = self.dlg.connect()
+
+        if not backend:
+            return
+
+        conn_name = backend.name
+        conn_url = backend.url
+        
+        # TODO: use of Connection_description can be removed by just adding to self.items
+        connection = OpenEOConnectionItem(self.plugin, conn_name, conn_url, self)
+        self.saved_connections.append(connection)
+        self.refresh_items()
+        self.dlg.close()
+        return
     
     def actions(self, parent):
         dirname = os.path.join(os.path.dirname(__file__), "images")
+        
         action_new_connection = QAction(QIcon(os.path.join(dirname, "icon.png")), "create new OpenEO connection", parent)
-        action_new_connection.triggered.connect(self.example_action)
-        actions = [action_new_connection]
+        action_new_connection.triggered.connect(self.add_connection)
+        action_refresh = QAction(QIcon(os.path.join(dirname, "icon.png")), "Refresh", parent)
+        action_refresh.triggered.connect(self.refresh_items)
+        actions = [action_new_connection, action_refresh]
         return actions
     
     def example_action(self):
         print("todo")
         return
 
-class OpenEOListItem(OpenEORootItem):
-    def __init__(self, plugin, name, parent):
-        OpenEORootItem.__init__(self, plugin, name, parent)
+class OpenEOConnectionItem(QgsDataCollectionItem):
+    def __init__(self, plugin, name, url, parent):
+        QgsDataCollectionItem.__init__(self, parent, name, plugin.PLUGIN_ENTRY_NAME)
         self.plugin = plugin
+        # TODO: use the connection that is coming straight from the pyhton client instead
+        # that would be cleaner.
+        self.backend = None
+        self.url = url
+
         self.name = name
+
+    #    #TODO: get name and dialog from login screen
+    #
+    #    #setup login dialog window
+    #    self.dlg = LoginDialog(iface=plugin.iface, openeo=self)
+    #    self.dlg.logo.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'images/icon_new.png')))
+    #    self.dlg.logo.setFixedSize(139, 89)
 
     def createChildren(self):
         settings = QgsSettings()
         items = []
         return items
+    
+    #def open_login_dialog(self):
+    #    self.dlg.show()
+    #    # Run dialog event loop
+    #    result = self.dlg.exec_()
+    #    # See if OK was pressed
+    #    if result:
+    #        # Do something useful here - delete the line containing pass and
+    #        # substitute with your code.
+    #        pass
+
+    #def connect(self, oidc=false):
+    #    """
+    #    callback for login dialog. logs the connection in and closes the login dialog
+    #    """
+    #    if oidc:
+    #        backend = self.dlg.connect_oidc()
+    #    else:
+    #        backend = self.dlg.connect()
+    #    
+    #    if not backend: 
+    #        return
+    #    
+    #    self.backend = backend
+    #    self.dlg.close()
+
+class Connection_description():
+    def __init__(self, name, url):
+        self.name = name
+        self.url = url

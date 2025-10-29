@@ -253,7 +253,11 @@ class OpenEORootItem(QgsDataCollectionItem):
         settings = QgsSettings()
         items = []
         for connection in self.saved_connections:  
-            item = connection
+            item = OpenEOConnectionItem(
+                plugin=self.plugin, 
+                name=connection.name, 
+                url=connection.url, 
+                parent=self)
             item.setState(QgsDataItem.Populated)
             item.refresh()
             sip.transferto(item, self)
@@ -286,8 +290,7 @@ class OpenEORootItem(QgsDataCollectionItem):
         conn_name = backend.name
         conn_url = backend.url
         
-        # TODO: use of Connection_description can be removed by just adding to self.items
-        connection = OpenEOConnectionItem(self.plugin, conn_name, conn_url, self)
+        connection = Connection_model(conn_name, conn_url)
         self.saved_connections.append(connection)
         self.refresh_items()
         self.dlg.close()
@@ -315,47 +318,14 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         # that would be cleaner.
         self.backend = None
         self.url = url
-
         self.name = name
-
-    #    #TODO: get name and dialog from login screen
-    #
-    #    #setup login dialog window
-    #    self.dlg = LoginDialog(iface=plugin.iface, openeo=self)
-    #    self.dlg.logo.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'images/icon_new.png')))
-    #    self.dlg.logo.setFixedSize(139, 89)
 
     def createChildren(self):
         settings = QgsSettings()
         items = []
         return items
-    
-    #def open_login_dialog(self):
-    #    self.dlg.show()
-    #    # Run dialog event loop
-    #    result = self.dlg.exec_()
-    #    # See if OK was pressed
-    #    if result:
-    #        # Do something useful here - delete the line containing pass and
-    #        # substitute with your code.
-    #        pass
 
-    #def connect(self, oidc=false):
-    #    """
-    #    callback for login dialog. logs the connection in and closes the login dialog
-    #    """
-    #    if oidc:
-    #        backend = self.dlg.connect_oidc()
-    #    else:
-    #        backend = self.dlg.connect()
-    #    
-    #    if not backend: 
-    #        return
-    #    
-    #    self.backend = backend
-    #    self.dlg.close()
-
-class Connection_description():
+class Connection_model():
     def __init__(self, name, url):
         self.name = name
         self.url = url

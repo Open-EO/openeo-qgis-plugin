@@ -266,6 +266,7 @@ class OpenEORootItem(QgsDataCollectionItem):
             item.refresh()
             sip.transferto(item, self)
             items.append(item)
+            self.items.append(item)
         return items
     
     def refresh_items(self):
@@ -328,10 +329,18 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.url = url
         self.connection_idx = connection_idx
         QgsDataCollectionItem.__init__(self, parent, self.name, plugin.PLUGIN_ENTRY_NAME)
+        self.createChildren()
 
     def createChildren(self):
-        settings = QgsSettings()
+        #TODO: children for collections, batch-jobs, services
         items = []
+        
+        # create Collections group
+        collections = OpenEOCollectionsGroup(self.plugin, self)
+        collections.setState(QgsDataItem.Populated)
+        collections.refresh()
+        items.append(collections)
+
         return items
     
     def delete_connection(self):
@@ -342,6 +351,17 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         action_delete.triggered.connect(self.delete_connection)
         actions = [action_delete]
         return actions
+    
+class OpenEOCollectionsGroup(QgsDataCollectionItem):
+    def __init__(self, plugin, parent_connection):
+        QgsDataCollectionItem.__init__(self, parent_connection, "Collections", plugin.PLUGIN_ENTRY_NAME)
+        self.plugin = plugin
+
+    def createChildren(self):
+        return 
+    
+    def actions(self, parent):
+        return []
 
 class Connection_model():
     def __init__(self, name, url):

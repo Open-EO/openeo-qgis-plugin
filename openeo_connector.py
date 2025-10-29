@@ -36,6 +36,8 @@ from .openeo_connector_dialog import OpenEODialog
 from .connect_dialog import Connect_dialog
 import os.path
 
+import openeo
+
 import string
 import random
 
@@ -252,12 +254,13 @@ class OpenEORootItem(QgsDataCollectionItem):
         del self.items[:]
         settings = QgsSettings()
         items = []
-        for connection in self.saved_connections:  
+        for idx, connection in enumerate(self.saved_connections):  
             item = OpenEOConnectionItem(
                 plugin=self.plugin, 
                 name=connection.name, 
                 url=connection.url, 
-                parent=self)
+                parent=self,
+                connection_idx=idx)
             item.setState(QgsDataItem.Populated)
             item.refresh()
             sip.transferto(item, self)
@@ -280,6 +283,10 @@ class OpenEORootItem(QgsDataCollectionItem):
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             pass
+    
+    def remove_connection(self, connection_idx):
+        self.saved_connections.pop(connection_idx)
+        self.refresh_items()
         
     def connect(self):
         conn_info = self.dlg.connect()
@@ -302,7 +309,7 @@ class OpenEORootItem(QgsDataCollectionItem):
         
         action_new_connection = QAction(QIcon(os.path.join(dirname, "icon.png")), "create new OpenEO connection", parent)
         action_new_connection.triggered.connect(self.add_connection)
-        action_refresh = QAction(QIcon(os.path.join(dirname, "icon.png")), "Refresh", parent)
+        action_refresh = QAction(QIcon(), "Refresh", parent)
         action_refresh.triggered.connect(self.refresh_items)
         actions = [action_new_connection, action_refresh]
         return actions
@@ -312,19 +319,31 @@ class OpenEORootItem(QgsDataCollectionItem):
         return
 
 class OpenEOConnectionItem(QgsDataCollectionItem):
-    def __init__(self, plugin, name, url, parent):
-        QgsDataCollectionItem.__init__(self, parent, name, plugin.PLUGIN_ENTRY_NAME)
+    def __init__(self, plugin, name, url, parent, connection_idx):
+        self.connection = openeo.connect(url)
+        capabilities = self.connection.capabilities()
+        if not name:
+            self.name = capabilities.get("title")
+        else:
+            self.name = name
         self.plugin = plugin
-        # TODO: use the connection that is coming straight from the pyhton client instead
-        # that would be cleaner.
-        self.backend = None
         self.url = url
-        self.name = name
+        self.connection_idx = connection_idx
+        QgsDataCollectionItem.__init__(self, parent, self.name, plugin.PLUGIN_ENTRY_NAME)
 
     def createChildren(self):
         settings = QgsSettings()
         items = []
         return items
+    
+    def delete_connection(self):
+        self.parent().remove_connection(self.connection_idx)
+    
+    def actions(self, parent):
+        action_delete = QAction(QIcon(), "delete connection...", parent)
+        action_delete.triggered.connect(self.delete_connection)
+        actions = [action_delete]
+        return actions
 
 class Connection_model():
     def __init__(self, name, url):

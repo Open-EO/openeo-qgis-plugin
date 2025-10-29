@@ -28,6 +28,7 @@ from qgis.PyQt.QtWidgets import QAction
 import sip
 from qgis.utils import iface
 from qgis.core import QgsApplication, QgsDataItemProvider, QgsSettings, QgsDataProvider, QgsDataItem, QgsDataCollectionItem
+from qgis.core import Qgis
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -303,8 +304,8 @@ class OpenEORootItem(QgsDataCollectionItem):
 
         connection = Connection_model(conn_name, conn_url)
         self.saved_connections.append(connection)
-        self.refresh_items()
         self.dlg.close()
+        self.refresh_items()
         return
     
     def actions(self, parent):
@@ -338,6 +339,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         # create Collections group
         collections = OpenEOCollectionsGroup(self.plugin, self)
         collections.setState(QgsDataItem.Populated)
+        sip.transferto(collections, self)
         collections.refresh()
         items.append(collections)
 
@@ -356,12 +358,47 @@ class OpenEOCollectionsGroup(QgsDataCollectionItem):
     def __init__(self, plugin, parent_connection):
         QgsDataCollectionItem.__init__(self, parent_connection, "Collections", plugin.PLUGIN_ENTRY_NAME)
         self.plugin = plugin
+        self.saved_collections = self.get_collections()
+        self.collection_items = []
+        self.createChildren()
+
+    def get_collections(self):
+        #some sort of pagination might be beneficial
+        collections = self.parent().connection.list_collections()
+        return collections
 
     def createChildren(self):
-        return 
+        del self.collection_items[:]
+        items = []
+        for collection in self.saved_collections:
+            item = OpenEoCollectionItem(
+                parent=self, 
+                collection_object=collection,
+                plugin = self.plugin)
+            item.setState(QgsDataItem.Populated)
+            item.refresh()
+            sip.transferto(item, self)
+            items.append(item)
+            self.collection_items.append(item)
+        return items
     
     def actions(self, parent):
         return []
+
+#TODO: the type this inherits is still to be debated.
+class OpenEoCollectionItem(QgsLayerItem):
+    def __init__(self, parent, collection_object, plugin):
+        self.collection = collection_object
+        QgsLayerItem.__init__(
+            self,
+            parent = parent,
+            name = self.collection["title"],
+            path = None,
+            uri = None,
+            layerType = Qgis.BrowserLayerType.NoType,
+            providerKey = plugin.PLUGIN_ENTRY_NAME
+        )
+    
 
 class Connection_model():
     def __init__(self, name, url):

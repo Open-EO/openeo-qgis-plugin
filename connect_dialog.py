@@ -66,6 +66,7 @@ class Connect_dialog(QtWidgets.QDialog, FORM_CLASS):
 
         connection = openeo.connect(url)
 
+        #TODO: use of a dict might not be most elegant. perhaps connection_model can be imported
         conn_info = {
             "connection": connection,
             "name": name,

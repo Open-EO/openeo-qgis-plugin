@@ -248,6 +248,7 @@ class OpenEORootItem(QgsDataCollectionItem):
         self.plugin = plugin
         #self.setIcon(QIcon(icon_filepath("edr.png")))
         self.saved_connections = [] #TODO: add this to QgsSettings for more persistence later
+        #TODO: also make sure to change all the add/remove_connection code accordingly
         self.items = []
 
     def createChildren(self):
@@ -285,6 +286,7 @@ class OpenEORootItem(QgsDataCollectionItem):
             pass
     
     def remove_connection(self, connection_idx):
+        #TODO: this will need to be changed when QgsSettings is implemented
         self.saved_connections.pop(connection_idx)
         self.refresh_items()
         
@@ -313,10 +315,6 @@ class OpenEORootItem(QgsDataCollectionItem):
         action_refresh.triggered.connect(self.refresh_items)
         actions = [action_new_connection, action_refresh]
         return actions
-    
-    def example_action(self):
-        print("todo")
-        return
 
 class OpenEOConnectionItem(QgsDataCollectionItem):
     def __init__(self, plugin, name, url, parent, connection_idx):

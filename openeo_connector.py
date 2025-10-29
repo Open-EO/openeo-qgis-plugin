@@ -282,14 +282,15 @@ class OpenEORootItem(QgsDataCollectionItem):
             pass
         
     def connect(self):
-        backend = self.dlg.connect()
+        conn_info = self.dlg.connect()
+        connection = conn_info["connection"]
 
-        if not backend:
+        if not connection:
             return
 
-        conn_name = backend.name
-        conn_url = backend.url
-        
+        conn_url = connection._orig_url
+        conn_name = conn_info["name"]
+
         connection = Connection_model(conn_name, conn_url)
         self.saved_connections.append(connection)
         self.refresh_items()

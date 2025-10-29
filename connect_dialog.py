@@ -10,7 +10,7 @@ from PyQt5.QtCore import Qt
 
 from qgis.PyQt.QtGui import QIcon
 from .openeo_connector_dialog import OpenEODialog
-from .models.backend import Backend
+import openeo
 #from .models.openeohub import get_hub_backends
 
 from .utils.logging import warning
@@ -60,14 +60,16 @@ class Connect_dialog(QtWidgets.QDialog, FORM_CLASS):
         if not url:
             warning(self.iface, "Connection not established. Enter a valid URL")
             return None
-
-        #TODO: get name from backend info
+        
         if not name:
-            name = url
+            name = False
 
-        backend = Backend(url=url)
+        connection = openeo.connect(url)
 
-        if not backend.name:
-            backend.name = name
+        conn_info = {
+            "connection": connection,
+            "name": name,
+            "url": url 
+        }
 
-        return backend
+        return conn_info

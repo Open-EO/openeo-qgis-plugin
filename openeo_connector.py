@@ -76,9 +76,6 @@ class OpenEO:
 
         self.PLUGIN_NAME = "OpenEO plugin"
         self.PLUGIN_ENTRY_NAME = "OpenEO plugin"
-        self.list_items_provider = OpenEO_item_provider(self)
-        QgsApplication.instance().dataItemProviderRegistry().addProvider(self.list_items_provider)
-
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
@@ -111,6 +108,7 @@ class OpenEO:
         status_tip=None,
         whats_this=None,
         parent=None):
+        return
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -175,26 +173,31 @@ class OpenEO:
         return action
 
     def initGui(self):
-        """Create the menu entries and toolbar icons inside the QGIS GUI."""
+        """Create the browser entries and toolbar icons (uncommented) inside the QGIS GUI."""
 
         icon_path = ':/plugins/openeo_connector/icon.png'
-        self.add_action(
-            icon_path,
-            text=self.tr(u'Access openEO backends'),
-            callback=self.run,
-            parent=self.iface.mainWindow())
+        #self.add_action(
+        #    icon_path,
+        #    text=self.tr(u'Access openEO backends'),
+        #    callback=self.run,
+        #    parent=self.iface.mainWindow())
+
+        self.list_items_provider = OpenEO_item_provider(self)
+        QgsApplication.instance().dataItemProviderRegistry().addProvider(self.list_items_provider)
+        self.list_items_provider_key = self.list_items_provider.dataProviderKey()
 
         # will be set False in run()
         self.first_start = True
 
 
     def unload(self):
-        """Removes the plugin menu item and icon from QGIS GUI."""
-        for action in self.actions:
-            self.iface.removePluginMenu(
-                self.tr(u'&OpenEO connector'),
-                action)
-            self.iface.removeToolBarIcon(action)
+        """Removes the plugin item from the QGIS browser."""
+        #for action in self.actions:
+        #    self.iface.removePluginMenu(
+        #        self.tr(u'&OpenEO connector'),
+        #        action)
+        #    self.iface.removeToolBarIcon(action)
+        QgsApplication.instance().dataItemProviderRegistry().removeProvider(self.list_items_provider)
 
 
     def run(self):

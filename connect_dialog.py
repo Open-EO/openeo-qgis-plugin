@@ -13,7 +13,6 @@ from .openeo_connector_dialog import OpenEODialog
 import openeo
 import requests
 from packaging.version import Version
-#from .models.openeohub import get_hub_backends
 
 from .utils.logging import warning
 ########################################################################################################################
@@ -22,7 +21,7 @@ from .utils.logging import warning
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'connect_dialog.ui'))
 
-class Connect_dialog(QtWidgets.QDialog, FORM_CLASS):
+class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
     """
     This class is responsible for showing the provider-connection window and to let the user connect to an openEO backend.
     """
@@ -32,7 +31,7 @@ class Connect_dialog(QtWidgets.QDialog, FORM_CLASS):
         :param parent: parent dialog of this dialog (e.g. OpenEODialog).
         :param iface: Interface to show the dialog.
         """
-        super(Connect_dialog, self).__init__(parent)
+        super(ConnectDialog, self).__init__(parent)
 
         self.HUB_URL = "https://hub.openeo.org"
 
@@ -44,7 +43,7 @@ class Connect_dialog(QtWidgets.QDialog, FORM_CLASS):
         self.backends = []
         # TODO: query openEO hub to populate combobox
         try:
-            self.backends = self.get_hub_backends()
+            self.backends = self.getHubBackends()
         except Exception as e:
             print(e)
             warning(self.iface, "The plugin was not able to connect to openEO Hub. "
@@ -53,7 +52,7 @@ class Connect_dialog(QtWidgets.QDialog, FORM_CLASS):
         for item in self.backends:
             self.server_selector.addItem(item["name"])
 
-        self.server_selector.currentIndexChanged.connect(self.server_selector_updated)
+        self.server_selector.currentIndexChanged.connect(self.serverSelectorUpdated)
 
         self.connect_button.clicked.connect(self.openeo.connect)
 
@@ -83,7 +82,7 @@ class Connect_dialog(QtWidgets.QDialog, FORM_CLASS):
 
         return conn_info
 
-    def server_selector_updated(self, index):
+    def serverSelectorUpdated(self, index):
         selected_backend = self.backends[index]
         new_name = selected_backend["name"]
         new_url = selected_backend["url"]
@@ -91,7 +90,7 @@ class Connect_dialog(QtWidgets.QDialog, FORM_CLASS):
         self.url_edit.setText(new_url)
         return
     
-    def get_hub_backends(self):
+    def getHubBackends(self):
         try:
             backendURL = requests.get('{}/api/backends'.format(self.HUB_URL), timeout=5)
         except:

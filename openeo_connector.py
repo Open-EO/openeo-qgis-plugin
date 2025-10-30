@@ -50,10 +50,10 @@ class OpenEO:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&OpenEO connector')
+        self.menu = self.tr(u'&openEO')
 
-        self.PLUGIN_NAME = "OpenEO plugin"
-        self.PLUGIN_ENTRY_NAME = "OpenEO plugin"
+        self.PLUGIN_NAME = "openEO"
+        self.PLUGIN_ENTRY_NAME = "openEO"
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads

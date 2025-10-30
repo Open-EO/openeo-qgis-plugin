@@ -196,12 +196,15 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
 
         return items
     
-    def deleteConnection(self):
+    def remove(self):
         self.parent().removeConnection(self.connection_idx)
+
+    def getConnection():
+        return self.connection
     
     def actions(self, parent):
         action_delete = QAction(QIcon(), "delete connection...", parent)
-        action_delete.triggered.connect(self.deleteConnection)
+        action_delete.triggered.connect(self.remove)
         actions = [action_delete]
         return actions
     
@@ -248,6 +251,9 @@ class OpenEOCollecionsGroupItem(QgsDataCollectionItem):
             self.collection_items.append(item)
         return items
     
+    def getConnection(self):
+        return self.parent().getConnection()
+    
     def actions(self, parent):
         return []
 
@@ -276,6 +282,9 @@ class OpenEOCollectionItem(QgsLayerItem):
             layerType = Qgis.BrowserLayerType.NoType,
             providerKey = plugin.PLUGIN_ENTRY_NAME
         )
+
+    def getConnection(self):
+        return self.parent().getConnection()
 
 class ConnectionModel():
     def __init__(self, name, url):

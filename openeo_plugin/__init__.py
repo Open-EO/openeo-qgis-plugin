@@ -3,8 +3,6 @@ import os
 
 from qgis.core import QgsApplication
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
-from qgis.PyQt.QtGui import QIcon, QPixmap
-from qgis.PyQt.QtWidgets import QAction
 
 from .gui.browser_elements import OpenEOItemProvider
 

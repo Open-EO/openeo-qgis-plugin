@@ -1,16 +1,9 @@
-import os
 import openeo
 import requests
-from packaging.version import Version
-
-from qgis.PyQt import uic
 
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QApplication
-from PyQt5.QtCore import Qt
-from qgis.PyQt.QtGui import QIcon
 
 from ..utils.logging import warning
 from .ui.connect_dialog import Ui_SpatialDialog as FORM_CLASS

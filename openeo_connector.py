@@ -76,7 +76,7 @@ class OpenEO:
 
         self.PLUGIN_NAME = "OpenEO plugin"
         self.PLUGIN_ENTRY_NAME = "OpenEO plugin"
-        self.list_items_provider = My_item_provider(self)
+        self.list_items_provider = OpenEO_item_provider(self)
         QgsApplication.instance().dataItemProviderRegistry().addProvider(self.list_items_provider)
 
 
@@ -215,13 +215,19 @@ class OpenEO:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             pass
-
-    ######
-    # experimental qgis browser manipulation code
-    ######
     
-class My_item_provider(QgsDataItemProvider):
+class OpenEO_item_provider(QgsDataItemProvider):
+    """
+    QgsDataItemProvider class implementation that is necessary to provide data-items to
+    the QGIS browser (the tree-structured menu on the left to the map screen by default)
+    """
     def __init__(self, plugin):
+        """Constructor.
+
+        :param plugin: Reference to the qgis plugin object. Passing this object
+            to the children allows for access to important attributes like
+            PLUGIN_NAME and PLUGIN_ENTRY_NAME.
+        """
         QgsDataItemProvider.__init__(self)
         self.root_item = None
         self.plugin = plugin
@@ -234,15 +240,33 @@ class My_item_provider(QgsDataItemProvider):
     
     def createDataItem(self, path, parentItem):
         if not parentItem:
-            ri = OpenEORootItem(plugin=self.plugin)
+            ri = OpenEo_root_item(plugin=self.plugin)
             sip.transferto(ri, None)
             self.root_item = ri
             return ri
         else:
             return None
     
-class OpenEORootItem(QgsDataCollectionItem):
+class OpenEo_root_item(QgsDataCollectionItem):
+    """
+    Implementation of QgsDataCollectionItem. The root of the plugin within the browser view
+    Direct parent to:
+     - OpenEo_connection_item
+    """
     def __init__(self, plugin, name=None, parent=None):
+        """Constructor.
+
+        :param plugin: Reference to the qgis plugin object. Passing this object
+            to the children allows for access to important attributes like
+            PLUGIN_NAME and PLUGIN_ENTRY_NAME.
+        
+        :param name: The name of the OpenEo_root_item. This will be displayed in the 
+            Browser.
+        :type name: str
+
+        :param parent: the parent DataItem. Root is not expected to have one.
+        :type parent: QgsDataItem
+        """
         name = plugin.PLUGIN_NAME if not name else name
         provider_key = plugin.PLUGIN_ENTRY_NAME
         QgsDataCollectionItem.__init__(self, parent, name, provider_key)
@@ -257,7 +281,7 @@ class OpenEORootItem(QgsDataCollectionItem):
         settings = QgsSettings()
         items = []
         for idx, connection in enumerate(self.saved_connections):  
-            item = OpenEOConnectionItem(
+            item = OpenEo_connection_item(
                 plugin=self.plugin, 
                 name=connection.name, 
                 url=connection.url, 
@@ -318,8 +342,35 @@ class OpenEORootItem(QgsDataCollectionItem):
         actions = [action_new_connection, action_refresh]
         return actions
 
-class OpenEOConnectionItem(QgsDataCollectionItem):
+class OpenEo_connection_item(QgsDataCollectionItem):
+    """
+    QgsDataCollectionItem that contains a connection to an OpenEO provider.
+    Direct parent to:
+     - OpenEo_collections_group_item
+     - OpenEo_batchjob_group_item
+     - OpenEo_services_group_item 
+    """
     def __init__(self, plugin, name, url, parent, connection_idx):
+        """Constructor.
+
+        :param plugin: Reference to the qgis plugin object. Passing this object
+            to the children allows for access to important attributes like
+            PLUGIN_NAME and PLUGIN_ENTRY_NAME.
+        
+        :param name: The name of the OpenEo_root_item. This will be displayed in the 
+            Browser.
+        :type name: str
+
+        :param url: The url where the openEO endpoint of the connection is located.
+        :type url: str
+
+        :param parent: the parent DataItem. expected to be an OpenEo_root_item.
+        :type parent: QgsDataItem
+
+        :param connection_idx: index of the connection in the parents' list of connection.
+            relevant for deletion of connections.
+        :type connection_idx: int
+        """
         self.connection = openeo.connect(url)
         capabilities = self.connection.capabilities()
         if not name:
@@ -337,7 +388,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         items = []
         
         # create Collections group
-        collections = OpenEOCollectionsGroup(self.plugin, self)
+        collections = OpenEo_collections_group_item(self.plugin, self)
         collections.setState(QgsDataItem.Populated)
         sip.transferto(collections, self)
         collections.refresh()
@@ -354,8 +405,23 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         actions = [action_delete]
         return actions
     
-class OpenEOCollectionsGroup(QgsDataCollectionItem):
+class OpenEo_collections_group_item(QgsDataCollectionItem):
+    """
+    QgsDataCollectionItem that groups together all collections offered by the corresponding
+    openEO provider
+    Direct parent to:
+     - OpenEo_collection_item
+    """
     def __init__(self, plugin, parent_connection):
+        """Constructor.
+
+        :param plugin: Reference to the qgis plugin object. Passing this object
+            to the children allows for access to important attributes like
+            PLUGIN_NAME and PLUGIN_ENTRY_NAME.
+
+        :param parent_connection: the parent DataItem. expected to be OpenEo_connection_item.
+        :type parent: QgsDataItem
+        """
         QgsDataCollectionItem.__init__(self, parent_connection, "Collections", plugin.PLUGIN_ENTRY_NAME)
         self.plugin = plugin
         self.saved_collections = self.get_collections()
@@ -371,7 +437,7 @@ class OpenEOCollectionsGroup(QgsDataCollectionItem):
         del self.collection_items[:]
         items = []
         for collection in self.saved_collections:
-            item = OpenEoCollectionItem(
+            item = OpenEo_collection_item(
                 parent=self, 
                 collection_object=collection,
                 plugin = self.plugin)
@@ -386,8 +452,20 @@ class OpenEOCollectionsGroup(QgsDataCollectionItem):
         return []
 
 #TODO: the type this inherits is still to be debated.
-class OpenEoCollectionItem(QgsLayerItem):
+class OpenEo_collection_item(QgsLayerItem):
     def __init__(self, parent, collection_object, plugin):
+        """Constructor.
+
+        :param parent: the parent DataItem. expected to be an OpenEo_collections_group_item.
+        :type parent: QgsDataItem
+
+        :param plugin: Reference to the qgis plugin object. Passing this object
+            to the children allows for access to important attributes like
+            PLUGIN_NAME and PLUGIN_ENTRY_NAME.
+        
+        :param collection_object: dict containing relevant infos about the collection.
+        :type url: dict
+        """
         self.collection = collection_object
         QgsLayerItem.__init__(
             self,

@@ -27,7 +27,7 @@ from qgis.PyQt.QtWidgets import QAction
 
 import sip
 from qgis.utils import iface
-from qgis.core import QgsApplication, QgsDataItemProvider, QgsSettings, QgsDataProvider, QgsDataItem, QgsDataCollectionItem
+from qgis.core import QgsApplication, QgsDataItemProvider, QgsSettings, QgsLayerItem, QgsDataProvider, QgsDataItem, QgsDataCollectionItem
 from qgis.core import Qgis
 
 # Initialize Qt resources from file resources.py

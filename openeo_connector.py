@@ -130,7 +130,7 @@ class OpenEO:
     def initGui(self):
         """Create the browser entries inside the QGIS GUI."""
 
-        icon_path = ':/plugins/openeo_connector/icon.png'
+        icon_path = ':/plugins/openeo_connector/images/icon.png'
 
         self.list_items_provider = OpenEO_item_provider(self)
         QgsApplication.instance().dataItemProviderRegistry().addProvider(self.list_items_provider)
@@ -248,7 +248,7 @@ class OpenEo_root_item(QgsDataCollectionItem):
 
     def add_connection(self):
         self.dlg = Connect_dialog(iface=self.plugin.iface, openeo=self)
-        self.dlg.logo.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'images/icon_new.png')))
+        self.dlg.logo.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'images/icon_large.png')))
         self.dlg.logo.setFixedSize(139, 89)
         self.dlg.show()
         result = self.dlg.exec_()
@@ -283,7 +283,7 @@ class OpenEo_root_item(QgsDataCollectionItem):
     def actions(self, parent):
         dirname = os.path.join(os.path.dirname(__file__), "images")
         
-        action_new_connection = QAction(QIcon(os.path.join(dirname, "icon.png")), "create new OpenEO connection", parent)
+        action_new_connection = QAction(QIcon(os.path.join(dirname, "icon_small.png")), "new connection", parent)
         action_new_connection.triggered.connect(self.add_connection)
         action_refresh = QAction(QIcon(), "Refresh", parent)
         action_refresh.triggered.connect(self.refresh_items)

@@ -1,4 +1,3 @@
-from .ConnectionModel import ConnectionModel
 from .OpenEOCollectionItem import OpenEOCollectionItem
 from .OpenEOCollectionsGroupItem import OpenEOCollectionsGroupItem
 from .OpenEOConnectionItem import OpenEOConnectionItem

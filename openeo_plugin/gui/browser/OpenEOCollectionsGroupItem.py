@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import sip
 
-from qgis.core import QgsDataItem
 from qgis.core import QgsDataCollectionItem
 
 from .OpenEOCollectionItem import OpenEOCollectionItem
@@ -14,7 +13,7 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
     Direct parent to:
      - OpenEOCollectionItem
     """
-    def __init__(self, plugin, parent_connection):
+    def __init__(self, plugin, parent):
         """Constructor.
 
         :param plugin: Reference to the qgis plugin object. Passing this object
@@ -24,30 +23,25 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
         :param parent_connection: the parent DataItem. expected to be OpenEOConnectionItem.
         :type parent: QgsDataItem
         """
-        QgsDataCollectionItem.__init__(self, parent_connection, "Collections", plugin.PLUGIN_ENTRY_NAME)
+        QgsDataCollectionItem.__init__(self, parent, "Collections", plugin.PLUGIN_ENTRY_NAME)
         self.plugin = plugin
-        self.saved_collections = self.getCollections()
-        self.collection_items = []
-        self.createChildren()
 
     def getCollections(self):
         #some sort of pagination might be beneficial
-        collections = self.parent().connection.list_collections()
+        collections = self.getConnection().list_collections()
         return collections
 
     def createChildren(self):
-        del self.collection_items[:]
         items = []
-        for collection in self.saved_collections:
+        collections = self.getCollections()
+        for collection in collections:
             item = OpenEOCollectionItem(
                 parent=self, 
-                collection_object=collection,
-                plugin = self.plugin)
-            item.setState(QgsDataItem.Populated)
-            item.refresh()
+                collection=collection,
+                plugin=self.plugin
+            )
             sip.transferto(item, self)
             items.append(item)
-            self.collection_items.append(item)
         return items
     
     def getConnection(self):

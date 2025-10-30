@@ -4,7 +4,7 @@ import os
 from qgis.core import QgsApplication
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
-from .gui.browser_elements import OpenEOItemProvider
+from .gui.browser import OpenEOItemProvider
 
 
 # noinspection PyPep8Naming
@@ -127,8 +127,6 @@ class OpenEO:
 
     def initGui(self):
         """Create the browser entries inside the QGIS GUI."""
-
-        icon_path = ':/plugins/openeo_connector/images/icon.png'
 
         self.list_items_provider = OpenEOItemProvider(self)
         QgsApplication.instance().dataItemProviderRegistry().addProvider(self.list_items_provider)

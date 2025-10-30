@@ -8,8 +8,7 @@ from qgis.PyQt.QtWidgets import QApplication
 
 from ..utils.logging import warning
 from .ui.connect_dialog import Ui_SpatialDialog as FORM_CLASS
-########################################################################################################################
-########################################################################################################################
+from ..models.ConnectionModel import ConnectionModel
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 # use this if the pb_tool compiled version of the dialog doesn't work
@@ -19,7 +18,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
     """
     This class is responsible for showing the provider-connection window and to let the user connect to an openEO backend.
     """
-    def __init__(self, parent=None, iface=None, openeo=None):
+    def __init__(self, parent=None, iface=None):
         """
         Constructor method: Initializing the button behaviours and the backend combobox.
         :param parent: parent dialog of this dialog (e.g. OpenEODialog).
@@ -30,27 +29,35 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         self.HUB_URL = "https://hub.openeo.org"
 
         QApplication.setStyle("cleanlooks")
-        self.openeo = openeo
         self.iface = iface
 
         self.setupUi(self)
+        self.connection = None
+        self.model = None
+
+        self.connect_button.clicked.connect(self.verify)
+
+        # Handle openEO Hub integration
         self.backends = []
-        # TODO: query openEO hub to populate combobox
         try:
             self.backends = self.getHubBackends()
+            for item in self.backends:
+                self.server_selector.addItem(item["name"])
         except Exception as e:
             print(e)
             warning(self.iface, "The plugin was not able to connect to openEO Hub. "
                                 "Are you connected to the internet?")
-        #populate combobox
-        for item in self.backends:
-            self.server_selector.addItem(item["name"])
-
+        
+        self.server_selector.setCurrentIndex(-1) # don't select anything by default
         self.server_selector.currentIndexChanged.connect(self.serverSelectorUpdated)
 
-        self.connect_button.clicked.connect(self.openeo.connect)
+    def getModel(self):
+        return self.model
+    
+    def getConnection(self):
+        return self.connection
 
-    def connect(self):
+    def verify(self):
         """
         Connect to the backend at the given URL. This will return a backend object of the
         connection to create a browser entry with.
@@ -59,24 +66,37 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         name = self.conn_name_edit.text()
 
         if not url:
-            warning(self.iface, "Connection not established. Enter a valid URL")
-            return None
-        
-        if not name:
-            name = False
+            warning(self.iface, "Please provide a URL to connect to.")
+            return
 
-        connection = openeo.connect(url)
+        self.connect_button.setDisabled(True)
+        btn_text = self.connect_button.text()
+        self.connect_button.setText("Testing Connection...")
+        QApplication.processEvents()
 
-        #TODO: use of a dict might not be most elegant. perhaps connection_model can be imported
-        conn_info = {
-            "connection": connection,
-            "name": name,
-            "url": url 
-        }
+        self.connection = None
+        self.model = None
+        try:
+            self.connection = openeo.connect(url)
+        except Exception as e:
+            print(e)
+            warning(self.iface, "Connection could not be established. Please check the URL and your internet connection.")
 
-        return conn_info
+            self.connect_button.setDisabled(False)
+            self.connect_button.setText(btn_text)
 
+        if self.connection:
+            if not name:
+                capabilities = self.connection.capabilities()
+                # Fallback to default naming if no title is provided
+                name = capabilities.get("title") or url
+            self.model = ConnectionModel(name, url)
+            self.accept()  # Close the dialog on success
+
+    
     def serverSelectorUpdated(self, index):
+        if index < 0:
+            return
         selected_backend = self.backends[index]
         new_name = selected_backend["name"]
         new_url = selected_backend["url"]
@@ -86,21 +106,18 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
     
     def getHubBackends(self):
         try:
-            backendURL = requests.get('{}/api/backends'.format(self.HUB_URL), timeout=5)
+            backendUrl = requests.get('{}/api/backends'.format(self.HUB_URL), timeout=5)
         except:
-            backendsALL = {}
+            hubBackends = {}
 
-        if backendURL.status_code == 200:
-            backendsALL = backendURL.json()
+        if backendUrl.status_code == 200:
+            hubBackends = backendUrl.json()
         else:
             return []
-        # self.processgraphEdit.setText(json.dumps(self.backendsALL, indent=4))
-        backends = []
 
-        # Look for .well-known endpoint
-        for name, url in backendsALL.items():
+        backends = []
+        for name, url in hubBackends.items():
             backend = {"name": name, "url": url}
             backends.append(backend)
-            #backends[index].append(HubBackend(url, name=name))
 
         return backends

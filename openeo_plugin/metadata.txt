@@ -27,7 +27,7 @@ tags=project, remote sensing, web, webservice, wms
 
 homepage=https://github.com/Open-EO/openeo-qgis-plugin
 category=Plugins
-icon=icon.png
+icon=images/icon_small.png
 # experimental flag
 experimental=False
 

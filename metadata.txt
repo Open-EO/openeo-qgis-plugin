@@ -6,7 +6,7 @@
 name=openEO
 qgisMinimumVersion=3.8
 description=Plugin to access openEO compliant backends.
-version=0.1
+version=2.0-beta.1
 author=Caro Niebl, Bernhard Goesswein, Nina Gnann
 email=c.niebl@moregeo.it
 

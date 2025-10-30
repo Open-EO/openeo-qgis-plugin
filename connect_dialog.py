@@ -11,6 +11,8 @@ from PyQt5.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from .openeo_connector_dialog import OpenEODialog
 import openeo
+import requests
+from packaging.version import Version
 #from .models.openeohub import get_hub_backends
 
 from .utils.logging import warning
@@ -32,20 +34,26 @@ class Connect_dialog(QtWidgets.QDialog, FORM_CLASS):
         """
         super(Connect_dialog, self).__init__(parent)
 
-        QApplication.setStyle("cleanlooks")
+        self.HUB_URL = "https://hub.openeo.org"
 
+        QApplication.setStyle("cleanlooks")
         self.openeo = openeo
         self.iface = iface
 
         self.setupUi(self)
         self.backends = []
         # TODO: query openEO hub to populate combobox
-        #try:
-        #    self.backends = get_hub_backends()
-        #    self.set_backend_urls()
-        #except:
-        #    warning(self.iface, "The plugin was not able to connect to openEO Hub. "
-        #                        "Are you connected to the internet?")
+        try:
+            self.backends = self.get_hub_backends()
+        except Exception as e:
+            print(e)
+            warning(self.iface, "The plugin was not able to connect to openEO Hub. "
+                                "Are you connected to the internet?")
+        #populate combobox
+        for item in self.backends:
+            self.server_selector.addItem(item["name"])
+
+        self.server_selector.currentIndexChanged.connect(self.server_selector_updated)
 
         self.connect_button.clicked.connect(self.openeo.connect)
 
@@ -74,3 +82,32 @@ class Connect_dialog(QtWidgets.QDialog, FORM_CLASS):
         }
 
         return conn_info
+
+    def server_selector_updated(self, index):
+        selected_backend = self.backends[index]
+        new_name = selected_backend["name"]
+        new_url = selected_backend["url"]
+        self.conn_name_edit.setText(new_name)
+        self.url_edit.setText(new_url)
+        return
+    
+    def get_hub_backends(self):
+        try:
+            backendURL = requests.get('{}/api/backends'.format(self.HUB_URL), timeout=5)
+        except:
+            backendsALL = {}
+
+        if backendURL.status_code == 200:
+            backendsALL = backendURL.json()
+        else:
+            return []
+        # self.processgraphEdit.setText(json.dumps(self.backendsALL, indent=4))
+        backends = []
+
+        # Look for .well-known endpoint
+        for name, url in backendsALL.items():
+            backend = {"name": name, "url": url}
+            backends.append(backend)
+            #backends[index].append(HubBackend(url, name=name))
+
+        return backends

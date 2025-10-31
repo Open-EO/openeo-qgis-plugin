@@ -2,9 +2,11 @@
 import os
 
 from qgis.core import QgsApplication
+from qgis.core import QgsSettings
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
 from .gui.browser import OpenEOItemProvider
+from .utils.settings import SettingsPath
 
 
 # noinspection PyPep8Naming
@@ -40,6 +42,9 @@ class OpenEO:
             self.plugin_dir,
             'i18n',
             'OpenEO_{}.qm'.format(locale))
+        
+        # initialize settings
+        self.initSettings()
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -106,7 +111,7 @@ class OpenEO:
 
         :param add_to_toolbar: Flag indicating whether the action should also
             be added to the toolbar. Defaults to True.
-        :type add_to_toolbar: bool
+        :type add_to_toolbar: bool   
 
         :param status_tip: Optional text to show in a popup when mouse pointer
             hovers over the action.
@@ -159,3 +164,13 @@ class OpenEO:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             pass
+
+    def initSettings(self):
+        """Checks for existing plugin settings or sets them up if they don't exist"""
+        settings = QgsSettings()
+        settings_exist = settings.contains(SettingsPath.SAVED_CONNECTIONS.value)
+        settings.value = settings.value(SettingsPath.SAVED_CONNECTIONS.value)
+
+        if not settings_exist or not settings.value:
+            #create the settings key
+            print(settings.setValue(SettingsPath.SAVED_CONNECTIONS.value, []))

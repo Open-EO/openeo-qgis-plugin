@@ -10,6 +10,8 @@ from qgis.core import QgsDataCollectionItem
 
 from .OpenEOConnectionItem import OpenEOConnectionItem
 from ..connect_dialog import ConnectDialog
+from ...utils.settings import SettingsPath
+from ...models.ConnectionModel import ConnectionModel
 
 class OpenEORootItem(QgsDataCollectionItem):
     """
@@ -36,13 +38,14 @@ class OpenEORootItem(QgsDataCollectionItem):
         QgsDataCollectionItem.__init__(self, parent, name, provider_key)
         self.plugin = plugin
         self.setIcon(QIcon(self.getImagePath("icon_small.png")))
-        self.saved_connections = [] #TODO: add this to QgsSettings for more persistence later
-        #TODO: also make sure to change all the add/removeConnection code accordingly
 
+        #get saved connections from QgsSettings
+        settings = QgsSettings()
+        models = map(eval, settings.value(SettingsPath.SAVED_CONNECTIONS.value))
+        self.saved_connections = list(models) # map needs to be turned into a list 
         self.populate() # todo: not sure why this is needed
 
     def createChildren(self):
-        settings = QgsSettings()
         items = []
         for connection in self.saved_connections:
             item = self.createConnectionItem(connection)
@@ -64,6 +67,7 @@ class OpenEORootItem(QgsDataCollectionItem):
         return os.path.join(dirname, name)
 
     def addConnection(self):
+        settings = QgsSettings()
         self.dlg = ConnectDialog(iface=self.plugin.iface)
         self.dlg.show()
         result = self.dlg.exec()
@@ -72,13 +76,24 @@ class OpenEORootItem(QgsDataCollectionItem):
             model = self.dlg.getModel()
             connection = self.dlg.getConnection()
             self.saved_connections.append(model)
+            
+            # save the model persistently
+            reprs = settings.value(SettingsPath.SAVED_CONNECTIONS.value)
+            reprs.append(repr(model))
+            settings.setValue(SettingsPath.SAVED_CONNECTIONS.value, reprs)
+
             item = self.createConnectionItem(model, connection=connection)
             self.addChildItem(item, refresh=True)
 
     
     def removeConnection(self, data_item):
-        #TODO: this will need to be changed when QgsSettings is implemented
         self.saved_connections.remove(data_item.model)
+        
+        # update the saved connection models
+        settings = QgsSettings()
+        reprs = map(repr, self.saved_connections)
+        settings.setValue(SettingsPath.SAVED_CONNECTIONS.value, list(reprs))
+
         self.deleteChildItem(data_item)
 
     

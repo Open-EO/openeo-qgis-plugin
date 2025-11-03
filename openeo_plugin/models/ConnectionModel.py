@@ -5,24 +5,21 @@ class ConnectionModel():
     def __init__(self, name, url):
         self.name = name
         self.url = url
-
+    
     @classmethod
-    def from_json(cls, json_string):
-        # alternative constructor from json
-        data = json.loads(json_string)
+    def fromDict(cls, data):
+        name = data["name"]
+        url = data["url"]
 
-        name = b64decode(data["name"]).decode("utf-8")
-        url = b64decode(data["url"]).decode("utf-8")
-        
         return cls(name=name, url=url)
-
-    def __repr__(self):
-        return f"ConnectionModel('{self.name}','{self.url}')"
     
     def __str__(self):
-        dict = {
-            "name": b64encode(self.name.encode("utf-8")).decode("utf-8"),
-            "url": b64encode(self.url.encode("utf-8")).decode("utf-8")
-        }
-        
+        dict = self.toDict
         return json.dumps(dict)
+    
+    def toDict(self):
+        dict = {
+            "name": self.name,
+            "url": self.url
+        }
+        return dict

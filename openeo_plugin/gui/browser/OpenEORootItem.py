@@ -41,7 +41,9 @@ class OpenEORootItem(QgsDataCollectionItem):
 
         #get saved connections from QgsSettings
         settings = QgsSettings()
-        models = map(eval, settings.value(SettingsPath.SAVED_CONNECTIONS.value))
+        
+        models = map(ConnectionModel.from_json, settings.value(SettingsPath.SAVED_CONNECTIONS.value))
+        
         self.saved_connections = list(models) # map needs to be turned into a list 
         self.populate() # todo: not sure why this is needed
 
@@ -79,7 +81,7 @@ class OpenEORootItem(QgsDataCollectionItem):
             
             # save the model persistently
             reprs = settings.value(SettingsPath.SAVED_CONNECTIONS.value)
-            reprs.append(repr(model))
+            reprs.append(str(model))
             settings.setValue(SettingsPath.SAVED_CONNECTIONS.value, reprs)
 
             item = self.createConnectionItem(model, connection=connection)
@@ -91,7 +93,7 @@ class OpenEORootItem(QgsDataCollectionItem):
         
         # update the saved connection models
         settings = QgsSettings()
-        reprs = map(repr, self.saved_connections)
+        reprs = map(str, self.saved_connections)
         settings.setValue(SettingsPath.SAVED_CONNECTIONS.value, list(reprs))
 
         self.deleteChildItem(data_item)

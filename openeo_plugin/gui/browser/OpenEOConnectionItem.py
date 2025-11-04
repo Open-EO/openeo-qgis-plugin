@@ -7,7 +7,7 @@ from qgis.PyQt.QtWidgets import QAction
 
 from qgis.core import QgsDataCollectionItem
 
-from .OpenEOCollectionsGroupItem import OpenEOCollectionsGroupItem
+from . import OpenEOCollectionsGroupItem
 
 class OpenEOConnectionItem(QgsDataCollectionItem):
     """

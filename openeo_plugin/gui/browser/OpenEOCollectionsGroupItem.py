@@ -3,8 +3,8 @@ import sip
 
 from qgis.core import QgsDataCollectionItem
 
-from .OpenEOCollectionItem import OpenEOCollectionItem
-from .OpenEOCollectionItem import OpenEOCollectionLayerItem
+from . import OpenEOCollectionItem
+from . import OpenEOCollectionLayerItem
 
 class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
     """

@@ -173,4 +173,4 @@ class OpenEO:
 
         if not settings_exist or not settings.value:
             #create the settings key
-            print(settings.setValue(SettingsPath.SAVED_CONNECTIONS.value, []))
+            settings.setValue(SettingsPath.SAVED_CONNECTIONS.value, []) 

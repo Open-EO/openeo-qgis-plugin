@@ -8,6 +8,7 @@ from qgis.PyQt.QtWidgets import QAction
 from qgis.core import QgsDataCollectionItem
 
 from . import OpenEOCollectionsGroupItem
+from ..login_dialog import LoginDialog
 
 class OpenEOConnectionItem(QgsDataCollectionItem):
     """
@@ -53,11 +54,24 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
     def remove(self):
         self.parent().removeConnection(self)
 
+    def authenticate(self):
+        self.dlg = LoginDialog(
+            connection=self.model,
+            iface=self.plugin.iface
+            )
+        
+        result = self.dlg.exec()
+
+        if result:
+            return
+
     def getConnection(self):
         return self.connection
     
     def actions(self, parent):
+        action_authenticate = QAction(QIcon(), "Authenticate Connection", parent)
+        action_authenticate.triggered.connect(self.authenticate)
         action_delete = QAction(QIcon(), "Remove Connection", parent)
         action_delete.triggered.connect(self.remove)
-        actions = [action_delete]
+        actions = [action_authenticate,action_delete]
         return actions

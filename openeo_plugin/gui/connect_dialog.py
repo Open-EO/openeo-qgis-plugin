@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
+import os
 import openeo
 import requests
 
+from qgis.PyQt import uic
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication
 from qgis.PyQt.QtWidgets import QApplication
 
 from ..utils.logging import warning
-from .ui.connect_dialog import Ui_SpatialDialog as FORM_CLASS
+#from .ui.connect_dialog import Ui_SpatialDialog as FORM_CLASS
 from ..models.ConnectionModel import ConnectionModel
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 # use this if the pb_tool compiled version of the dialog doesn't work
-#FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'ui/connect_dialog.ui'))
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'ui/connect_dialog.ui'))
 
 class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
     """

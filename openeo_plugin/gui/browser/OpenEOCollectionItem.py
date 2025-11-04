@@ -5,6 +5,7 @@ from qgis.core import Qgis
 from qgis.core import QgsLayerItem
 from qgis.core import QgsDataCollectionItem
 from qgis.core import QgsDataItem
+from qgis.core import QgsMimeDataUtils
 
 from urllib.parse import urlencode, unquote, quote
 from owslib.wmts import WebMapTileService
@@ -52,9 +53,25 @@ class OpenEOCollectionLayerItem(QgsLayerItem):
         :param collection: dict containing relevant infos about the collection.
         :type url: dict
         """
-        uri = None
 
         webMapLink = parent.getWebMapLinks(collection)[0]
+        #uri = self.createUri(webMapLink)
+        uri = "placeholder"
+        QgsLayerItem.__init__(
+            self,
+            parent = parent,
+            name = collection.get("title") or collection.get("id"),
+            path = None,
+            uri = uri,
+            layerType = Qgis.BrowserLayerType.Raster,
+            providerKey = "wms"
+        )
+        self.collection = collection
+        # Has no children, set as populated to avoid the expand arrow
+        self.setState(QgsDataItem.Populated)
+
+    def createUri(self, webMapLink):
+        uri = None
         # different map service formats
         if webMapLink["rel"] == "xyz":
             uri = f"type=xyz&url={webMapLink["href"]}/"+quote("{z}/{y}/{x}") 
@@ -76,29 +93,31 @@ class OpenEOCollectionLayerItem(QgsLayerItem):
             styleID = wmts.contents[layerID].styles
 
             
+            #TODO: determine more URI parameters programmatically
             
             uri = f"crs=EPSG:3857&styles=default&tilePixelRatio=0&format=image/png&layers={layerID}&tileMatrixSet={tileMatrixSet}&url={webMapLink["href"]}"
 
-
-        QgsLayerItem.__init__(
-            self,
-            parent = parent,
-            name = collection.get("title") or collection.get("id"),
-            path = None,
-            uri = uri,
-            layerType = Qgis.BrowserLayerType.Raster,
-            providerKey = "wms"
-        )
-        self.collection = collection
-        # Has no children, set as populated to avoid the expand arrow
-        self.setState(QgsDataItem.Populated)
+        return uri
 
     def getConnection(self):
         return self.parent().getConnection()
     
     def getMime(self):
         # mimeUri is deprecated.
-        print(self.mimeUri())
+        print(self.mimeUris()[0].uri)
+
+    def mimeUris(self):
+        #TODO: add loading indicator
+        mimeUri = super().mimeUris()[0]
+        
+        webMapLink = self.parent().getWebMapLinks(self.collection)[0]
+        self.uri = self.createUri(webMapLink)
+        mimeUri.uri = self.uri
+
+        return [mimeUri]
+         
+    
+    #try just returning the new uri through mimeuri
     
     def actions(self, parent):
         action_mime = QAction(QIcon(), "get mime uri", parent)

@@ -1,8 +1,10 @@
 from urllib.parse import quote
 from owslib.wmts import WebMapTileService
 
+from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QApplication
 
 from qgis.core import Qgis
 from qgis.core import QgsLayerItem
@@ -70,28 +72,31 @@ class OpenEOCollectionLayerItem(QgsLayerItem):
 
     def getConnection(self):
         return self.parent().getConnection()
-    
-    def getMime(self):
-        # mimeUri is deprecated.
-        print(self.mimeUris()[0].uri)
 
     def mimeUris(self):
-        #TODO: add loading indicator
+        #TODO: what if operation takes way too long?
         mimeUri = super().mimeUris()[0]
         
         webMapLink = self.parent().getWebMapLinks(self.collection)[0]
-        self.uri = self.createUri(webMapLink)
+        try:
+            # TODO: test on different systems and decide on the following
+            # WaitCursor, BusyCursor, DragMoveCursor, DragCopyCursor
+            #   DragCopyCursor is whats used by QGIS by default
+            #   however, what we chose will also end up being used on right-click add-to-map
+            QApplication.setOverrideCursor(Qt.DragCopyCursor)
+            self.uri = self.createUri(webMapLink)
+        except:
+            QApplication.restoreOverrideCursor()
         mimeUri.uri = self.uri
 
+        QApplication.restoreOverrideCursor()
         return [mimeUri]
          
     
     #try just returning the new uri through mimeuri
     
     def actions(self, parent):
-        action_mime = QAction(QIcon(), "get mime uri", parent)
-        action_mime.triggered.connect(self.getMime)
-        actions = [action_mime]
+        actions = []
         return actions
 
 

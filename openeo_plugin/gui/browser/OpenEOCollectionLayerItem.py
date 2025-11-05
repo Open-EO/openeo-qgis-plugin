@@ -1,14 +1,11 @@
 from urllib.parse import quote
-from owslib.wmts import WebMapTileService
+from ...utils.wmts import WebMapTileService
+from ...utils.logging import warning
 
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtWidgets import QApplication
 
-from qgis.core import Qgis
-from qgis.core import QgsLayerItem
-from qgis.core import QgsDataItem
+from qgis.core import Qgis, QgsLayerItem, QgsDataItem, QgsMimeDataUtils, QgsMapLayerFactory
 
 class OpenEOCollectionLayerItem(QgsLayerItem):
     def __init__(self, parent, collection, plugin):
@@ -25,32 +22,39 @@ class OpenEOCollectionLayerItem(QgsLayerItem):
         :type url: dict
         """
 
-        webMapLink = parent.getWebMapLinks(collection)[0]
-        #uri = self.createUri(webMapLink)
-        uri = "placeholder"
         QgsLayerItem.__init__(
             self,
             parent = parent,
             name = collection.get("title") or collection.get("id"),
             path = None,
-            uri = uri,
+            uri = "",
             layerType = Qgis.BrowserLayerType.Raster,
             providerKey = "wms"
         )
         self.collection = collection
+        self.plugin = plugin
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
 
-    def createUri(self, webMapLink):
-        uri = None
-        # different map service formats
-        if webMapLink["rel"] == "xyz":
-            uri = f"type=xyz&url={webMapLink["href"]}/"+quote("{z}/{y}/{x}") 
-            # example
-            # uri= "type=xyz&url=https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/"+quote("{z}/{y}/{x}")
+    def createUri(self, link):
+        title = link.get("title") or ""
+        rel = link.get("rel") or ""
 
-        if webMapLink["rel"] == "wmts":
-            wmtsUrl = webMapLink["href"]+"?service=wmts&request=getCapabilities"
+        uri = QgsMimeDataUtils.Uri()
+        uri.layerType = QgsMapLayerFactory.typeToString(self.mapLayerType())
+        uri.providerKey = self.providerKey()
+        uri.name = self.layerName()
+        if len(title) > 0 and title != uri.name:
+            uri.name += f" - {title}"
+        uri.supportedFormats = self.supportedFormats() # todo: do we need to set this more specifically?
+        uri.supportedCrs = self.supportedCrs() # todo: set more specific supportedCrs below
+
+        # different map service formats
+        if rel == "xyz":
+            uri.uri = f"type=xyz&url={link["href"]}/"+quote("{z}/{y}/{x}")
+            return uri
+        elif rel == "wmts":
+            wmtsUrl = link["href"]+"?service=wmts&request=getCapabilities"
             wmts = WebMapTileService(wmtsUrl)
             targetCRS = "EPSG::3857"
             
@@ -63,40 +67,45 @@ class OpenEOCollectionLayerItem(QgsLayerItem):
             layerID = list(wmts.contents)[0]
             styleID = wmts.contents[layerID].styles
 
-            
             #TODO: determine more URI parameters programmatically
-            
-            uri = f"crs=EPSG:3857&styles=default&tilePixelRatio=0&format=image/png&layers={layerID}&tileMatrixSet={tileMatrixSet}&url={webMapLink["href"]}"
-
-        return uri
+            uri.uri = f"crs=EPSG:3857&styles=default&tilePixelRatio=0&format=image/png&layers={layerID}&tileMatrixSet={tileMatrixSet}&url={link["href"]}"
+            return uri
+        else:
+            return None
 
     def getConnection(self):
         return self.parent().getConnection()
 
     def mimeUris(self):
-        #TODO: what if operation takes way too long?
-        mimeUri = super().mimeUris()[0]
-        
-        webMapLink = self.parent().getWebMapLinks(self.collection)[0]
-        try:
-            # TODO: test on different systems and decide on the following
-            # WaitCursor, BusyCursor, DragMoveCursor, DragCopyCursor
-            #   DragCopyCursor is whats used by QGIS by default
-            #   however, what we chose will also end up being used on right-click add-to-map
-            QApplication.setOverrideCursor(Qt.DragCopyCursor)
-            self.uri = self.createUri(webMapLink)
-        except:
-            QApplication.restoreOverrideCursor()
-        mimeUri.uri = self.uri
+        mimeUris = []
 
+        webMapLinks = self.parent().getWebMapLinks(self.collection)
+        if len(webMapLinks) == 0:
+            warning(self.plugin.iface, "Could not detect a layer from the given source.")
+            return mimeUris
+
+        QApplication.setOverrideCursor(Qt.BusyCursor)
+
+        #TODO: what if operation takes way too long?
+        for link in webMapLinks:
+            try:
+                mimeUri = self.createUri(link)
+                mimeUris.append(mimeUri)
+            except Exception as e:
+                print(e)
+                warning(
+                    self.plugin.iface,
+                    f"Loading the map service {webMapLinks['href']} failed."
+                )
+        
         QApplication.restoreOverrideCursor()
-        return [mimeUri]
+
+        return mimeUris
          
     
     #try just returning the new uri through mimeuri
     
     def actions(self, parent):
-        actions = []
-        return actions
+        return []
 
 

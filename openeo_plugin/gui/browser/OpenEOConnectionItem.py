@@ -37,6 +37,9 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.plugin = plugin
         self.model = model
 
+        if not self.connection:
+            self.connection = model.connect()
+
     def createChildren(self):
         if not self.connection:
             self.connection = openeo.connect(self.model.url)
@@ -56,7 +59,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
 
     def authenticate(self):
         self.dlg = LoginDialog(
-            connection=self.model,
+            connection=self.connection,
+            model=self.model,
             iface=self.plugin.iface
             )
         

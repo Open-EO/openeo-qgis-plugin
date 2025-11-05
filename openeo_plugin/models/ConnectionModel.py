@@ -1,5 +1,6 @@
 from base64 import b64encode, b64decode
 import json
+import openeo
 
 class ConnectionModel():
     def __init__(self, name, url):
@@ -13,6 +14,9 @@ class ConnectionModel():
 
         return cls(name=name, url=url)
     
+    def connect(self):
+        return openeo.connect(self.url)
+
     def __str__(self):
         dict = self.toDict
         return json.dumps(dict)

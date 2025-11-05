@@ -73,7 +73,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         return self.connection
     
     def actions(self, parent):
-        action_authenticate = QAction(QIcon(), "Authenticate Connection", parent)
+        action_authenticate = QAction(QIcon(), "Authentication (Login)", parent)
         action_authenticate.triggered.connect(self.authenticate)
         action_delete = QAction(QIcon(), "Remove Connection", parent)
         action_delete.triggered.connect(self.remove)

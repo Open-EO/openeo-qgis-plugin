@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QApplication
 from qgis.PyQt.QtWidgets import QApplication
 
 from ..utils.logging import warning
-#from .ui.connect_dialog import Ui_SpatialDialog as FORM_CLASS
+#from .ui.connect_dialog import Ui_ConnectDialog as FORM_CLASS
 from ..models.ConnectionModel import ConnectionModel
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer

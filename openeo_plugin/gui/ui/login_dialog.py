@@ -11,13 +11,13 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_SpatialDialog(object):
-    def setupUi(self, SpatialDialog):
-        SpatialDialog.setObjectName("SpatialDialog")
-        SpatialDialog.resize(551, 285)
-        self.gridLayout_2 = QtWidgets.QGridLayout(SpatialDialog)
+class Ui_LoginDialog(object):
+    def setupUi(self, LoginDialog):
+        LoginDialog.setObjectName("LoginDialog")
+        LoginDialog.resize(551, 285)
+        self.gridLayout_2 = QtWidgets.QGridLayout(LoginDialog)
         self.gridLayout_2.setObjectName("gridLayout_2")
-        self.tabWidget = QtWidgets.QTabWidget(SpatialDialog)
+        self.tabWidget = QtWidgets.QTabWidget(LoginDialog)
         self.tabWidget.setTabPosition(QtWidgets.QTabWidget.North)
         self.tabWidget.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.tabWidget.setDocumentMode(False)
@@ -56,7 +56,7 @@ class Ui_SpatialDialog(object):
         self.verticalLayout_3.addWidget(self.authButton)
         self.tabWidget.addTab(self.internal, "")
         self.gridLayout_2.addWidget(self.tabWidget, 9, 0, 1, 1)
-        self.titleLabel = QtWidgets.QLabel(SpatialDialog)
+        self.titleLabel = QtWidgets.QLabel(LoginDialog)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -69,15 +69,15 @@ class Ui_SpatialDialog(object):
         self.titleLabel.setObjectName("titleLabel")
         self.gridLayout_2.addWidget(self.titleLabel, 0, 0, 1, 1)
 
-        self.retranslateUi(SpatialDialog)
-        QtCore.QMetaObject.connectSlotsByName(SpatialDialog)
+        self.retranslateUi(LoginDialog)
+        QtCore.QMetaObject.connectSlotsByName(LoginDialog)
 
-    def retranslateUi(self, SpatialDialog):
+    def retranslateUi(self, LoginDialog):
         _translate = QtCore.QCoreApplication.translate
-        SpatialDialog.setWindowTitle(_translate("SpatialDialog", "Authenticate connection"))
-        self.usernameLabel.setText(_translate("SpatialDialog", "Username"))
-        self.passwordLabel.setText(_translate("SpatialDialog", "Password"))
-        self.description.setText(_translate("SpatialDialog", "<html><head/><body><p><span style=\" font-weight:700; color:#c01c28;\">warning: </span><span style=\" color:#000000;\">credentials are stored as plain text in project file</span></p></body></html>"))
-        self.authButton.setText(_translate("SpatialDialog", "Authenticate with internal log in"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.internal), _translate("SpatialDialog", "Internal"))
-        self.titleLabel.setText(_translate("SpatialDialog", "Log in to"))
+        LoginDialog.setWindowTitle(_translate("LoginDialog", "Authenticate connection"))
+        self.usernameLabel.setText(_translate("LoginDialog", "Username"))
+        self.passwordLabel.setText(_translate("LoginDialog", "Password"))
+        self.description.setText(_translate("LoginDialog", "<html><head/><body><p><span style=\" font-weight:700; color:#c01c28;\">warning: </span><span style=\" color:#000000;\">credentials are stored as plain text in project file</span></p></body></html>"))
+        self.authButton.setText(_translate("LoginDialog", "Authenticate with internal log in"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.internal), _translate("LoginDialog", "Internal"))
+        self.titleLabel.setText(_translate("LoginDialog", "Log in to"))

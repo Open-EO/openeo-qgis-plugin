@@ -1,18 +1,17 @@
-import os
-import openeo
+#import os
 
-from qgis.PyQt import uic
+#from qgis.PyQt import uic
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication
 
-#from .ui.login_dialog import Ui_SpatialDialog as FORM_CLASS
+from .ui.login_dialog import Ui_LoginDialog
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 # use this if the pb_tool compiled version of the dialog doesn't work
-FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'ui/login_dialog.ui'))
+#Ui_LoginDialog, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'ui/login_dialog.ui'))
 
-class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
+class LoginDialog(QtWidgets.QDialog, Ui_LoginDialog):
     """
     This class is responsible for showing the provider-authencication window to set up authentication with the backend.
     """
@@ -46,6 +45,7 @@ class LoginDialog(QtWidgets.QDialog, FORM_CLASS):
 
         return
     
+#TODO: maybe have the following class inherit from the loginDialog class instead    
 class UI_TabContent:
     def __init__(self, auth_provider, TabContent=None):
         provider_title = auth_provider["title"]
@@ -77,4 +77,4 @@ class UI_TabContent:
 
     def retranslateUi(self, auth_provider):
         _translate = QtCore.QCoreApplication.translate
-        self.authButton.setText(_translate("SpatialDialog", "Log in to ") + auth_provider["title"])
+        self.authButton.setText(_translate("LoginDialog", "Log in to ") + auth_provider["title"])

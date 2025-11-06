@@ -40,12 +40,9 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.plugin = plugin
         self.model = model
 
-        if not self.connection:
-            self.connection = model.connect()
-
     def createChildren(self):
-        if not self.connection:
-            self.connection = openeo.connect(self.model.url)
+        #ensure a connection exists first
+        self.getConnection()
         
         #TODO: children for collections, batch-jobs, services
         items = []
@@ -80,7 +77,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
 
         settings = QgsSettings() #TODO: save auth info
         self.dlg = LoginDialog(
-            connection=self.connection,
+            connection=self.getConnection(),
             model=self.model,
             iface=self.plugin.iface
             )
@@ -91,14 +88,14 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             authProvider = self.dlg.activeAuthProvider
             if authProvider["type"] == "basic":
                 try:
-                    self.connection.authenticate_basic(self.dlg.username, self.dlg.password)
+                    self.getConnection().authenticate_basic(self.dlg.username, self.dlg.password)
                 except AttributeError:
                     self.plugin.iface.messageBar().pushMessage("Error", "login failed. connection missing")
                     return
 
             elif authProvider["type"] == "oidc":
                 try:
-                    self.connection.authenticate_oidc()
+                    self.getConnection().authenticate_oidc()
                 except AttributeError:
                     self.plugin.iface.messageBar().pushMessage("Error", "login failed. connection missing")
                     return
@@ -110,15 +107,17 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
     
     def isAuthenticated(self):
         try:
-            account = self.connection.describe_account()
+            account = self.getConnection().describe_account()
             if account:
                 return True
             else:
                 return False
-        except openeo.rest.OpenEoApiError as e:
+        except Exception:
             return False
 
-    def getConnection(self):
+    def getConnection(self):         
+        if not self.connection:
+            self.connection = self.model.connect()
         return self.connection
     
     def actions(self, parent):

@@ -5,6 +5,7 @@ import openeo
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
+from qgis.core import QgsSettings
 from qgis.core import QgsDataCollectionItem
 
 from . import OpenEOCollectionsGroupItem
@@ -58,6 +59,9 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.parent().removeConnection(self)
 
     def authenticate(self):
+        #TODO: check if authentication exists first
+
+        settings = QgsSettings()
         self.dlg = LoginDialog(
             connection=self.connection,
             model=self.model,
@@ -67,6 +71,22 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         result = self.dlg.exec()
 
         if result:
+            authProvider = self.dlg.activeAuthProvider
+            print(authProvider)
+            if authProvider["type"] == "basic":
+                try:
+                    self.connection.authenticate_basic(self.dlg.username, self.dlg.password)
+                except AttributeError:
+                    self.plugin.iface.messageBar().pushMessage("Error", "login failed. connection missing")
+                print(self.connection)
+            elif authProvider["type"] == "oidc":
+                try:
+                    self.connection.authenticate_oidc()
+                except AttributeError:
+                    self.plugin.iface.messageBar().pushMessage("Error", "login failed. connection missing")
+                print(self.connection)
+            else:
+                return
             return
 
     def getConnection(self):

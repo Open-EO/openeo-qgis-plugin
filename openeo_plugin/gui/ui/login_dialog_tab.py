@@ -24,7 +24,6 @@ class Ui_DynamicLoginDialog(Ui_LoginDialog):
         self.provider_tabs = []
 
         for auth_provider in auth_provider_list:
-            print(auth_provider)
             tab = {}
             provider_title = auth_provider["title"]
 
@@ -61,8 +60,15 @@ class Ui_DynamicLoginDialog(Ui_LoginDialog):
             tab["spacerItem"] = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
             tab["verticalLayout"].addItem(tab["spacerItem"])
 
+            if auth_provider["type"] == "oidc":
+                tab["oidcInfoLabel"] = QtWidgets.QLabel(self.internal)
+                tab["oidcInfoLabel"].setObjectName("oidcInfoLabel")
+                tab["verticalLayout"].addWidget(tab["oidcInfoLabel"])
+                tab["oidcInfoLabel"].setWordWrap(True)
+
             tab["authButton"] = QtWidgets.QPushButton(tab["widget"])
             tab["authButton"].setObjectName("authButton")
+            tab["authButton"].clicked.connect(self.login)
             tab["verticalLayout"].addWidget(tab["authButton"])
 
             self.tabWidget.addTab(tab["widget"], auth_provider["title"])
@@ -81,9 +87,10 @@ class Ui_DynamicLoginDialog(Ui_LoginDialog):
                 if auth_provider["type"] == "basic":
                     tab["usernameLabel"].setText(_translate("LoginDialog", "Username"))
                     tab["passwordLabel"].setText(_translate("LoginDialog", "Password"))
-                    tab["authButton"].setText(_translate("LoginDialog", "Authenticate with internal log in")) 
                     tab["warningLabel"].setText(_translate("LoginDialog", "<html><head/><body><p><span style=\" font-weight:700; color:#c01c28;\">warning: </span><span style=\" color:#000000;\">credentials are stored as plain text in project file</span></p></body></html>"))
-                else:    
+                    tab["authButton"].setText(_translate("LoginDialog", "Authenticate with internal log in"))
+                else:
+                    tab["oidcInfoLabel"].setText(_translate("LoginDialog","Pressing the button below may open a new browser window for login"))    
                     tab["authButton"].setText(_translate("LoginDialog", "Log in to ") + auth_provider["title"])
                 
                 if "description" in auth_provider:

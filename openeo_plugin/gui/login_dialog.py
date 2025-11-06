@@ -1,5 +1,10 @@
 #import os
-#import openeo
+import threading
+import io
+import re
+import time
+import sys
+import webbrowser
 
 #from qgis.PyQt import uic
 from PyQt5 import QtWidgets
@@ -18,20 +23,90 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
     def __init__(self, connection=None, model=None, parent=None, iface=None):
 
         super(LoginDialog, self).__init__(parent)
+        QApplication.setStyle("cleanlooks")
 
         self.iface = iface
         self.parent = parent
         self.connection = connection
-        #TODO: get auth provider list
+        self.activeAuthProvider = None
         #TODO: check that it supports deviceCodeFlow
         #TODO: ask for ClientID if it doesnt support that
         self.auth_provider_list = self.connection.list_auth_providers()
-        #self.auth_provider_list = [{"title": "openeo", "description":"this is an example provider"}, {"title": "otherExample", "description":""}]
-
-        QApplication.setStyle("cleanlooks")
         
         self.setupUi(self, auth_provider_list=self.auth_provider_list)
         #TODO: don't forget this during localization
         self.titleLabel.setText(f"Log in to {model.name}")
 
         return
+
+    def login(self):
+        # get the currently active tab to log in with   
+        auth_provider_idx = self.tabWidget.currentIndex()
+        auth_provider = self.auth_provider_list[auth_provider_idx]
+        self.activeAuthProvider = auth_provider # so the connectionItem can access it
+        tab = self.provider_tabs[auth_provider_idx]
+
+        if auth_provider["type"] == "basic":
+            self.username = tab["usernameEdit"].text()
+            self.password = tab["passwordEdit"].text()
+            self.activeAuthProvider = auth_provider
+            self.accept() # Close the dialog
+            return
+        
+        elif auth_provider["type"] == "oidc":
+            capture_buffer = io.StringIO()
+        
+            try:
+                # open a browser window when prompted
+                auth_thread = threading.Thread(target=self._run_auth, args=(capture_buffer,))
+                auth_thread.start()
+
+                # Add waiting indicator to window
+                tab["authButton"].setDisabled(True)
+                btn_text = tab["authButton"].text()
+                tab["authButton"].setText("Waiting for authentication...")
+                QApplication.processEvents()
+
+                # Monitor output buffer for URL as it appears
+                url_found = None
+                while auth_thread.is_alive():
+                    output = capture_buffer.getvalue()
+                    urls = re.findall(r'https?:\/\/[^\s]+', output)
+                    if urls:
+                        url_found = urls[0]
+                        break
+                    time.sleep(0.1)  # short wait before checking again
+
+                if url_found:
+                    msg = f"Opening browser to: {url_found}"
+                    self.iface.messageBar().pushMessage(msg)
+                    print(msg)
+                    webbrowser.open(url_found)
+                else:
+                    self.iface.messageBar().pushMessage("Error", "No URL found before auth finished.")
+                    print("No URL found before auth finished.")
+
+                auth_thread.join()
+                self.iface.messageBar().pushMessage("Error", "Auth process completed.")
+                print("Auth process completed.")
+
+                self.accept()
+                return
+            except AttributeError:
+                self.iface.messageBar().pushMessage("Error", "login failed. connection missing")
+                
+                self.reject()
+                return
+            finally:
+                self.accept()
+            return
+
+    def _run_auth(self, capture_buffer):
+        # Redirect stdout for this thread only
+        old_stdout = sys.stdout
+        sys.stdout = capture_buffer
+        try:
+            self.connection.authenticate_oidc()
+        finally:
+            sys.stdout = old_stdout
+    

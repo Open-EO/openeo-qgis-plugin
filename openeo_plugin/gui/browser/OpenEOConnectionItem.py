@@ -59,9 +59,11 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.parent().removeConnection(self)
 
     def authenticate(self):
-        #TODO: check if authentication exists first
+        if self.isAuthenticated():
+            # this shouldnt be reached since the action is already disabled in this case
+            return
 
-        settings = QgsSettings()
+        settings = QgsSettings() #TODO: save auth info
         self.dlg = LoginDialog(
             connection=self.connection,
             model=self.model,
@@ -88,6 +90,16 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             else:
                 return
             return
+    
+    def isAuthenticated(self):
+        try:
+            account = self.connection.describe_account()
+            if account:
+                return True
+            else:
+                return False
+        except openeo.rest.OpenEoApiError as e:
+            return False
 
     def getConnection(self):
         return self.connection
@@ -97,5 +109,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         action_authenticate.triggered.connect(self.authenticate)
         action_delete = QAction(QIcon(), "Remove Connection", parent)
         action_delete.triggered.connect(self.remove)
+
+        action_authenticate.setEnabled(not self.isAuthenticated())
+
         actions = [action_authenticate,action_delete]
         return actions

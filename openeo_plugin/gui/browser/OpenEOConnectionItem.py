@@ -8,6 +8,8 @@ from qgis.PyQt.QtWidgets import QAction
 from qgis.core import QgsSettings
 from qgis.core import QgsDataCollectionItem
 
+from . import OpenEOProcessesGroupItem
+from . import OpenEOServicesGroupItem
 from . import OpenEOCollectionsGroupItem
 from ..login_dialog import LoginDialog
 
@@ -53,7 +55,20 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         sip.transferto(collections, self)
         items.append(collections)
 
+        if self.isAuthenticated():
+            self.addServiceAndProcessGroups()
+
         return items
+    
+    def addServiceAndProcessGroups(self):
+        services = OpenEOServicesGroupItem(self.plugin, self)
+        sip.transferto(services, self)
+        processes = OpenEOProcessesGroupItem(self.plugin, self)
+        sip.transferto(processes, self)
+        
+        self.addChildItem(services, refresh=True)
+        self.addChildItem(processes, refresh=True)
+
     
     def remove(self):
         self.parent().removeConnection(self)
@@ -74,22 +89,24 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
 
         if result:
             authProvider = self.dlg.activeAuthProvider
-            print(authProvider)
             if authProvider["type"] == "basic":
                 try:
                     self.connection.authenticate_basic(self.dlg.username, self.dlg.password)
                 except AttributeError:
                     self.plugin.iface.messageBar().pushMessage("Error", "login failed. connection missing")
-                print(self.connection)
+                    return
+
             elif authProvider["type"] == "oidc":
                 try:
                     self.connection.authenticate_oidc()
                 except AttributeError:
                     self.plugin.iface.messageBar().pushMessage("Error", "login failed. connection missing")
-                print(self.connection)
-            else:
-                return
-            return
+                    return
+
+        if self.isAuthenticated():
+            self.addServiceAndProcessGroups()
+
+        return
     
     def isAuthenticated(self):
         try:

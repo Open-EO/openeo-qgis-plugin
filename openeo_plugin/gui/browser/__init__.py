@@ -1,6 +1,12 @@
+from .OpenEOProcessesGroupItem import OpenEOProcessesGroupItem
+
+from .OpenEOServicesGroupItem import OpenEOServicesGroupItem
+
 from .OpenEOCollectionItem import OpenEOCollectionItem
 from .OpenEOCollectionLayerItem import OpenEOCollectionLayerItem
 from .OpenEOCollectionsGroupItem import OpenEOCollectionsGroupItem
+
 from .OpenEOConnectionItem import OpenEOConnectionItem
+
 from .OpenEOItemProvider import OpenEOItemProvider
 from .OpenEORootItem import OpenEORootItem

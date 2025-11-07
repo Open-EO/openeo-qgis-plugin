@@ -3,9 +3,9 @@ import sip
 
 from qgis.core import QgsDataCollectionItem
 
-class OpenEOProcessesGroupItem(QgsDataCollectionItem):
+class OpenEOJobsGroupItem(QgsDataCollectionItem):
     """
-    QgsDataCollectionItem that groups together all Processes offered by the corresponding
+    QgsDataCollectionItem that groups together all Batch jobs offered by the corresponding
     openEO provider to the logged in account. Requires Authentication.
     Direct parent to:
     """
@@ -19,8 +19,20 @@ class OpenEOProcessesGroupItem(QgsDataCollectionItem):
         :param parent_connection: the parent DataItem. expected to be OpenEOConnectionItem.
         :type parent: QgsDataItem
         """
-        QgsDataCollectionItem.__init__(self, parent, "Processes", plugin.PLUGIN_ENTRY_NAME)
+        QgsDataCollectionItem.__init__(self, parent, "Batch Jobs", plugin.PLUGIN_ENTRY_NAME)
         self.plugin = plugin
+
+        self.populate() #removes expand icon
 
     def getConnection(self):
         return self.parent().getConnection()
+    
+    def isAuthenticated(self):
+        return self.parent().isAuthenticated()
+    
+    def handleDoubleClick(self):
+        if not self.isAuthenticated():
+            self.parent().authenticate()
+
+            #TODO: handle child items
+        return super().handleDoubleClick()

@@ -19,8 +19,20 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         :param parent_connection: the parent DataItem. expected to be OpenEOConnectionItem.
         :type parent: QgsDataItem
         """
-        QgsDataCollectionItem.__init__(self, parent, "Services", plugin.PLUGIN_ENTRY_NAME)
+        QgsDataCollectionItem.__init__(self, parent, "Web Services", plugin.PLUGIN_ENTRY_NAME)
         self.plugin = plugin
+
+        self.populate() #removes expand icon
 
     def getConnection(self):
         return self.parent().getConnection()
+    
+    def isAuthenticated(self):
+        return self.parent().isAuthenticated()
+    
+    def handleDoubleClick(self):
+        if not self.isAuthenticated():
+            self.parent().authenticate()
+
+            #TODO: handle child items
+        return super().handleDoubleClick()

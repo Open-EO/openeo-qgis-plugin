@@ -1,4 +1,4 @@
-from .OpenEOProcessesGroupItem import OpenEOProcessesGroupItem
+from .OpenEOJobsGroupItem import OpenEOJobsGroupItem
 
 from .OpenEOServicesGroupItem import OpenEOServicesGroupItem
 

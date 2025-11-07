@@ -8,7 +8,7 @@ from qgis.PyQt.QtWidgets import QAction
 from qgis.core import QgsSettings
 from qgis.core import QgsDataCollectionItem
 
-from . import OpenEOProcessesGroupItem
+from . import OpenEOJobsGroupItem
 from . import OpenEOServicesGroupItem
 from . import OpenEOCollectionsGroupItem
 from ..login_dialog import LoginDialog
@@ -44,28 +44,21 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         #ensure a connection exists first
         self.getConnection()
         
-        #TODO: children for collections, batch-jobs, services
         items = []
         
         # create Collections group
         collections = OpenEOCollectionsGroupItem(self.plugin, self)
         sip.transferto(collections, self)
-        items.append(collections)
-
-        if self.isAuthenticated():
-            self.addServiceAndProcessGroups()
-
-        return items
-    
-    def addServiceAndProcessGroups(self):
         services = OpenEOServicesGroupItem(self.plugin, self)
         sip.transferto(services, self)
-        processes = OpenEOProcessesGroupItem(self.plugin, self)
-        sip.transferto(processes, self)
+        jobs = OpenEOJobsGroupItem(self.plugin, self)
+        sip.transferto(jobs, self)
         
-        self.addChildItem(services, refresh=True)
-        self.addChildItem(processes, refresh=True)
+        items.append(collections)
+        items.append(services)
+        items.append(jobs)
 
+        return items
     
     def remove(self):
         self.parent().removeConnection(self)
@@ -99,9 +92,6 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                 except AttributeError:
                     self.plugin.iface.messageBar().pushMessage("Error", "login failed. connection missing")
                     return
-
-        if self.isAuthenticated():
-            self.addServiceAndProcessGroups()
 
         return
     

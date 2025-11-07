@@ -4,6 +4,8 @@ import openeo
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtWidgets import QApplication
 
 from qgis.core import QgsSettings
 from qgis.core import QgsDataCollectionItem
@@ -68,13 +70,15 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             # this shouldnt be reached since the action is already disabled in this case
             return
 
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         settings = QgsSettings() #TODO: save auth info
         self.dlg = LoginDialog(
             connection=self.getConnection(),
             model=self.model,
             iface=self.plugin.iface
             )
-        
+        QApplication.restoreOverrideCursor()
+
         result = self.dlg.exec()
 
         if result:

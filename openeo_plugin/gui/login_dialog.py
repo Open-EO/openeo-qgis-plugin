@@ -29,13 +29,20 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
         self.parent = parent
         self.connection = connection
         self.activeAuthProvider = None
-        #TODO: check that it supports deviceCodeFlow
-        #TODO: ask for ClientID if it doesnt support that
+        
         self.auth_provider_list = self.connection.list_auth_providers()
         
         self.setupUi(self, auth_provider_list=self.auth_provider_list)
         #TODO: don't forget this during localization
         self.titleLabel.setText(f"Log in to {model.name}")
+
+        # check for device_code_flow
+        #TODO: ask for ClientID if it doesnt support that
+        for i, auth_provider in enumerate(self.auth_provider_list):
+            if auth_provider["type"] == "oidc":
+                if not self._supportsDeviceCodeFlow(auth_provider):
+                    self.tabWidget.setTabEnabled(i, False) #for now, grey out tabs that don't support devicecodeflow
+                    self.tabWidget.setTabToolTip(i, "oidc provider does not support device code flow")
 
         return
 
@@ -53,7 +60,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
             self.accept() # Close the dialog
             return
         
-        elif auth_provider["type"] == "oidc":
+        elif auth_provider["type"] == "oidc" and auth_provider:
             capture_buffer = io.StringIO()
         
             try:
@@ -110,3 +117,14 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
         finally:
             sys.stdout = old_stdout
     
+    def _supportsDeviceCodeFlow(self, auth_provider):
+        # check if auth provider has a list of default clients
+        #TODO: exact implementation may depend on how openeo.list_auth_providers is finally implemented
+        support = False
+        if "default_clients" not in auth_provider:
+            return support
+        for client in auth_provider["default_clients"]:
+            if "urn:ietf:params:oauth:grant-type:device_code+pkce" in client ["grant_types"]:
+               support = True 
+
+        return support

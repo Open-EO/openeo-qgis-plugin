@@ -2,19 +2,32 @@ from urllib.parse import quote
 from ...utils.wmts import WebMapTileService
 from ...utils.logging import warning
 
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
 from qgis.core import QgsIconUtils
-from qgis.core import QgsCoordinateReferenceSystem
 from qgis.core import Qgis
-from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import QApplication
-
-from qgis.core import Qgis, QgsLayerItem, QgsDataItem, QgsMimeDataUtils, QgsMapLayerFactory
+from qgis.core import QgsDataItem
+from qgis.core import QgsMimeDataUtils
+from qgis.core import QgsMapLayerFactory
 
 class OpenEOCollectionLayerItem(QgsDataItem):
     def __init__(self, parent, collection, plugin):
+        """Constructor.
+
+        :param parent: the parent DataItem. expected to be an OpenEOCollectionsGroupItem.
+        :type parent: QgsDataItem
+
+        :param plugin: Reference to the qgis plugin object. Passing this object
+            to the children allows for access to important attributes like
+            PLUGIN_NAME and PLUGIN_ENTRY_NAME.
+        
+        :param collection: dict containing relevant infos about the collection.
+        :type url: dict
+        """
+
         name = collection.get("title") or collection.get("id")
         QgsDataItem.__init__(
             self,
@@ -27,6 +40,8 @@ class OpenEOCollectionLayerItem(QgsDataItem):
 
         self.collection = collection
         self.plugin = plugin
+
+        self.uris = []
 
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
@@ -85,13 +100,17 @@ class OpenEOCollectionLayerItem(QgsDataItem):
             return uri
         else:
             return None
-        
     
     def mimeUris(self):
+
+        #see if uri has already been created
+        # TODO: in the current state this only supports single URIs, should not be an issue for the used types.
+        if len(self.uris) == 0:
+            return self.uris
+
         mimeUris = []
 
         webMapLinks = self.parent().getWebMapLinks(self.collection)
-        print(webMapLinks)
         if len(webMapLinks) == 0:
             warning(self.plugin.iface, "Could not detect a layer from the given source.")
             return mimeUris
@@ -112,14 +131,15 @@ class OpenEOCollectionLayerItem(QgsDataItem):
         
         QApplication.restoreOverrideCursor()
 
+        self.uris = mimeUris
+
         return mimeUris
     
     def addToProject(self):
-        for uri in self.mimeUris():
-            self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
+        uri = self.mimeUris()[0]
+        self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
 
     def actions(self, parent):
         action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
         action_add_to_project.triggered.connect(self.addToProject)
         return [action_add_to_project]
-        return []

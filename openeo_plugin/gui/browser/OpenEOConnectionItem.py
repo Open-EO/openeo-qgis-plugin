@@ -51,14 +51,14 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         # create Collections group
         collections = OpenEOCollectionsGroupItem(self.plugin, self)
         sip.transferto(collections, self)
-        services = OpenEOServicesGroupItem(self.plugin, self)
-        sip.transferto(services, self)
-        jobs = OpenEOJobsGroupItem(self.plugin, self)
-        sip.transferto(jobs, self)
+        self.servicesGroup = OpenEOServicesGroupItem(self.plugin, self)
+        sip.transferto(self.servicesGroup, self)
+        self.jobsGroup = OpenEOJobsGroupItem(self.plugin, self)
+        sip.transferto(self.jobsGroup, self)
         
         items.append(collections)
-        items.append(services)
-        items.append(jobs)
+        items.append(self.servicesGroup)
+        items.append(self.jobsGroup)
 
         return items
     
@@ -96,6 +96,10 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                 except AttributeError:
                     self.plugin.iface.messageBar().pushMessage("Error", "login failed. connection missing")
                     return
+                
+        #refresh children
+        self.servicesGroup.refresh()
+        self.jobsGroup.refresh()
 
         return
     

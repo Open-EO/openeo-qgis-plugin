@@ -3,6 +3,8 @@ import sip
 
 from qgis.core import QgsDataCollectionItem
 
+from . import OpenEOServiceItem
+
 class OpenEOServicesGroupItem(QgsDataCollectionItem):
     """
     QgsDataCollectionItem that groups together all Services offered by the corresponding
@@ -24,6 +26,21 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
 
         self.populate() #removes expand icon
 
+    def createChildren(self):
+        if not self.isAuthenticated():
+            return []
+        items = []
+        services = self.getServices()
+        for service in services:
+            item = OpenEOServiceItem(
+                parent = self,
+                service = service,
+                plugin =  self.plugin,
+            )
+            sip.transferto(item, self)
+            items.append(item)
+        return items
+
     def getConnection(self):
         return self.parent().getConnection()
     
@@ -36,3 +53,7 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
 
             #TODO: handle child items
         return super().handleDoubleClick()
+    
+    def getServices(self):
+        services = self.getConnection().list_services()
+        return services

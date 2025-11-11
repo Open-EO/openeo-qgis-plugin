@@ -3,6 +3,8 @@ import sip
 
 from qgis.core import QgsDataCollectionItem
 
+from . import OpenEOJobItem
+
 class OpenEOJobsGroupItem(QgsDataCollectionItem):
     """
     QgsDataCollectionItem that groups together all Batch jobs offered by the corresponding
@@ -24,6 +26,26 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
         self.populate() #removes expand icon
 
+    def createChildren(self):
+        if not self.isAuthenticated():
+            return []
+        items = []
+        jobs = self.getJobs()
+        for job in jobs:
+            item = OpenEOJobItem(
+                parent = self,
+                job = job,
+                plugin =  self.plugin,
+            )
+            sip.transferto(item, self)
+            items.append(item)
+        return items
+
+    def addChildren(self, children):
+        for child in children:
+            self.addChildItem(child)
+        self.refresh()
+
     def getConnection(self):
         return self.parent().getConnection()
     
@@ -33,6 +55,11 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
     def handleDoubleClick(self):
         if not self.isAuthenticated():
             self.parent().authenticate()
-
+            self.refresh()
             #TODO: handle child items
         return super().handleDoubleClick()
+    
+    def getJobs(self):
+        #TODO: how to handle pagination
+        jobs = self.getConnection().list_jobs()
+        return jobs

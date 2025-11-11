@@ -14,6 +14,7 @@ from . import OpenEOJobsGroupItem
 from . import OpenEOServicesGroupItem
 from . import OpenEOCollectionsGroupItem
 from ..login_dialog import LoginDialog
+from ...utils.settings import SettingsPath
 
 class OpenEOConnectionItem(QgsDataCollectionItem):
     """
@@ -42,6 +43,10 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.plugin = plugin
         self.model = model
 
+        login = self.getLogin()
+        if login:
+            self.getConnection().authenticate_basic(login["loginName"], login["password"])
+
     def createChildren(self):
         #ensure a connection exists first
         self.getConnection()
@@ -63,6 +68,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         return items
     
     def remove(self):
+        self.deleteLogin()
         self.parent().removeConnection(self)
 
     def authenticate(self):
@@ -86,6 +92,9 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             if authProvider["type"] == "basic":
                 try:
                     self.getConnection().authenticate_basic(self.dlg.username, self.dlg.password)
+                    if self.isAuthenticated():
+                        #TODO: add checkmark to select whether to save login
+                        self.saveLogin(self.dlg.username, self.dlg.password)
                 except AttributeError:
                     self.plugin.iface.messageBar().pushMessage("Error", "login failed. connection missing")
                     return
@@ -98,8 +107,9 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                     return
                 
         #refresh children
-        self.servicesGroup.refresh()
-        self.jobsGroup.refresh()
+        if hasattr(self, "serviceGroup") and hasattr(self, "jobsGroup"):
+            self.servicesGroup.refresh()
+            self.jobsGroup.refresh()
 
         return
     
@@ -117,6 +127,34 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         if not self.connection:
             self.connection = self.model.connect()
         return self.connection
+    
+    def saveLogin(self, name, password):
+        settings = QgsSettings()
+        loginInfo = {
+            "id": str(self.model.id),
+            "loginName": name,
+            "password": password,
+        }
+        logins = settings.value(SettingsPath.SAVED_LOGINS.value)
+        logins.append(loginInfo)
+        settings.setValue(SettingsPath.SAVED_LOGINS.value, logins)
+
+    def getLogin(self):
+        settings = QgsSettings()
+        loginInfo = None # return None if no login has been saved
+        logins = settings.value(SettingsPath.SAVED_LOGINS.value)
+        for login in logins:
+            if login["id"] == str(self.model.id):
+                loginInfo = login
+        return loginInfo
+
+    def deleteLogin(self):
+        settings = QgsSettings()
+        logins = settings.value(SettingsPath.SAVED_LOGINS.value)
+        for i, login in enumerate(logins):
+            if login["id"] == str(self.model.id):
+                logins.pop(i)
+        settings.setValue(SettingsPath.SAVED_LOGINS.value, logins)
     
     def actions(self, parent):
         action_authenticate = QAction(QIcon(), "Authentication (Login)", parent)

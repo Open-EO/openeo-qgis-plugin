@@ -168,9 +168,15 @@ class OpenEO:
     def initSettings(self):
         """Checks for existing plugin settings or sets them up if they don't exist"""
         settings = QgsSettings()
-        settings_exist = settings.contains(SettingsPath.SAVED_CONNECTIONS.value)
-        settings.value = settings.value(SettingsPath.SAVED_CONNECTIONS.value)
+        saved_connections_exist = settings.contains(SettingsPath.SAVED_CONNECTIONS.value)
+        saved_connections_value = settings.value(SettingsPath.SAVED_CONNECTIONS.value)
 
-        if not settings_exist or not settings.value:
+        if not saved_connections_exist or not saved_connections_value:
             #create the settings key
             settings.setValue(SettingsPath.SAVED_CONNECTIONS.value, []) 
+        
+        saved_logins_exist = settings.contains(SettingsPath.SAVED_LOGINS.value)
+        saved_logins_value = settings.value(SettingsPath.SAVED_LOGINS.value)
+
+        if not saved_logins_exist or not saved_logins_value:
+            settings.setValue(SettingsPath.SAVED_LOGINS.value, [])

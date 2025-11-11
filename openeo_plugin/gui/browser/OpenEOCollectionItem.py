@@ -1,8 +1,6 @@
 from urllib.parse import quote
-import requests
 import tempfile
 import webbrowser
-import base64
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication

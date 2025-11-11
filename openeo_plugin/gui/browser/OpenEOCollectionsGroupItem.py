@@ -4,7 +4,6 @@ import sip
 from qgis.core import QgsDataCollectionItem
 
 from . import OpenEOCollectionItem
-from . import OpenEOCollectionLayerItem
 
 class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
     """

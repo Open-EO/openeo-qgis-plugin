@@ -1,6 +1,8 @@
 from urllib.parse import quote
-from ...utils.wmts import WebMapTileService
-from ...utils.logging import warning
+import requests
+import tempfile
+import webbrowser
+import base64
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication
@@ -12,6 +14,9 @@ from qgis.core import Qgis
 from qgis.core import QgsDataItem
 from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
+
+from ...utils.wmts import WebMapTileService
+from ...utils.logging import warning
 
 class OpenEOCollectionLayerItem(QgsDataItem):
     def __init__(self, parent, collection, plugin):
@@ -134,12 +139,85 @@ class OpenEOCollectionLayerItem(QgsDataItem):
         self.uris = mimeUris
 
         return mimeUris
+
     
     def addToProject(self):
         uri = self.mimeUris()[0]
         self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
 
+    def viewProperties(self):
+        collection_link = None
+        
+        links = self.collection["links"]
+        for link in links:
+            if link["rel"] == "self":
+                collection_link = link["href"]
+                break
+        
+        collectionInfoHTML = f"""
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Collections</title>
+              <style id="styles">
+                body {{
+                  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Ubuntu, Cantarell, 'Open Sans', sans-serif;
+                }}
+                h2, h3 {{
+                  color: #58965A;
+                  border-bottom: 1px solid black;
+                  font-weight: 600;
+                  padding: 0.25rem;
+                }}
+                h3 {{
+                  font-size: 2rem;
+                }}
+                h3 {{
+                  font-size: 1.5rem;
+                }}
+
+                a {{
+                  color: #84ABD5;
+                }}
+              </style>
+            </head>
+            <body>
+              <p id="loading" style="display: block;">Loading data…</p>
+              <openeo-collection id="data" style="display: none;"></openeo-collection>
+            </body>
+              <script src="https://cdn.jsdelivr.net/npm/@openeo/vue-components@2/assets/openeo.min.js"></script>
+              <script>
+              fetch('{collection_link}')
+                .then(function(response) {{
+                  return response.json();
+                }})
+                .then(function(data) {{
+                  console.log(data);
+                  var elem = document.getElementById("data");
+                  elem.data = data;
+                  elem.style.display = "block";
+
+                  var css = document.getElementById("styles").cloneNode(true);
+                  elem.shadowRoot.appendChild(css);
+
+                  document.getElementById("loading").style.display = "none";
+                }})
+                .catch(function(err) {{
+                  console.error('Fetch error:', err);
+                }});</script>
+            </html>"""
+        fh, path = tempfile.mkstemp(suffix='.html')
+        url = 'file://' + path
+        with open(path, 'w') as fp:
+            fp.write(collectionInfoHTML)
+        webbrowser.open_new(url)
+
+
     def actions(self, parent):
         action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
         action_add_to_project.triggered.connect(self.addToProject)
-        return [action_add_to_project]
+        action_properties = QAction(QIcon(), "Collection Properties", parent)
+        action_properties.triggered.connect(self.viewProperties)
+        return [action_add_to_project, action_properties]

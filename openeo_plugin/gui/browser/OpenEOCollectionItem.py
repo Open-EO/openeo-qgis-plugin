@@ -53,7 +53,7 @@ class OpenEOCollectionItem(QgsDataItem):
     def icon(self):
         if self.preview:
             return QgsIconUtils.iconRaster()
-        return QgsIconUtils.iconTable()
+        return QgsIconUtils.iconTiledScene()
 
     def hasDragEnabled(self):
         return self.preview

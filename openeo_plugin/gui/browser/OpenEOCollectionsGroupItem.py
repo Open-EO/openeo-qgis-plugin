@@ -11,7 +11,7 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
     QgsDataCollectionItem that groups together all collections offered by the corresponding
     openEO provider
     Direct parent to:
-     - OpenEOCollectionItem
+     - OpenEOCollectionLayerItem
     """
     def __init__(self, plugin, parent):
         """Constructor.
@@ -37,10 +37,11 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
         for collection in collections:
             # determine whether collectionItem or LayerItem
             if len(self.getWebMapLinks(collection)) > 0:
-                item = OpenEOCollectionLayerItem(
+                item = OpenEOCollectionItem(
                     parent=self, 
                     collection=collection,
-                    plugin=self.plugin
+                    plugin=self.plugin,
+                    preview=True
                 )
                 sip.transferto(item, self)
                 items.append(item)

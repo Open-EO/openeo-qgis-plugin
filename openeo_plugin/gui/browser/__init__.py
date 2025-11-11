@@ -3,7 +3,6 @@ from .OpenEOJobsGroupItem import OpenEOJobsGroupItem
 from .OpenEOServicesGroupItem import OpenEOServicesGroupItem
 
 from .OpenEOCollectionItem import OpenEOCollectionItem
-from .OpenEOCollectionLayerItem import OpenEOCollectionLayerItem
 from .OpenEOCollectionsGroupItem import OpenEOCollectionsGroupItem
 
 from .OpenEOConnectionItem import OpenEOConnectionItem

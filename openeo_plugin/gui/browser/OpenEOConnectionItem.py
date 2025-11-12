@@ -7,6 +7,7 @@ from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication
 
+from qgis.core import QgsApplication
 from qgis.core import QgsSettings
 from qgis.core import QgsDataCollectionItem
 
@@ -47,6 +48,11 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         if login:
             self.getConnection().authenticate_basic(login["loginName"], login["password"])
 
+    def icon(self):
+        icon = QgsApplication.getThemeIcon("mIconCloud.svg")
+        return icon
+
+
     def createChildren(self):
         #ensure a connection exists first
         self.getConnection()
@@ -77,7 +83,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             return
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        settings = QgsSettings() #TODO: save auth info
+        settings = QgsSettings()
         self.dlg = LoginDialog(
             connection=self.getConnection(),
             model=self.model,

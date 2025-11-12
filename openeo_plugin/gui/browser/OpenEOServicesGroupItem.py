@@ -2,6 +2,7 @@
 import sip
 
 from qgis.core import QgsDataCollectionItem
+from qgis.core import QgsApplication
 
 from . import OpenEOServiceItem
 
@@ -25,6 +26,10 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         self.plugin = plugin
 
         self.populate() #removes expand icon
+
+    def icon(self):
+        icon = QgsApplication.getThemeIcon("mIconFolder.svg")
+        return icon
 
     def createChildren(self):
         if not self.isAuthenticated():

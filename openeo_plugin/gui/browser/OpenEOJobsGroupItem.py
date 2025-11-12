@@ -2,6 +2,7 @@
 import sip
 
 from qgis.core import QgsDataCollectionItem
+from qgis.core import QgsApplication
 
 from . import OpenEOJobItem
 
@@ -40,7 +41,11 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             sip.transferto(item, self)
             items.append(item)
         return items
-
+    
+    def icon(self):
+        icon = QgsApplication.getThemeIcon("mIconFolder.svg")
+        return icon
+    
     def addChildren(self, children):
         for child in children:
             self.addChildItem(child)

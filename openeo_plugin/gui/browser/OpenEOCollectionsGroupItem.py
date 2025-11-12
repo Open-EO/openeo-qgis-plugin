@@ -2,6 +2,7 @@
 import sip
 
 from qgis.core import QgsDataCollectionItem
+from qgis.core import QgsApplication
 
 from . import OpenEOCollectionItem
 
@@ -24,6 +25,10 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
         """
         QgsDataCollectionItem.__init__(self, parent, "Collections", plugin.PLUGIN_ENTRY_NAME)
         self.plugin = plugin
+
+    def icon(self):
+        icon = QgsApplication.getThemeIcon("mIconFolder.svg")
+        return icon
 
     def getCollections(self):
         #some sort of pagination might be beneficial

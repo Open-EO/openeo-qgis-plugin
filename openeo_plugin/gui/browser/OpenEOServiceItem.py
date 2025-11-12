@@ -2,8 +2,6 @@
 from urllib.parse import quote
 
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtGui import QFont
-from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import QApplication
 
 from qgis.core import QgsIconUtils
@@ -127,6 +125,7 @@ class OpenEOServiceItem(QgsDataItem):
             if mimeUri:
                 mimeUris.append(mimeUri)
         except Exception as e:
+            QApplication.restoreOverrideCursor()
             print(e)
             warning(
                 self.plugin.iface,

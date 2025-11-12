@@ -114,30 +114,28 @@ class OpenEOServiceItem(QgsDataItem):
 
         mimeUris = []
 
-        webMapLinks = self.parent().getWebMapLinks(self.service)
-        if len(webMapLinks) == 0:
+        service = self.service
+        if not service:
             warning(self.plugin.iface, "Could not detect a layer from the given source.")
             return mimeUris
 
         QApplication.setOverrideCursor(Qt.BusyCursor)
 
         #TODO: what if operation takes way too long?
-        for link in webMapLinks:
-            try:
-                mimeUri = self.createUri(link)
-                if mimeUri:
-                    mimeUris.append(mimeUri)
-            except Exception as e:
-                print(e)
-                warning(
-                    self.plugin.iface,
-                    f"Loading the map service {link['href']} failed."
-                )
+        try:
+            mimeUri = self.createUri(service)
+            if mimeUri:
+                mimeUris.append(mimeUri)
+        except Exception as e:
+            print(e)
+            warning(
+                self.plugin.iface,
+                f"Loading the map service {service['url']} failed."
+            )
         
         QApplication.restoreOverrideCursor()
 
         self.uris = mimeUris
-        print(self.uris)
 
         return mimeUris
 

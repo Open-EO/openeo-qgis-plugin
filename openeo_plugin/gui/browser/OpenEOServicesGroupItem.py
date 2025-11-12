@@ -53,23 +53,6 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
 
         return super().handleDoubleClick()
     
-    def getWebMapLinks(self, service):
-        """
-        helper-function that determines whether or not a service of this 
-        connection contains a web-map-link 
-        """
-        webMapLinks = []
-        print(service)
-        #TODO: more cases. how are wmts handled?
-        match service["type"].lower():
-            case "wmts":
-                webMapLinks.append(service)
-            case "xyz":
-                webMapLinks.append(service)
-            case "wms":
-                webMapLinks.append(service)
-        return webMapLinks
-    
     def getServices(self):
         services = self.getConnection().list_services()
         return services

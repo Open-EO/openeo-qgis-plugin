@@ -87,7 +87,7 @@ class Ui_DynamicLoginDialog(Ui_LoginDialog):
                 if auth_provider["type"] == "basic":
                     tab["usernameLabel"].setText(_translate("LoginDialog", "Username"))
                     tab["passwordLabel"].setText(_translate("LoginDialog", "Password"))
-                    tab["warningLabel"].setText(_translate("LoginDialog", "<html><head/><body><p><span style=\" font-weight:700; color:#c01c28;\">warning: </span><span style=\" color:#000000;\">credentials are stored as plain text in project file</span></p></body></html>"))
+                    tab["warningLabel"].setText(_translate("LoginDialog", "<html><head/><body><p><span style=\" font-weight:700; color:#c01c28;\">Warning: </span><span style=\" color:#000000;\">Credentials are stored as plain text in the project file!</span></p></body></html>"))
                     tab["authButton"].setText(_translate("LoginDialog", "Authenticate with internal log in"))
                 else:
                     tab["oidcInfoLabel"].setText(_translate("LoginDialog","Pressing the button below may open a new browser window for login"))    

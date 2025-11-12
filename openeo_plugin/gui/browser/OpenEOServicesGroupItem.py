@@ -51,8 +51,30 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         if not self.isAuthenticated():
             self.parent().authenticate()
 
-            #TODO: handle child items
         return super().handleDoubleClick()
+    
+    def getWebMapLinks(self, service):
+        """
+        helper-function that determines whether or not a service of this 
+        connection contains a web-map-link 
+        """
+        webMapLinks = []
+        print(service)
+        #TODO: more cases. how are wmts handled?
+        match service["type"]:
+            case "wmts":
+                webMapLinks.append(service)
+            case "xyz":
+                webMapLinks.append(service)
+            # case "3d-tiles":
+            #     webMapLinks.append(service)
+            # case "wms":
+            #     webMapLinks.append(service)
+            # case "pmtiles":
+            #     webMapLinks.append(service)
+            # case "tilejson":
+            #     webMapLinks.append(service)
+        return webMapLinks
     
     def getServices(self):
         services = self.getConnection().list_services()

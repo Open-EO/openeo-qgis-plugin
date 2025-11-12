@@ -1,7 +1,19 @@
 # -*- coding: utf-8 -*-
+from urllib.parse import quote
+
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QFont
+from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtWidgets import QApplication
+
 from qgis.core import QgsIconUtils
 from qgis.core import Qgis
 from qgis.core import QgsDataItem
+from qgis.core import QgsMimeDataUtils
+from qgis.core import QgsMapLayerFactory
+
+from ...utils.wmts import WebMapTileService
+from ...utils.logging import warning
 
 class OpenEOServiceItem(QgsDataItem):
     def __init__(self, parent, service, plugin):
@@ -53,6 +65,83 @@ class OpenEOServiceItem(QgsDataItem):
     
     def getConnection(self):
         return self.parent().getConnection()
+    
+    def createUri(self, link):
+        title = link.get("title") or ""
+        mapType = link.get("type") or ""
+
+        uri = QgsMimeDataUtils.Uri()
+        uri.layerType = QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster)  
+        uri.providerKey = "wms"
+        uri.name = self.layerName()
+        if len(title) > 0 and title != uri.name:
+            uri.name += f" - {title}"
+        uri.supportedFormats = self.supportedFormats() # todo: do we need to set this more specifically?
+        uri.supportedCrs = self.supportedCrs() # todo: set more specific supportedCrs below
+
+        # different map service formats
+        if mapType == "xyz":
+            uri.uri = f"type=xyz&url={link["url"]}"
+            return uri
+        elif mapType == "wmts":
+            wmtsUrl = link["url"]+"?service=wmts&request=getCapabilities"
+            wmts = WebMapTileService(wmtsUrl)
+            targetCRS = "EPSG::3857"
+            
+            tileMatrixSet = None
+            for tms_id, tms in list(wmts.tilematrixsets.items()):
+                if targetCRS in tms.crs: 
+                    tileMatrixSet = tms_id
+                    break
+            layerID = None
+            layerID = list(wmts.contents)[0]
+            styleID = wmts.contents[layerID].styles
+
+            #TODO: determine more URI parameters programmatically
+            uri.uri = f"crs=EPSG:3857&styles=default&tilePixelRatio=0&format=image/png&layers={layerID}&tileMatrixSet={tileMatrixSet}&url={link["href"]}"
+            return uri
+        else:
+            return None
+        
+    def mimeUris(self):
+        #see if uri has already been created
+        # TODO: in the current state this only supports single URIs, should not be an issue for the used types.
+        if len(self.uris) != 0:
+            return self.uris
+
+        mimeUris = []
+
+        webMapLinks = self.parent().getWebMapLinks(self.service)
+        if len(webMapLinks) == 0:
+            warning(self.plugin.iface, "Could not detect a layer from the given source.")
+            return mimeUris
+
+        QApplication.setOverrideCursor(Qt.BusyCursor)
+
+        #TODO: what if operation takes way too long?
+        for link in webMapLinks:
+            try:
+                mimeUri = self.createUri(link)
+                if mimeUri:
+                    mimeUris.append(mimeUri)
+            except Exception as e:
+                print(e)
+                warning(
+                    self.plugin.iface,
+                    f"Loading the map service {link['href']} failed."
+                )
+        
+        QApplication.restoreOverrideCursor()
+
+        self.uris = mimeUris
+        print(self.uris)
+
+        return mimeUris
+
+    def addToProject(self):
+        uris = self.mimeUris()
+        uri = uris[0]
+        self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
 
     def actions(self, parent):
         actions = []

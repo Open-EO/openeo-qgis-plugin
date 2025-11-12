@@ -61,19 +61,13 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         webMapLinks = []
         print(service)
         #TODO: more cases. how are wmts handled?
-        match service["type"]:
+        match service["type"].lower():
             case "wmts":
                 webMapLinks.append(service)
             case "xyz":
                 webMapLinks.append(service)
-            # case "3d-tiles":
-            #     webMapLinks.append(service)
-            # case "wms":
-            #     webMapLinks.append(service)
-            # case "pmtiles":
-            #     webMapLinks.append(service)
-            # case "tilejson":
-            #     webMapLinks.append(service)
+            case "wms":
+                webMapLinks.append(service)
         return webMapLinks
     
     def getServices(self):

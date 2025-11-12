@@ -80,10 +80,10 @@ class OpenEOServiceItem(QgsDataItem):
         uri.supportedCrs = self.supportedCrs() # todo: set more specific supportedCrs below
 
         # different map service formats
-        if mapType == "xyz":
+        if mapType.lower() == "xyz":
             uri.uri = f"type=xyz&url={link["url"]}"
             return uri
-        elif mapType == "wmts":
+        elif mapType.lower() == "wmts":
             wmtsUrl = link["url"]+"?service=wmts&request=getCapabilities"
             wmts = WebMapTileService(wmtsUrl)
             targetCRS = "EPSG::3857"
@@ -100,6 +100,9 @@ class OpenEOServiceItem(QgsDataItem):
             #TODO: determine more URI parameters programmatically
             uri.uri = f"crs=EPSG:3857&styles=default&tilePixelRatio=0&format=image/png&layers={layerID}&tileMatrixSet={tileMatrixSet}&url={link["href"]}"
             return uri
+        elif mapType.lower() == "wms":
+            #TODO
+            return
         else:
             return None
         

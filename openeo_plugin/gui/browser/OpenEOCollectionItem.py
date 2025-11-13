@@ -186,7 +186,7 @@ class OpenEOCollectionItem(QgsDataItem):
             action_add_to_project.triggered.connect(self.addToProject)
             actions.append(action_add_to_project)
 
-        action_properties = QAction(QIcon(), "Collection Properties", parent)
+        action_properties = QAction(QIcon(), "Details", parent)
         action_properties.triggered.connect(self.viewProperties)
         actions.append(action_properties)
 

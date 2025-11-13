@@ -118,8 +118,10 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                     return
                 
         #refresh children
-        if hasattr(self, "serviceGroup") and hasattr(self, "jobsGroup"):
+        if hasattr(self, "servicesGroup"):
             self.servicesGroup.refresh()
+
+        if hasattr(self, "jobsGroup"):
             self.jobsGroup.refresh()
 
         return

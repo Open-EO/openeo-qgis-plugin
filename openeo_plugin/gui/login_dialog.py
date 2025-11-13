@@ -90,7 +90,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                     print(msg)
                     webbrowser.open(url_found)
                 else:
-                    self.iface.messageBar().pushMessage("Error", "No URL found before auth finished.")
+                    self.iface.messageBar().pushMessage("Error", "No URL found before the login has been cancelled by QGIS. Please try again.")
                     print("No URL found before auth finished.")
 
                 auth_thread.join()

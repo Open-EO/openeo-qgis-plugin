@@ -1,4 +1,14 @@
 # -*- coding: utf-8 -*-
+import webbrowser
+import os
+import tempfile
+import json
+import pathlib
+import requests
+
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QAction
+
 from qgis.core import QgsIconUtils
 from qgis.core import Qgis
 from qgis.core import QgsDataItem
@@ -36,6 +46,14 @@ class OpenEOJobItem(QgsDataItem):
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
 
+    #TODO: batch job status, one of 
+    # "created", 
+    # "queued", 
+    # "running - orange
+    # "canceled", 
+    # "finished"
+    # "error" - red
+
     def icon(self):
         return QgsIconUtils.iconTiledScene()
 
@@ -53,8 +71,28 @@ class OpenEOJobItem(QgsDataItem):
     
     def getConnection(self):
         return self.parent().getConnection()
+    
+    def viewProperties(self):
+        job = self.getConnection().job(self.job["id"])
+        job_description = job.describe()
+        job_json = json.dumps(job_description)
+
+        filePath = pathlib.Path(__file__).parent.resolve()
+        with open(os.path.join(filePath, "..", "jobProperties.html")) as file:
+            jobInfoHTML = file.read()
+        jobInfoHTML = jobInfoHTML.replace("{{ json }}", job_json)
+        
+        fh, path = tempfile.mkstemp(suffix='.html')
+        url = 'file://' + path
+        with open(path, 'w') as fp:
+            fp.write(jobInfoHTML)
+        webbrowser.open_new(url)
 
     def actions(self, parent):
         actions = []
+
+        job_properties = QAction(QIcon(), "Batch Job Properties", parent)
+        job_properties.triggered.connect(self.viewProperties)
+        actions.append(job_properties)
 
         return actions

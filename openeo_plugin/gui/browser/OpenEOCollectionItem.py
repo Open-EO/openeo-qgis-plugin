@@ -1,6 +1,10 @@
 from urllib.parse import quote
 import tempfile
 import webbrowser
+import pathlib
+import os
+import requests
+import json
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication
@@ -154,67 +158,19 @@ class OpenEOCollectionItem(QgsDataItem):
 
     def viewProperties(self):
         collection_link = None
-        
         links = self.collection["links"]
         for link in links:
             if link["rel"] == "self":
                 collection_link = link["href"]
                 break
+        collection_json = requests.get(collection_link).json()
+        collection_json = json.dumps(collection_json)
         
-        collectionInfoHTML = f"""
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Collections</title>
-              <style id="styles">
-                body {{
-                  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Ubuntu, Cantarell, 'Open Sans', sans-serif;
-                }}
-                h2, h3 {{
-                  color: #58965A;
-                  border-bottom: 1px solid black;
-                  font-weight: 600;
-                  padding: 0.25rem;
-                }}
-                h3 {{
-                  font-size: 2rem;
-                }}
-                h3 {{
-                  font-size: 1.5rem;
-                }}
+        filePath = pathlib.Path(__file__).parent.resolve()
+        with open(os.path.join(filePath, "..", "collectionProperties.html")) as file:
+            collectionInfoHTML = file.read()
+        collectionInfoHTML = collectionInfoHTML.replace("{{ json }}", collection_json)
 
-                a {{
-                  color: #84ABD5;
-                }}
-              </style>
-            </head>
-            <body>
-              <p id="loading" style="display: block;">Loading data…</p>
-              <openeo-collection id="data" style="display: none;"></openeo-collection>
-            </body>
-              <script src="https://cdn.jsdelivr.net/npm/@openeo/vue-components@2/assets/openeo.min.js"></script>
-              <script>
-              fetch('{collection_link}')
-                .then(function(response) {{
-                  return response.json();
-                }})
-                .then(function(data) {{
-                  console.log(data);
-                  var elem = document.getElementById("data");
-                  elem.data = data;
-                  elem.style.display = "block";
-
-                  var css = document.getElementById("styles").cloneNode(true);
-                  elem.shadowRoot.appendChild(css);
-
-                  document.getElementById("loading").style.display = "none";
-                }})
-                .catch(function(err) {{
-                  console.error('Fetch error:', err);
-                }});</script>
-            </html>"""
         fh, path = tempfile.mkstemp(suffix='.html')
         url = 'file://' + path
         with open(path, 'w') as fp:

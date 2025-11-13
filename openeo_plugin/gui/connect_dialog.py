@@ -38,6 +38,8 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         self.model = None
 
         self.connect_button.clicked.connect(self.verify)
+        self.url_edit.returnPressed.connect(self.verify)
+        self.conn_name_edit.returnPressed.connect(self.verify)
 
         # Handle openEO Hub integration
         self.backends = []

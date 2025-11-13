@@ -51,6 +51,8 @@ class Ui_DynamicLoginDialog(Ui_LoginDialog):
                 tab["passwordEdit"].setEchoMode(QtWidgets.QLineEdit.Password)
                 tab["passwordEdit"].setObjectName("passwordEdit")
                 tab["verticalLayout"].addWidget(tab["passwordEdit"])
+                tab["usernameEdit"].returnPressed.connect(self.login)
+                tab["passwordEdit"].returnPressed.connect(self.login)
 
             if "description" in auth_provider:
                 tab["description"] = QtWidgets.QLabel(tab["widget"])

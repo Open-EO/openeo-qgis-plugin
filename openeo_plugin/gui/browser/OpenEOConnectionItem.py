@@ -16,6 +16,7 @@ from . import OpenEOServicesGroupItem
 from . import OpenEOCollectionsGroupItem
 from ..login_dialog import LoginDialog
 from ...utils.settings import SettingsPath
+from ...utils.logging import warning, debug
 
 class OpenEOConnectionItem(QgsDataCollectionItem):
     """
@@ -98,8 +99,10 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                     if self.isAuthenticated():
                         #TODO: add checkmark to select whether to save login
                         self.saveLogin(self.dlg.username, self.dlg.password)
-                except AttributeError:
-                    self.plugin.iface.messageBar().pushMessage("Error", "login failed. connection missing")
+                except Exception as e:
+                    warning(self.plugin.iface, "Login Failed: have you entered the correct credentials?")
+                    #TODO: consider if a popup might be more clear
+                    debug(str(e))
                     return
 
             elif authProvider["type"] == "oidc":
@@ -107,6 +110,11 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                     self.getConnection().authenticate_oidc()
                 except AttributeError:
                     self.plugin.iface.messageBar().pushMessage("Error", "login failed. connection missing")
+                    return
+                except Exception as e:
+                    warning(self.plugin.iface, "Authentication failed. see logs for details")
+                    debug(str(e))
+                    #TODO: consider if a popup might be more clear
                     return
                 
         #refresh children

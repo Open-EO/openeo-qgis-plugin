@@ -57,18 +57,43 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         
         items = []
         
+        # TODO: only create those if these endpoints are supported
+        #   example connection.list_services(). check for 404 OpenEoApiError
         # create Collections group
         collections = OpenEOCollectionsGroupItem(self.plugin, self)
         sip.transferto(collections, self)
-        self.servicesGroup = OpenEOServicesGroupItem(self.plugin, self)
-        sip.transferto(self.servicesGroup, self)
-        self.jobsGroup = OpenEOJobsGroupItem(self.plugin, self)
-        sip.transferto(self.jobsGroup, self)
-        
         items.append(collections)
-        items.append(self.servicesGroup)
-        items.append(self.jobsGroup)
 
+        try:
+            self.getConnection().list_services() 
+        except openeo.rest.OpenEoApiError as e:
+            if e.http_status_code != 404:
+                self.servicesGroup = OpenEOServicesGroupItem(self.plugin, self)
+                sip.transferto(self.servicesGroup, self)
+                items.append(self.servicesGroup)
+            else:
+                print(str(e))
+                print("no services found")
+        else:
+            self.servicesGroup = OpenEOServicesGroupItem(self.plugin, self)
+            sip.transferto(self.servicesGroup, self)
+            items.append(self.servicesGroup)
+        
+        try:
+            self.getConnection().list_jobs()
+        except openeo.rest.OpenEoApiError as e:      
+            if e.http_status_code != 404:
+                self.jobsGroup = OpenEOJobsGroupItem(self.plugin, self)
+                sip.transferto(self.jobsGroup, self)
+                items.append(self.jobsGroup)
+            else:
+                print(str(e))
+                print("no services found")
+        else:
+            self.jobsGroup = OpenEOJobsGroupItem(self.plugin, self)
+            sip.transferto(self.jobsGroup, self)
+            items.append(self.jobsGroup)
+        
         return items
     
     def remove(self):

@@ -42,7 +42,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
             if auth_provider["type"] == "oidc":
                 if not self._supportsDeviceCodeFlow(auth_provider):
                     self.tabWidget.setTabEnabled(i, False) #for now, grey out tabs that don't support devicecodeflow
-                    self.tabWidget.setTabToolTip(i, "oidc provider does not support device code flow")
+                    self.tabWidget.setTabToolTip(i, "Authentication provider does not support the OpenID Connect Device Code Flow")
 
         return
 

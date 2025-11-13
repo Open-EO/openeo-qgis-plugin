@@ -25,10 +25,7 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
         """
         QgsDataCollectionItem.__init__(self, parent, "Collections", plugin.PLUGIN_ENTRY_NAME)
         self.plugin = plugin
-
-    def icon(self):
-        icon = QgsApplication.getThemeIcon("mIconFolder.svg")
-        return icon
+        self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
     def getCollections(self):
         #some sort of pagination might be beneficial

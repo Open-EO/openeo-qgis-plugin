@@ -40,6 +40,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         :type parent: QgsDataItem
         """
         QgsDataCollectionItem.__init__(self, parent, model.name, plugin.PLUGIN_ENTRY_NAME)
+        self.setIcon(QgsApplication.getThemeIcon("mIconCloud.svg"))
         self.connection = connection
         self.plugin = plugin
         self.model = model
@@ -47,10 +48,6 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         login = self.getLogin()
         if login:
             self.getConnection().authenticate_basic(login["loginName"], login["password"])
-
-    def icon(self):
-        icon = QgsApplication.getThemeIcon("mIconCloud.svg")
-        return icon
 
 
     def createChildren(self):

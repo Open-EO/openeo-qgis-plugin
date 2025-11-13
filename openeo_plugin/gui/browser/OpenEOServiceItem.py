@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
-from urllib.parse import quote
+import webbrowser
+import os
+import tempfile
+import json
+import pathlib
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QAction
 
 from qgis.core import QgsIconUtils
 from qgis.core import Qgis
@@ -38,6 +44,8 @@ class OpenEOServiceItem(QgsDataItem):
             providerKey = plugin.PLUGIN_ENTRY_NAME
         )
 
+        self.setIcon(QgsIconUtils.iconTiledScene())
+
         self.service = service
         self.plugin = plugin
 
@@ -46,8 +54,7 @@ class OpenEOServiceItem(QgsDataItem):
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
 
-    def icon(self):
-        return QgsIconUtils.iconTiledScene()
+        #enabled / disabled
 
     def hasDragEnabled(self):
         return True
@@ -143,7 +150,27 @@ class OpenEOServiceItem(QgsDataItem):
         uri = uris[0]
         self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
 
+    def viewProperties(self):
+        service = self.getConnection().service(self.service["id"])
+        service_description = service.describe_service()
+        service_json = json.dumps(service_description)
+
+        filePath = pathlib.Path(__file__).parent.resolve()
+        with open(os.path.join(filePath, "..", "serviceProperties.html")) as file:
+            serviceInfoHTML = file.read()
+        serviceInfoHTML = serviceInfoHTML.replace("{{ json }}", service_json)
+        
+        fh, path = tempfile.mkstemp(suffix='.html')
+        url = 'file://' + path
+        with open(path, 'w') as fp:
+            fp.write(serviceInfoHTML)
+        webbrowser.open_new(url)
+
     def actions(self, parent):
         actions = []
+        
+        action_properties = QAction(QIcon(), "Service Properties", parent)
+        action_properties.triggered.connect(self.viewProperties)
+        actions.append(action_properties)
 
         return actions

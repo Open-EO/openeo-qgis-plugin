@@ -94,7 +94,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                     print("No URL found before auth finished.")
 
                 auth_thread.join()
-                self.iface.messageBar().pushMessage("Error", "Auth process completed.")
+                self.iface.messageBar().pushMessage("Login completed successfully.")
                 print("Auth process completed.")
 
                 self.accept()

@@ -71,9 +71,6 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                 self.servicesGroup = OpenEOServicesGroupItem(self.plugin, self)
                 sip.transferto(self.servicesGroup, self)
                 items.append(self.servicesGroup)
-            else:
-                print(str(e))
-                print("no services found")
         else:
             self.servicesGroup = OpenEOServicesGroupItem(self.plugin, self)
             sip.transferto(self.servicesGroup, self)
@@ -86,9 +83,6 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                 self.jobsGroup = OpenEOJobsGroupItem(self.plugin, self)
                 sip.transferto(self.jobsGroup, self)
                 items.append(self.jobsGroup)
-            else:
-                print(str(e))
-                print("no services found")
         else:
             self.jobsGroup = OpenEOJobsGroupItem(self.plugin, self)
             sip.transferto(self.jobsGroup, self)

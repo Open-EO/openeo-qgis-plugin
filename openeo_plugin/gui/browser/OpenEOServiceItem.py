@@ -169,7 +169,7 @@ class OpenEOServiceItem(QgsDataItem):
     def actions(self, parent):
         actions = []
         
-        action_properties = QAction(QIcon(), "Service Properties", parent)
+        action_properties = QAction(QIcon(), "Details", parent)
         action_properties.triggered.connect(self.viewProperties)
         actions.append(action_properties)
 

@@ -100,7 +100,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                 self.accept()
                 return
             except AttributeError:
-                self.iface.messageBar().pushMessage("Error", "login failed. connection missing")
+                self.iface.messageBar().pushMessage("Error", "Login failed as the connection is missing. Please try again.")
                 
                 self.reject()
                 return

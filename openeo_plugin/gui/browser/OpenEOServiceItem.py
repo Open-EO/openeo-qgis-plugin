@@ -47,6 +47,7 @@ class OpenEOServiceItem(QgsDataItem):
         self.setIcon(QgsIconUtils.iconTiledScene())
 
         self.service = service
+        self.serviceID = self.service["id"]
         self.plugin = plugin
 
         self.uris = []
@@ -166,6 +167,15 @@ class OpenEOServiceItem(QgsDataItem):
             fp.write(serviceInfoHTML)
         webbrowser.open_new(url)
 
+    def getService(self):
+        return self.getConnection().service(self.service["id"])
+
+    def isEnabled(self):
+        return self.getService().describe_service()["enabled"]
+
+    def printService(self):
+        print(repr(self.getService().describe_service()))
+
     def actions(self, parent):
         actions = []
 
@@ -176,5 +186,9 @@ class OpenEOServiceItem(QgsDataItem):
         action_properties = QAction(QIcon(), "Details", parent)
         action_properties.triggered.connect(self.viewProperties)
         actions.append(action_properties)
+
+        #action_debug = QAction(QIcon(), "print service", parent)
+        #action_debug.triggered.connect(self.printService)
+        #actions.append(action_debug)
 
         return actions

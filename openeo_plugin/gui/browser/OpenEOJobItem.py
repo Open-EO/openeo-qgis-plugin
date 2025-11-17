@@ -72,8 +72,11 @@ class OpenEOJobItem(QgsDataItem):
     def getConnection(self):
         return self.parent().getConnection()
     
+    def getJob(self):
+        return self.getConnection().job(self.job["id"])
+    
     def viewProperties(self):
-        job = self.getConnection().job(self.job["id"])
+        job = self.getJob()
         job_description = job.describe()
         job_json = json.dumps(job_description)
 
@@ -88,11 +91,21 @@ class OpenEOJobItem(QgsDataItem):
             fp.write(jobInfoHTML)
         webbrowser.open_new(url)
 
+    def getStatus(self):
+        return self.getJob().describe["status"]
+
+    def printJob(self):
+        print(self.getJob().describe())
+
     def actions(self, parent):
         actions = []
 
         job_properties = QAction(QIcon(), "Details", parent)
         job_properties.triggered.connect(self.viewProperties)
         actions.append(job_properties)
+
+        #action_debug = QAction(QIcon(), "print job details", parent)
+        #action_debug.triggered.connect(self.printJob)
+        #actions.append(action_debug)
 
         return actions

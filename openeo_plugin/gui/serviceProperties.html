@@ -20,7 +20,6 @@
     h3 {
       font-size: 1.5rem;
     }
-
     a {
       color: #84ABD5;
     }
@@ -28,9 +27,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@openeo/vue-components@2/assets/openeo.min.js"></script>
 </head>
 <body>
-  <openeo-service>
+  <openeo-service id="component">
     <script prop="service" type="application/json">{{ json }}</script>
-    <!-- todo: add more properties -->
   </openeo-service>
+  <script>
+    const css = document.getElementById("styles").cloneNode(true);
+    document.getElementById("component").shadowRoot.appendChild(css);
+  </script>
 </body>
 </html>

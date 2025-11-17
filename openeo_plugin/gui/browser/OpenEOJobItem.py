@@ -91,7 +91,7 @@ class OpenEOJobItem(QgsDataItem):
     def actions(self, parent):
         actions = []
 
-        job_properties = QAction(QIcon(), "Batch Job Properties", parent)
+        job_properties = QAction(QIcon(), "Details", parent)
         job_properties.triggered.connect(self.viewProperties)
         actions.append(job_properties)
 

@@ -168,6 +168,10 @@ class OpenEOServiceItem(QgsDataItem):
 
     def actions(self, parent):
         actions = []
+
+        action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
+        action_add_to_project.triggered.connect(self.addToProject)
+        actions.append(action_add_to_project)
         
         action_properties = QAction(QIcon(), "Details", parent)
         action_properties.triggered.connect(self.viewProperties)

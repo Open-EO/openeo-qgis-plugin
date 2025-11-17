@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sip
 import openeo
+from openeo.rest.auth.config import RefreshTokenStore
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -55,9 +56,9 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         capabilities = self.getConnection().capabilities()
         items = []
         
-        collections = OpenEOCollectionsGroupItem(self.plugin, self)
-        sip.transferto(collections, self)
-        items.append(collections)
+        self.collectionsGroup = OpenEOCollectionsGroupItem(self.plugin, self)
+        sip.transferto(self.collectionsGroup, self)
+        items.append(self.collectionsGroup)
         
         if capabilities.supports_endpoint("/services"):
             self.servicesGroup = OpenEOServicesGroupItem(self.plugin, self)
@@ -71,6 +72,14 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
 
         return items
     
+    def refreshChildren(self):
+        if hasattr(self, "collectionsGroup"):
+            self.collectionsGroup.refresh()
+        if hasattr(self, "servicesGroup"):
+            self.servicesGroup.refresh()
+        if hasattr(self, "jobsGroup"):
+            self.jobsGroup.refresh()
+
     def remove(self):
         self.deleteLogin()
         self.parent().removeConnection(self)
@@ -116,14 +125,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                     debug(str(e))
                     #TODO: consider if a popup might be more clear
                     return
-                
-        #refresh children
-        if hasattr(self, "servicesGroup"):
-            self.servicesGroup.refresh()
-
-        if hasattr(self, "jobsGroup"):
-            self.jobsGroup.refresh()
-
+        
+        self.refreshChildren()
         return
     
     def isAuthenticated(self):
@@ -163,19 +166,48 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
 
     def deleteLogin(self):
         settings = QgsSettings()
+
+        # for deleting basic login
         logins = settings.value(SettingsPath.SAVED_LOGINS.value)
         for i, login in enumerate(logins):
             if login["id"] == str(self.model.id):
                 logins.pop(i)
         settings.setValue(SettingsPath.SAVED_LOGINS.value, logins)
+
+        # for deleting oidc refresh tokens
+        try:
+            # determine the key for the refresh token storage
+            _g = openeo.rest.auth.oidc.DefaultOidcClientGrant
+            provider_id, client_info = self.getConnection()._get_oidc_provider_and_client_info(
+                provider_id=None, client_id=None, client_secret=None,
+                default_client_grant_check=lambda grants: (
+                        _g.REFRESH_TOKEN in grants and (_g.DEVICE_CODE in grants or _g.DEVICE_CODE_PKCE in grants)
+                )
+            )
+            # overwrite refresh tokens
+            RefreshTokenStore().set(client_info.provider.issuer, value={})
+        except openeo.rest.OpenEoClientException as e:
+            print(e)
+            # this happens when the connection does not support oidc
+            return
+    
+    def logout(self):
+        self.deleteLogin()
+        # refresh connection
+        self.connection = None
+        self.connection = self.getConnection()
+        self.refreshChildren()
     
     def actions(self, parent):
         action_authenticate = QAction(QIcon(), "Authentication (Login)", parent)
         action_authenticate.triggered.connect(self.authenticate)
         action_delete = QAction(QIcon(), "Remove Connection", parent)
         action_delete.triggered.connect(self.remove)
+        action_logout = QAction(QIcon(), "Log Out", parent)
+        action_logout.triggered.connect(self.logout)
 
         action_authenticate.setEnabled(not self.isAuthenticated())
+        action_logout.setEnabled(self.isAuthenticated())
 
-        actions = [action_authenticate,action_delete]
+        actions = [action_authenticate, action_logout, action_delete]
         return actions

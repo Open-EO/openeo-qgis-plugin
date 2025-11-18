@@ -2,6 +2,11 @@
 import sip
 import openeo
 from openeo.rest.auth.config import RefreshTokenStore
+import webbrowser
+import json
+import pathlib
+import os
+import tempfile
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -17,7 +22,6 @@ from . import OpenEOServicesGroupItem
 from . import OpenEOCollectionsGroupItem
 from ..login_dialog import LoginDialog
 from ...utils.settings import SettingsPath
-from ...utils.logging import warning, debug
 
 class OpenEOConnectionItem(QgsDataCollectionItem):
     """
@@ -177,9 +181,24 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.connection = None
         self.connection = self.getConnection()
         self.refreshChildren()
-    
-    def copyUrl(self):
-        QApplication.clipboard().setText(self.getConnection()._orig_url)
+
+    def viewProperties(self):
+        connection = self.getConnection()
+        connection_description = connection.capabilities().capabilities
+        connection_url = connection.capabilities().url
+        connection_json = json.dumps(connection_description)
+
+        filePath = pathlib.Path(__file__).parent.resolve()
+        with open(os.path.join(filePath, "..", "connectionProperties.html")) as file:
+            connectionInfoHTML = file.read()
+        connectionInfoHTML = connectionInfoHTML.replace("{{ json }}", connection_json)
+        connectionInfoHTML = connectionInfoHTML.replace("{{ url }}", connection_url)
+        
+        fh, path = tempfile.mkstemp(suffix='.html')
+        url = 'file://' + path
+        with open(path, 'w') as fp:
+            fp.write(connectionInfoHTML)
+        webbrowser.open_new(url)
 
     def actions(self, parent):
         actions = []
@@ -192,9 +211,9 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             action_logout.triggered.connect(self.logout)
             actions.append(action_logout)
         
-        action_copyUrl = QAction(QIcon(), "Copy Endpoint URL", parent)
-        action_copyUrl.triggered.connect(self.copyUrl)
-        actions.append(action_copyUrl)
+        action_properties = QAction(QIcon(), "Details", parent)
+        action_properties.triggered.connect(self.viewProperties)
+        actions.append(action_properties)
         action_delete = QAction(QIcon(), "Remove Connection", parent)
         action_delete.triggered.connect(self.remove)
         actions.append(action_delete)

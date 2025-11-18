@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import sip
 
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QAction
+
 from qgis.core import QgsDataCollectionItem
 from qgis.core import QgsApplication
 
@@ -60,6 +63,10 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
                 items.append(item)
         return items
     
+    def refreshChildren(self):
+        self.depopulate()
+        self.populate()
+    
     def getConnection(self):
         return self.parent().getConnection()
     
@@ -87,5 +94,7 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
 
         return webMapLinks
     
-    def actions(self, parent):
-        return []
+    def actions(self, parent):        
+        action_refresh = QAction(QIcon(), "Refresh", parent)
+        action_refresh.triggered.connect(self.refreshChildren)
+        return [action_refresh]

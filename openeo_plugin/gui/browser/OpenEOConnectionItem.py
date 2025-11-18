@@ -75,10 +75,13 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
     def refreshChildren(self):
         if hasattr(self, "collectionsGroup"):
             self.collectionsGroup.refresh()
+            self.collectionsGroup.refreshChildren()
         if hasattr(self, "servicesGroup"):
             self.servicesGroup.refresh()
+            self.collectionsGroup.refreshChildren()
         if hasattr(self, "jobsGroup"):
             self.jobsGroup.refresh()
+            self.collectionsGroup.refreshChildren()
 
     def remove(self):
         self.deleteLogin()
@@ -204,15 +207,18 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
     def actions(self, parent):
         action_authenticate = QAction(QIcon(), "Authentication (Login)", parent)
         action_authenticate.triggered.connect(self.authenticate)
+        action_logout = QAction(QIcon(), "Log Out", parent)
+        action_logout.triggered.connect(self.logout)
+        
         action_copyUrl = QAction(QIcon(), "Copy Endpoint URL", parent)
         action_copyUrl.triggered.connect(self.copyUrl)
         action_delete = QAction(QIcon(), "Remove Connection", parent)
         action_delete.triggered.connect(self.remove)
-        action_logout = QAction(QIcon(), "Log Out", parent)
-        action_logout.triggered.connect(self.logout)
+        action_refresh = QAction(QIcon(), "Refresh", parent)
+        action_refresh.triggered.connect(self.refreshChildren)
 
         action_authenticate.setEnabled(not self.isAuthenticated())
         action_logout.setEnabled(self.isAuthenticated())
 
-        actions = [action_authenticate, action_copyUrl, action_logout, action_delete]
+        actions = [action_authenticate, action_logout, action_delete, action_copyUrl, action_refresh]
         return actions

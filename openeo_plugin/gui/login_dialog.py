@@ -33,7 +33,11 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
         self.connection = connection
         self.activeAuthProvider = None
         
-        self.auth_provider_list = self.connection.list_auth_providers()
+        if hasattr(self.connection, 'list_auth_providers'):
+            self.auth_provider_list = self.connection.list_auth_providers()
+        else:
+            # todo: remove this when the openEO Python client has been updated to support this method
+            self.auth_provider_list = self.list_auth_providers()
         
         self.setupUi(self, auth_provider_list=self.auth_provider_list)
         #TODO: don't forget this during localization
@@ -48,6 +52,38 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                     self.tabWidget.setTabToolTip(i, "Authentication provider does not support the OpenID Connect Device Code Flow")
 
         return
+
+    # todo: remove this when the openEO Python client has been updated to support this method
+    def list_auth_providers(self) -> list[dict]:
+        providers = []
+        cap = self.connection.capabilities()
+
+        # Add OIDC providers
+        oidc_path = "/credentials/oidc"
+        if cap.supports_endpoint(oidc_path, method="GET"):
+            try:
+                data = self.connection.get(oidc_path, expected_status=200).json()
+                if isinstance(data, dict):
+                    for provider in data.get("providers", []):
+                        provider["type"] = "oidc"
+                        providers.append(provider)
+            except openeo.rest.OpenEoApiError as e:
+                warning(self.iface, f"Unable to load the OpenID Connect provider list: {e.message}")
+
+        # Add Basic provider
+        basic_path = "/credentials/basic"
+        if cap.supports_endpoint(basic_path, method="GET"):
+            providers.append(
+                {
+                    "id": basic_path,
+                    "issuer": self.connection.build_url(basic_path),
+                    "type": "basic",
+                    "title": "Internal",
+                    "description": "The HTTP Basic authentication method is mostly used for development and testing purposes.",
+                }
+            )
+
+        return providers
 
     def login(self):
         # get the currently active tab to log in with   
@@ -147,8 +183,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
             sys.stdout = old_stdout
     
     def _supportsDeviceCodeFlow(self, auth_provider):
-        # check if auth provider has a list of default clients
-        #TODO: exact implementation may depend on how openeo.list_auth_providers is finally implemented
+        # check if auth provider has a list of default clients that support device code flow
         support = False
         if "default_clients" not in auth_provider:
             return support

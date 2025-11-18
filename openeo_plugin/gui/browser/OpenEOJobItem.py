@@ -46,13 +46,14 @@ class OpenEOJobItem(QgsDataItem):
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
 
-    #TODO: batch job status, one of 
-    # "created", 
-    # "queued", 
-    # "running - orange
-    # "canceled", 
-    # "finished"
-    # "error" - red
+        # batch job status
+        self.refresh()
+
+    def refresh(self):
+        super().refresh()
+        name = self.job.get("title") or self.job.get("id")
+        status = f"({self.getStatus()}) "
+        self.setName(status + name)
 
     def icon(self):
         return QgsIconUtils.iconTiledScene()
@@ -92,7 +93,7 @@ class OpenEOJobItem(QgsDataItem):
         webbrowser.open_new(url)
 
     def getStatus(self):
-        return self.getJob().describe["status"]
+        return self.getJob().describe()["status"]
 
     def printJob(self):
         print(self.getJob().describe())
@@ -103,6 +104,10 @@ class OpenEOJobItem(QgsDataItem):
         job_properties = QAction(QIcon(), "Details", parent)
         job_properties.triggered.connect(self.viewProperties)
         actions.append(job_properties)
+
+        action_refresh = QAction(QIcon(), "Refresh", parent)
+        action_refresh.triggered.connect(self.refresh)
+        actions.append(action_refresh)
 
         #action_debug = QAction(QIcon(), "print job details", parent)
         #action_debug.triggered.connect(self.printJob)

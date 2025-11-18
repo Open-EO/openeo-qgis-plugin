@@ -56,6 +56,15 @@ class OpenEOServiceItem(QgsDataItem):
         self.setState(QgsDataItem.Populated)
 
         #enabled / disabled
+        self.refresh()
+
+    def refresh(self):
+        super().refresh()
+        name = self.service.get("title") or self.service.get("id")
+        status = "(enabled) "
+        if not self.isEnabled():
+            status = "(disabled) "
+        self.setName(status + name)
 
     def hasDragEnabled(self):
         return True
@@ -182,10 +191,12 @@ class OpenEOServiceItem(QgsDataItem):
         action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
         action_add_to_project.triggered.connect(self.addToProject)
         actions.append(action_add_to_project)
-        
         action_properties = QAction(QIcon(), "Details", parent)
         action_properties.triggered.connect(self.viewProperties)
         actions.append(action_properties)
+        action_refresh = QAction(QIcon(), "Refresh", parent)
+        action_refresh.triggered.connect(self.refresh)
+        actions.append(action_refresh)
 
         #action_debug = QAction(QIcon(), "print service", parent)
         #action_debug.triggered.connect(self.printService)

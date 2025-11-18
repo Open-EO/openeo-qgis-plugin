@@ -93,10 +93,10 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             return
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        settings = QgsSettings()
         self.dlg = LoginDialog(
             connection=self.getConnection(),
             model=self.model,
+            parent=self,
             iface=self.plugin.iface
             )
         QApplication.restoreOverrideCursor()
@@ -104,30 +104,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         result = self.dlg.exec()
 
         if result:
-            authProvider = self.dlg.activeAuthProvider
-            if authProvider["type"] == "basic":
-                try:
-                    self.getConnection().authenticate_basic(self.dlg.username, self.dlg.password)
-                    if self.isAuthenticated():
-                        #TODO: add checkmark to select whether to save login
-                        self.saveLogin(self.dlg.username, self.dlg.password)
-                except Exception as e:
-                    warning(self.plugin.iface, "Login Failed: have you entered the correct credentials?")
-                    #TODO: consider if a popup might be more clear
-                    debug(str(e))
-                    return
-
-            elif authProvider["type"] == "oidc":
-                try:
-                    self.getConnection().authenticate_oidc()
-                except AttributeError:
-                    self.plugin.iface.messageBar().pushMessage("Error", "login failed. connection missing")
-                    return
-                except Exception as e:
-                    warning(self.plugin.iface, "Authentication failed. see logs for details")
-                    debug(str(e))
-                    #TODO: consider if a popup might be more clear
-                    return
+            pass
         
         self.refreshChildren()
         return
@@ -205,20 +182,24 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         QApplication.clipboard().setText(self.getConnection()._orig_url)
 
     def actions(self, parent):
-        action_authenticate = QAction(QIcon(), "Authentication (Login)", parent)
-        action_authenticate.triggered.connect(self.authenticate)
-        action_logout = QAction(QIcon(), "Log Out", parent)
-        action_logout.triggered.connect(self.logout)
+        actions = []
+        if not self.isAuthenticated():
+            action_authenticate = QAction(QIcon(), "Authentication (Login)", parent)
+            action_authenticate.triggered.connect(self.authenticate)
+            actions.append(action_authenticate)
+        else:
+            action_logout = QAction(QIcon(), "Log Out", parent)
+            action_logout.triggered.connect(self.logout)
+            actions.append(action_logout)
         
         action_copyUrl = QAction(QIcon(), "Copy Endpoint URL", parent)
         action_copyUrl.triggered.connect(self.copyUrl)
+        actions.append(action_copyUrl)
         action_delete = QAction(QIcon(), "Remove Connection", parent)
         action_delete.triggered.connect(self.remove)
+        actions.append(action_delete)
         action_refresh = QAction(QIcon(), "Refresh", parent)
         action_refresh.triggered.connect(self.refreshChildren)
+        actions.append(action_refresh)
 
-        action_authenticate.setEnabled(not self.isAuthenticated())
-        action_logout.setEnabled(self.isAuthenticated())
-
-        actions = [action_authenticate, action_logout, action_delete, action_copyUrl, action_refresh]
         return actions

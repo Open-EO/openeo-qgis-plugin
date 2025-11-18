@@ -5,12 +5,15 @@ import re
 import time
 import sys
 import webbrowser
+import openeo
 
 #from qgis.PyQt import uic
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication
+from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtWidgets import QApplication
+from qgis.PyQt.QtWidgets import QMessageBox
 
 from .ui.login_dialog_tab import Ui_DynamicLoginDialog
+from ..utils.logging import warning, info
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 # use this if the pb_tool compiled version of the dialog doesn't work
@@ -22,7 +25,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
     """
     def __init__(self, connection=None, model=None, parent=None, iface=None):
 
-        super(LoginDialog, self).__init__(parent)
+        super(LoginDialog, self).__init__()
         QApplication.setStyle("cleanlooks")
 
         self.iface = iface
@@ -57,12 +60,35 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
             self.username = tab["usernameEdit"].text()
             self.password = tab["passwordEdit"].text()
             self.activeAuthProvider = auth_provider
-            self.accept() # Close the dialog
+            if self.authenticate(auth_provider):
+                self.accept() # Close the dialog
             return
         
         elif auth_provider["type"] == "oidc" and auth_provider:
+            self.authenticate(auth_provider, tab)
+    
+    def authenticate(self, auth_provider, tab=None):
+        if auth_provider["type"] == "basic":
+            try:
+                self.parent.getConnection().authenticate_basic(self.username, self.password)
+                if self.parent.isAuthenticated():
+                    #TODO: add checkmark to select whether to save login
+                    self.parent.saveLogin(self.username, self.password)
+                    return True
+            except openeo.rest.OpenEoApiError as e:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Login Failed")
+                msg.setInformativeText('Account name or password incorrect')
+                msg.setWindowTitle("Login Failed")
+                msg.exec_()
+            except Exception as e:
+                warning(self.iface, "Login Failed: something went wrong. See log for details")
+                print(str(e))
+                return False
+
+        elif auth_provider["type"] == "oidc":
             capture_buffer = io.StringIO()
-        
             try:
                 # open a browser window when prompted
                 auth_thread = threading.Thread(target=self._run_auth, args=(capture_buffer,))
@@ -86,27 +112,30 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
 
                 if url_found:
                     msg = f"Opening browser to: {url_found}"
-                    self.iface.messageBar().pushMessage(msg)
-                    print(msg)
+                    info(self.iface, msg)
                     webbrowser.open(url_found)
                 else:
-                    self.iface.messageBar().pushMessage("Error", "No URL found before the login has been cancelled by QGIS. Please try again.")
+                    #self.iface.messageBar().pushMessage("Error", "No URL found before the login has been cancelled by QGIS. Please try again.")
                     print("No URL found before auth finished.")
 
                 auth_thread.join()
-                self.iface.messageBar().pushMessage("Login completed successfully.")
-                print("Auth process completed.")
 
-                self.accept()
+                self.accept() # Close the dialog
                 return
             except AttributeError:
                 self.iface.messageBar().pushMessage("Error", "Login failed as the connection is missing. Please try again.")
                 
                 self.reject()
                 return
-            finally:
-                self.accept()
-            return
+            except Exception as e:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Authentication Failed")
+                msg.setInformativeText('See logs for details')
+                msg.setWindowTitle("Authentication Failed")
+                msg.exec_()
+                print(str(e))
+                return False
 
     def _run_auth(self, capture_buffer):
         # Redirect stdout for this thread only

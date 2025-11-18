@@ -8,6 +8,7 @@ from qgis.core import QgsDataCollectionItem
 from qgis.core import QgsApplication
 
 from . import OpenEOServiceItem
+from ...utils.logging import error
 
 class OpenEOServicesGroupItem(QgsDataCollectionItem):
     """
@@ -70,6 +71,7 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
             services = self.getConnection().list_services()
             return services
         except Exception as e:
+            error(self.plugin.iface, "Fetching services failed. See log for details")
             print(str(Exception))
         return []
     

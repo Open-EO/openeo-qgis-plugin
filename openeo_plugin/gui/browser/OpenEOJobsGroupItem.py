@@ -8,6 +8,7 @@ from qgis.core import QgsDataCollectionItem
 from qgis.core import QgsApplication
 
 from . import OpenEOJobItem
+from ...utils.logging import error
 
 class OpenEOJobsGroupItem(QgsDataCollectionItem):
     """
@@ -77,6 +78,7 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             jobs = self.getConnection().list_jobs()
             return jobs
         except Exception as e:
+            error(self.plugin.iface, "Fetching batch jobs failed. See log for details")
             print(str(Exception))
         return []
     

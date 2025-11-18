@@ -8,6 +8,7 @@ from qgis.core import QgsDataCollectionItem
 from qgis.core import QgsApplication
 
 from . import OpenEOCollectionItem
+from ...utils.logging import error
 
 class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
     """
@@ -36,6 +37,7 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
             collections = self.getConnection().list_collections()
             return collections
         except Exception as e:
+            error(self.plugin.iface, "Fetching collections failed. See log for details")
             print(str(Exception))
         return []
 

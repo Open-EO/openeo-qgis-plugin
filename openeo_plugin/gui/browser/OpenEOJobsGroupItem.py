@@ -66,5 +66,9 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
     
     def getJobs(self):
         #TODO: how to handle pagination
-        jobs = self.getConnection().list_jobs()
-        return jobs
+        try:
+            jobs = self.getConnection().list_jobs()
+            return jobs
+        except Exception as e:
+            print(str(Exception))
+        return []

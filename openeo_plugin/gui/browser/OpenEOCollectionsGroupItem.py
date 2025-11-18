@@ -29,8 +29,12 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
 
     def getCollections(self):
         #some sort of pagination might be beneficial
-        collections = self.getConnection().list_collections()
-        return collections
+        try:
+            collections = self.getConnection().list_collections()
+            return collections
+        except Exception as e:
+            print(str(Exception))
+        return []
 
     def createChildren(self):
         items = []

@@ -59,5 +59,9 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         return super().handleDoubleClick()
     
     def getServices(self):
-        services = self.getConnection().list_services()
-        return services
+        try:
+            services = self.getConnection().list_services()
+            return services
+        except Exception as e:
+            print(str(Exception))
+        return []

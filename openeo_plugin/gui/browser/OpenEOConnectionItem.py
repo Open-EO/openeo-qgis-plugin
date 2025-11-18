@@ -7,6 +7,7 @@ import json
 import pathlib
 import os
 import tempfile
+import urllib
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -199,6 +200,12 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         with open(path, 'w') as fp:
             fp.write(connectionInfoHTML)
         webbrowser.open_new(url)
+    
+    def openInWebEditor(self):    
+        serverUrl = self.getConnection().capabilities().url
+        serverUrl = urllib.parse.quote(serverUrl)
+        webEditorUrl = f"https://editor.openeo.org/?server={serverUrl}"
+        webbrowser.open(webEditorUrl)
 
     def actions(self, parent):
         actions = []
@@ -214,6 +221,9 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         action_properties = QAction(QIcon(), "Details", parent)
         action_properties.triggered.connect(self.viewProperties)
         actions.append(action_properties)
+        action_webeditor = QAction(QIcon(), "Open in Web Editor", parent)
+        action_webeditor.triggered.connect(self.openInWebEditor)
+        actions.append(action_webeditor)
         action_delete = QAction(QIcon(), "Remove Connection", parent)
         action_delete.triggered.connect(self.remove)
         actions.append(action_delete)

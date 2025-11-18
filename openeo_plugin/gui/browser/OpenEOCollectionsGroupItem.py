@@ -32,13 +32,12 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
     def getCollections(self):
-        #some sort of pagination might be beneficial
         try:
             collections = self.getConnection().list_collections()
             return collections
         except Exception as e:
+            print(str(e))
             error(self.plugin.iface, "Fetching collections failed. See log for details")
-            print(str(Exception))
         return []
 
     def createChildren(self):
@@ -64,10 +63,6 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
                 sip.transferto(item, self)
                 items.append(item)
         return items
-    
-    def refreshChildren(self):
-        self.depopulate()
-        self.populate()
     
     def getConnection(self):
         return self.parent().getConnection()
@@ -98,5 +93,5 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
     
     def actions(self, parent):        
         action_refresh = QAction(QIcon(), "Refresh", parent)
-        action_refresh.triggered.connect(self.refreshChildren)
+        action_refresh.triggered.connect(self.refresh)
         return [action_refresh]

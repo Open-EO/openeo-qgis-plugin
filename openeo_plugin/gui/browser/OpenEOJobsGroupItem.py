@@ -40,7 +40,7 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             item = OpenEOJobItem(
                 parent = self,
                 job = job,
-                plugin =  self.plugin,
+                plugin = self.plugin,
             )
             sip.transferto(item, self)
             items.append(item)
@@ -54,10 +54,6 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         for child in children:
             self.addChildItem(child)
         self.refresh()
-    
-    def refreshChildren(self):
-        self.depopulate()
-        self.populate()
 
     def getConnection(self):
         return self.parent().getConnection()
@@ -69,20 +65,18 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         if not self.isAuthenticated():
             self.parent().authenticate()
             self.refresh()
-            #TODO: handle child items
         return super().handleDoubleClick()
     
     def getJobs(self):
-        #TODO: how to handle pagination
         try:
             jobs = self.getConnection().list_jobs()
             return jobs
         except Exception as e:
+            print(str(e))
             error(self.plugin.iface, "Fetching batch jobs failed. See log for details")
-            print(str(Exception))
         return []
     
     def actions(self, parent):        
         action_refresh = QAction(QIcon(), "Refresh", parent)
-        action_refresh.triggered.connect(self.refreshChildren)
+        action_refresh.triggered.connect(self.refresh)
         return [action_refresh]

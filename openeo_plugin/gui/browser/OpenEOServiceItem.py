@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from collections.abc import Iterable
 import webbrowser
 import os
 import tempfile
@@ -55,11 +56,15 @@ class OpenEOServiceItem(QgsDataItem):
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
 
-        #enabled / disabled
-        self.refresh()
+        self.updateFromData()
 
-    def refresh(self):
+    # todo: Not exactly sure why the second argument is needed, but without we get errors.
+    def refresh(self, children: Iterable[QgsDataItem] = None):
+        self.getService()
         super().refresh()
+        self.updateFromData()
+
+    def updateFromData(self):
         name = self.service.get("title") or self.service.get("id")
         status = "(enabled) "
         if not self.isEnabled():
@@ -142,14 +147,13 @@ class OpenEOServiceItem(QgsDataItem):
             if mimeUri:
                 mimeUris.append(mimeUri)
         except Exception as e:
-            QApplication.restoreOverrideCursor()
             print(e)
             warning(
                 self.plugin.iface,
                 f"Loading the map service {service['url']} failed."
             )
-        
-        QApplication.restoreOverrideCursor()
+        finally:
+            QApplication.restoreOverrideCursor()
 
         self.uris = mimeUris
 
@@ -161,9 +165,8 @@ class OpenEOServiceItem(QgsDataItem):
         self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
 
     def viewProperties(self):
-        service = self.getConnection().service(self.service["id"])
-        service_description = service.describe_service()
-        service_json = json.dumps(service_description)
+        self.getService()
+        service_json = json.dumps(self.service)
 
         filePath = pathlib.Path(__file__).parent.resolve()
         with open(os.path.join(filePath, "..", "serviceProperties.html")) as file:
@@ -177,29 +180,31 @@ class OpenEOServiceItem(QgsDataItem):
         webbrowser.open_new(url)
 
     def getService(self):
-        return self.getConnection().service(self.service["id"])
+        self.service = self.getConnection().service(self.service["id"]).describe_service()
+        self.updateFromData()
+        return self.service
 
     def isEnabled(self):
-        return self.getService().describe_service()["enabled"]
-
-    def printService(self):
-        print(repr(self.getService().describe_service()))
+        return self.service.get("enabled", False)
 
     def actions(self, parent):
         actions = []
 
-        action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
-        action_add_to_project.triggered.connect(self.addToProject)
-        actions.append(action_add_to_project)
         action_properties = QAction(QIcon(), "Details", parent)
         action_properties.triggered.connect(self.viewProperties)
         actions.append(action_properties)
+
         action_refresh = QAction(QIcon(), "Refresh", parent)
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
 
-        #action_debug = QAction(QIcon(), "print service", parent)
-        #action_debug.triggered.connect(self.printService)
-        #actions.append(action_debug)
+        if self.isEnabled():
+            separator = QAction(parent)
+            separator.setSeparator(True)
+            actions.append(separator)
+
+            action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
+            action_add_to_project.triggered.connect(self.addToProject)
+            actions.append(action_add_to_project)
 
         return actions

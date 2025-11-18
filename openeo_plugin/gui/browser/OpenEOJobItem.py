@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
+from collections.abc import Iterable
 import webbrowser
 import os
 import tempfile
 import json
 import pathlib
-import requests
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -46,11 +46,15 @@ class OpenEOJobItem(QgsDataItem):
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
 
-        # batch job status
-        self.refresh()
+        self.updateFromData()
 
-    def refresh(self):
+    # todo: Not exactly sure why the second argument is needed, but without we get errors.
+    def refresh(self, children: Iterable[QgsDataItem] = None):
+        self.getJob()
         super().refresh()
+        self.updateFromData()
+
+    def updateFromData(self):
         name = self.job.get("title") or self.job.get("id")
         status = f"({self.getStatus()}) "
         self.setName(status + name)
@@ -74,12 +78,13 @@ class OpenEOJobItem(QgsDataItem):
         return self.parent().getConnection()
     
     def getJob(self):
-        return self.getConnection().job(self.job["id"])
+        self.job = self.getConnection().job(self.job["id"]).describe()
+        self.updateFromData()
+        return self.job
     
     def viewProperties(self):
-        job = self.getJob()
-        job_description = job.describe()
-        job_json = json.dumps(job_description)
+        self.getJob()
+        job_json = json.dumps(self.job)
 
         filePath = pathlib.Path(__file__).parent.resolve()
         with open(os.path.join(filePath, "..", "jobProperties.html")) as file:
@@ -93,10 +98,7 @@ class OpenEOJobItem(QgsDataItem):
         webbrowser.open_new(url)
 
     def getStatus(self):
-        return self.getJob().describe()["status"]
-
-    def printJob(self):
-        print(self.getJob().describe())
+        return self.job.get("status", "unknown")
 
     def actions(self, parent):
         actions = []
@@ -108,9 +110,5 @@ class OpenEOJobItem(QgsDataItem):
         action_refresh = QAction(QIcon(), "Refresh", parent)
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
-
-        #action_debug = QAction(QIcon(), "print job details", parent)
-        #action_debug.triggered.connect(self.printJob)
-        #actions.append(action_debug)
 
         return actions

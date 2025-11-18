@@ -44,15 +44,11 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
             item = OpenEOServiceItem(
                 parent = self,
                 service = service,
-                plugin =  self.plugin,
+                plugin = self.plugin,
             )
             sip.transferto(item, self)
             items.append(item)
         return items
-    
-    def refreshChildren(self):
-        self.depopulate()
-        self.populate()
 
     def getConnection(self):
         return self.parent().getConnection()
@@ -71,11 +67,11 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
             services = self.getConnection().list_services()
             return services
         except Exception as e:
+            print(str(e))
             error(self.plugin.iface, "Fetching services failed. See log for details")
-            print(str(Exception))
         return []
     
-    def actions(self, parent):        
+    def actions(self, parent):
         action_refresh = QAction(QIcon(), "Refresh", parent)
-        action_refresh.triggered.connect(self.refreshChildren)
+        action_refresh.triggered.connect(self.refresh)
         return [action_refresh]

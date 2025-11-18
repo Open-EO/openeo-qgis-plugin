@@ -7,7 +7,6 @@ import json
 import pathlib
 import os
 import tempfile
-import urllib
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -77,16 +76,13 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
 
         return items
     
-    def refreshChildren(self):
+    def refresh(self):
         if hasattr(self, "collectionsGroup"):
             self.collectionsGroup.refresh()
-            self.collectionsGroup.refreshChildren()
         if hasattr(self, "servicesGroup"):
             self.servicesGroup.refresh()
-            self.collectionsGroup.refreshChildren()
         if hasattr(self, "jobsGroup"):
             self.jobsGroup.refresh()
-            self.collectionsGroup.refreshChildren()
 
     def remove(self):
         self.deleteLogin()
@@ -111,11 +107,11 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         if result:
             pass
         
-        self.refreshChildren()
-        return
+        self.refresh()
     
     def isAuthenticated(self):
         try:
+            # todo: this request should be cached and not fired on every call
             account = self.getConnection().describe_account()
             if account:
                 return True
@@ -181,7 +177,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         # refresh connection
         self.connection = None
         self.connection = self.getConnection()
-        self.refreshChildren()
+        self.refresh()
 
     def viewProperties(self):
         connection = self.getConnection()
@@ -202,33 +198,44 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         webbrowser.open_new(url)
     
     def openInWebEditor(self):    
-        serverUrl = self.getConnection().capabilities().url
-        serverUrl = urllib.parse.quote(serverUrl)
-        webEditorUrl = f"https://editor.openeo.org/?server={serverUrl}"
+        webEditorUrl = self.getConnection().web_editor()
         webbrowser.open(webEditorUrl)
 
     def actions(self, parent):
         actions = []
+
         if not self.isAuthenticated():
-            action_authenticate = QAction(QIcon(), "Authentication (Login)", parent)
+            action_authenticate = QAction(QIcon(), "Log In (Authenticate)", parent)
             action_authenticate.triggered.connect(self.authenticate)
             actions.append(action_authenticate)
-        else:
+
+            separator = QAction(parent)
+            separator.setSeparator(True)
+            actions.append(separator)
+
+        action_properties = QAction(QIcon(), "Details", parent)
+        action_properties.triggered.connect(self.viewProperties)
+        actions.append(action_properties)
+        
+        action_refresh = QAction(QIcon(), "Refresh", parent)
+        action_refresh.triggered.connect(self.refresh)
+        actions.append(action_refresh)
+        
+        if self.isAuthenticated():
             action_logout = QAction(QIcon(), "Log Out", parent)
             action_logout.triggered.connect(self.logout)
             actions.append(action_logout)
         
-        action_properties = QAction(QIcon(), "Details", parent)
-        action_properties.triggered.connect(self.viewProperties)
-        actions.append(action_properties)
-        action_webeditor = QAction(QIcon(), "Open in Web Editor", parent)
-        action_webeditor.triggered.connect(self.openInWebEditor)
-        actions.append(action_webeditor)
         action_delete = QAction(QIcon(), "Remove Connection", parent)
         action_delete.triggered.connect(self.remove)
         actions.append(action_delete)
-        action_refresh = QAction(QIcon(), "Refresh", parent)
-        action_refresh.triggered.connect(self.refreshChildren)
-        actions.append(action_refresh)
+
+        separator = QAction(parent)
+        separator.setSeparator(True)
+        actions.append(separator)
+        
+        action_webeditor = QAction(QIcon(), "Open in Web Editor", parent)
+        action_webeditor.triggered.connect(self.openInWebEditor)
+        actions.append(action_webeditor)
 
         return actions

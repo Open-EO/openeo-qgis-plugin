@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sip
+import openeo
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -30,10 +31,9 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         self.plugin = plugin
 
         self.populate() #removes expand icon
+        self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
     def createChildren(self):
-        if not self.isAuthenticated():
-            return []
         items = []
         jobs = self.getJobs()
         for job in jobs:
@@ -45,10 +45,6 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             sip.transferto(item, self)
             items.append(item)
         return items
-    
-    def icon(self):
-        icon = QgsApplication.getThemeIcon("mIconFolder.svg")
-        return icon
     
     def addChildren(self, children):
         for child in children:
@@ -71,6 +67,8 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         try:
             jobs = self.getConnection().list_jobs()
             return jobs
+        except openeo.rest.OpenEoApiError:
+            return []
         except Exception as e:
             print(str(e))
             error(self.plugin.iface, "Fetching batch jobs failed. See log for details")

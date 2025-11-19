@@ -107,10 +107,9 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
         if auth_provider["type"] == "basic":
             try:
                 self.parent.getConnection().authenticate_basic(self.username, self.password)
-                if self.parent.isAuthenticated():
-                    #TODO: add checkmark to select whether to save login
-                    self.parent.saveLogin(self.username, self.password)
-                    return True
+                #TODO: add checkmark to select whether to save login
+                self.parent.saveLogin(self.username, self.password)
+                return True
             except openeo.rest.OpenEoApiError as e:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Critical)

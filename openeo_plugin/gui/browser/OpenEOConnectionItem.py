@@ -7,6 +7,7 @@ import json
 import pathlib
 import os
 import tempfile
+import datetime
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -50,6 +51,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.connection = connection
         self.plugin = plugin
         self.model = model
+        self.lastAuthCheck = datetime.datetime.min
+        self.authenticated = False
 
         login = self.getLogin()
         if login:
@@ -77,6 +80,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         return items
     
     def refresh(self):
+        self.isAuthenticated(forceRefresh=True)
         if hasattr(self, "collectionsGroup"):
             self.collectionsGroup.refresh()
         if hasattr(self, "servicesGroup"):
@@ -89,10 +93,6 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.parent().removeConnection(self)
 
     def authenticate(self):
-        if self.isAuthenticated():
-            # this shouldnt be reached since the action is already disabled in this case
-            return
-
         QApplication.setOverrideCursor(Qt.WaitCursor)
         self.dlg = LoginDialog(
             connection=self.getConnection(),
@@ -109,16 +109,20 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         
         self.refresh()
     
-    def isAuthenticated(self):
-        try:
-            # todo: this request should be cached and not fired on every call
-            account = self.getConnection().describe_account()
-            if account:
-                return True
-            else:
-                return False
-        except Exception:
-            return False
+    def isAuthenticated(self, forceRefresh=False):
+        authCacheAge = datetime.timedelta(seconds=60)
+        maximumTime = self.lastAuthCheck + authCacheAge
+        if (datetime.datetime.now() > maximumTime) or forceRefresh:
+            try:
+                self.lastAuthCheck = datetime.datetime.now() 
+                account = self.getConnection().describe_account()
+                if account:
+                    self.authenticated = True
+                else:
+                    self.authenticated = False
+            except Exception:
+                self.authenticated = False
+        return self.authenticated
 
     def getConnection(self):         
         if not self.connection:

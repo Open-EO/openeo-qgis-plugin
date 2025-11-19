@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sip
+import openeo
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -30,14 +31,9 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         self.plugin = plugin
 
         self.populate() #removes expand icon
-
-    def icon(self):
-        icon = QgsApplication.getThemeIcon("mIconFolder.svg")
-        return icon
+        self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
     def createChildren(self):
-        if not self.isAuthenticated():
-            return []
         items = []
         services = self.getServices()
         for service in services:
@@ -66,6 +62,8 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         try:
             services = self.getConnection().list_services()
             return services
+        except openeo.rest.OpenEoApiError:
+            return [] #this happens when authentication is missing
         except Exception as e:
             print(str(e))
             error(self.plugin.iface, "Fetching services failed. See log for details")

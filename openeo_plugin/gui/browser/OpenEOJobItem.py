@@ -12,6 +12,12 @@ from qgis.PyQt.QtWidgets import QAction
 from qgis.core import QgsIconUtils
 from qgis.core import Qgis
 from qgis.core import QgsDataItem
+from qgis.core import QgsStacItem
+from qgis.core import QgsStacCollection
+from qgis.core import QgsJsonUtils
+from qgis.core import QgsStacLink
+from qgis.core import QgsStacAsset
+from qgis.core import QgsBox3D
 
 class OpenEOJobItem(QgsDataItem):
     def __init__(self, parent, job, plugin):
@@ -82,6 +88,56 @@ class OpenEOJobItem(QgsDataItem):
         self.updateFromData()
         return self.job
     
+    def getResults(self):
+        results = self.getConnection().job(self.job["id"]).get_results()
+        results = results.get_metadata()
+        # create a job results object. from the metadata of a JobResults object. that should result in a stacItem or stacCollection
+        # https://api.openeo.org/#tag/Batch-Jobs/operation/list-results
+        # https://qgis.org/pyqgis/master/core/QgsStacItem.html#qgis.core.QgsStacItem
+        # STAC-item: type=Feature  STAC-collection: type=Collection
+        if results.get("type") == "Feature":
+            # create stac item
+            bbox = results.get("assets").get("bbox")
+            result = QgsStacItem(
+                id = results.get("id"),
+                version = results.get("stac_version"),
+                geometry = QgsJsonUtils.geometryFromGeoJson(results.get("geometry")),
+                properties = results.get("properties"),
+                links = self._asQgsStacLinks(results.get("links", [])),
+                assets = self._asQgsStacAssets(results.get("assets"), []),
+                bbox = QgsBox3D(x=bbox[0],x2=bbox[2],y=bbox[1],y2=bbox[3])
+            )
+            return result
+        elif results.get("type") == "Collection":
+            # create stac collection
+            pass
+
+    def _asQgsStacAssets(self, dict):
+        assets = []
+        for assetTitle in dict:
+            # I dont know where the CS info and other cube:dimensions info goes
+            stacAsset = QgsStacAsset(
+                href = dict[assetTitle].get('href', None),
+                title = dict[assetTitle].get('title', None),
+                description = dict[assetTitle].get('description', None),
+                mediaType = dict[assetTitle].get('type', None),
+                roles = dict[assetTitle].get('roles', None)
+            )
+            assets.append(stacAsset)
+        return assets
+
+    def _asQgsStacLinks(self, dict):
+        links = []
+        for link in dict:
+            stacLink = QgsStacLink(
+                href = link.get('href', None),
+                relation = link.get('rel', None),
+                mediaType = link.get('type', None),
+                title = link.get('title', None)
+            )
+            links.append(stacLink)
+        return links
+
     def viewProperties(self):
         self.getJob()
         job_json = json.dumps(self.job)
@@ -99,6 +155,9 @@ class OpenEOJobItem(QgsDataItem):
 
     def getStatus(self):
         return self.job.get("status", "unknown")
+    
+    def printJobMetadata(self):
+        print(self.getResults())
 
     def actions(self, parent):
         actions = []
@@ -110,5 +169,9 @@ class OpenEOJobItem(QgsDataItem):
         action_refresh = QAction(QIcon(), "Refresh", parent)
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
+
+        action_debug = QAction(QIcon(), "debug", parent)
+        action_debug.triggered.connect(self.printJobMetadata)
+        actions.append(action_debug)
 
         return actions

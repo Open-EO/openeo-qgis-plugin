@@ -6,7 +6,7 @@ from qgis.core import Qgis
 from qgis.core import QgsIconUtils
 from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
-from qgis.core import QgsStacController
+#from qgis.core import QgsStacController
 
 class OpenEOStacAssetItem(QgsDataItem):
     def __init__(self, assetDict, parent, plugin):
@@ -37,7 +37,7 @@ class OpenEOStacAssetItem(QgsDataItem):
 
         self.asset = assetDict
         self.plugin = plugin
-        self.stacController = QgsStacController()
+        #self.stacController = QgsStacController()
         self.uris = None #initialise
         self.uris = self.mimeUris()
 
@@ -65,8 +65,8 @@ class OpenEOStacAssetItem(QgsDataItem):
             authcfg = self.stacController.authCfg()
             if href.startswith("http") or href.startswith("ftp"):
                 uriString = f"/vsicurl/{href}"
-                if len(authcfg) > 0:
-                    uriString += f" authcfg='{authcfg}'"
+                #if len(authcfg) > 0:
+                #    uriString += f" authcfg='{authcfg}'"
             elif href.startswith("s3://"):
                 uriString = f"/vsis3/{href[5:]}"
             else:

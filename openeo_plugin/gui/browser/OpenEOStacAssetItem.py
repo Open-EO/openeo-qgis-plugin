@@ -62,7 +62,7 @@ class OpenEOStacAssetItem(QgsDataItem):
             # create the uri string
             uriString = ""
             href = self.asset.get("href", "")
-            authcfg = self.stacController.authCfg()
+            #authcfg = self.stacController.authCfg()
             if href.startswith("http") or href.startswith("ftp"):
                 uriString = f"/vsicurl/{href}"
                 #if len(authcfg) > 0:

@@ -101,9 +101,8 @@ class OpenEOStacAssetItem(QgsDataItem):
     def actions(self, parent):
         actions = []
 
-        if self.viewable:
-            action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
-            action_add_to_project.triggered.connect(self.addToProject)
-            actions.append(action_add_to_project)
+        action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
+        action_add_to_project.triggered.connect(self.addToProject)
+        actions.append(action_add_to_project)
 
         return actions

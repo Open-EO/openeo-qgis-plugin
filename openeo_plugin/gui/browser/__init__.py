@@ -1,3 +1,4 @@
+from .OpenEOStacAssetItem import OpenEOStacAssetItem
 from .OpenEOJobItem import OpenEOJobItem
 from .OpenEOJobsGroupItem import OpenEOJobsGroupItem
 

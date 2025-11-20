@@ -68,7 +68,7 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             jobs = self.getConnection().list_jobs()
             return jobs
         except openeo.rest.OpenEoApiError:
-            return []
+            return [] #this happens when authentication is missing
         except Exception as e:
             print(str(e))
             error(self.plugin.iface, "Fetching batch jobs failed. See log for details")

@@ -68,7 +68,7 @@ class OpenEOJobItem(QgsDataItem):
         status = self.getStatus()
         statusString = f"({status}) "
 
-        if not status == "finished":
+        if status != "finished":
             #TODO: may not be foolproof. can finished jobs without assets exist?
             self.setState(QgsDataItem.Populated)
         self.setName(statusString + name)
@@ -126,9 +126,6 @@ class OpenEOJobItem(QgsDataItem):
 
     def getStatus(self):
         return self.job.get("status", "unknown")
-    
-    def printJobMetadata(self):
-        print(self.getResults())
 
     def actions(self, parent):
         actions = []
@@ -140,9 +137,5 @@ class OpenEOJobItem(QgsDataItem):
         action_refresh = QAction(QIcon(), "Refresh", parent)
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
-
-        action_debug = QAction(QIcon(), "debug", parent)
-        action_debug.triggered.connect(self.printJobMetadata)
-        actions.append(action_debug)
 
         return actions

@@ -10,16 +10,9 @@ import pathlib
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
-from qgis.core import QgsIconUtils
 from qgis.core import Qgis
 from qgis.core import QgsDataItem
-from qgis.core import QgsStacItem
-from qgis.core import QgsStacCollection
-from qgis.core import QgsJsonUtils
-from qgis.core import QgsStacLink
-from qgis.core import QgsStacAsset
-from qgis.core import QgsBox3D
-from qgis.core import QgsStacExtent
+from qgis.core import QgsApplication
 
 from . import OpenEOStacAssetItem
 
@@ -53,7 +46,7 @@ class OpenEOJobItem(QgsDataItem):
 
         self.uris = []
 
-        self.setIcon(QgsIconUtils.iconTiledScene())
+        self.setIcon(QgsApplication.getThemeIcon("mIconTiledScene.svg"))
 
         self.updateFromData()
 

@@ -16,6 +16,7 @@ from qgis.core import Qgis
 from qgis.core import QgsDataItem
 from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
+from qgis.core import QgsApplication
 
 from ...utils.wmts import WebMapTileService
 from ...utils.logging import warning
@@ -45,7 +46,7 @@ class OpenEOServiceItem(QgsDataItem):
             providerKey = plugin.PLUGIN_ENTRY_NAME
         )
 
-        self.setIcon(QgsIconUtils.iconTiledScene())
+        self.setIcon(QgsApplication.getThemeIcon("mIconTiledScene.svg"))
 
         self.service = service
         self.serviceID = self.service["id"]

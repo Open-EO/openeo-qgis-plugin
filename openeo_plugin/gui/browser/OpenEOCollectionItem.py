@@ -16,6 +16,7 @@ from qgis.core import Qgis
 from qgis.core import QgsDataItem
 from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
+from qgis.core import QgsApplication
 
 from ...utils.wmts import WebMapTileService
 from ...utils.logging import warning
@@ -54,10 +55,9 @@ class OpenEOCollectionItem(QgsDataItem):
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
 
-    def icon(self):
         if self.preview:
-            return QgsIconUtils.iconRaster()
-        return QgsIconUtils.iconTiledScene()
+            self.setIcon(QgsIconUtils.iconRaster())
+        self.setIcon(QgsApplication.getThemeIcon("mIconTiledScene.svg"))
 
     def hasDragEnabled(self):
         return self.preview

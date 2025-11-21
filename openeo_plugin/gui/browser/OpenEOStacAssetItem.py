@@ -24,8 +24,8 @@ class OpenEOStacAssetItem(QgsDataItem):
         :param job: dict containing relevant infos about the batch job that is created.
         :type url: dict
         """
-        #TODO: might be worth using a QgsStacAsset to ensure type safetys
-        print(assetDict)
+        #TODO: might be worth using a QgsStacAsset to ensure type safety
+        # problem. Those are only introduced with 3.44
         QgsDataItem.__init__(
             self,
             type = Qgis.BrowserItemType.Custom,

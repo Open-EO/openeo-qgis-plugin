@@ -7,8 +7,10 @@ import tempfile
 import json
 import pathlib
 
+from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QApplication
 
 from qgis.core import Qgis
 from qgis.core import QgsDataItem
@@ -123,21 +125,23 @@ class OpenEOJobItem(QgsDataItem):
         return self.job.get("status", "unknown")
 
     def addResultsToProject(self):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         if len(self.assetItems) == 0:
             self.createChildren()
 
         for asset in self.assetItems:
             uri = asset.mimeUris()[0]
-        
+
         # create group
         project = QgsProject.instance()
         group = project.layerTreeRoot().addGroup(self.name())
-
+        
         # create layers and add them to group
         for asset in self.assetItems:
             layer = QgsRasterLayer(asset.mimeUris()[0].uri, asset.name())
             project.addMapLayer(layer, False)
             group.addLayer(layer)
+        QApplication.restoreOverrideCursor()
 
     def actions(self, parent):
         actions = []

@@ -108,7 +108,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
             try:
                 self.parent.getConnection().authenticate_basic(self.username, self.password)
                 #TODO: add checkmark to select whether to save login
-                self.parent.saveLogin(self.username, self.password)
+                self.parent.saveLogin(auth_provider["type"],self.username, self.password)
                 return True
             except openeo.rest.OpenEoApiError as e:
                 msg = QMessageBox()
@@ -154,7 +154,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                     print("No URL found before auth finished.")
 
                 auth_thread.join()
-
+                self.parent.saveLogin(auth_provider["type"])
                 self.accept() # Close the dialog
                 return
             except AttributeError:

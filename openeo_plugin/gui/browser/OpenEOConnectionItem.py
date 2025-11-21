@@ -56,15 +56,10 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
 
         login = self.getLogin()
         if login:
-            self.getConnection().authenticate_basic(login["loginName"], login["password"])
-        else: 
-            try: 
-                #TODO: this is slow. consider a different check to test for oidc
-                # one options would be to save oidc logins in the settings too
-                # just add an additional logintype flag
+            if login.get("loginType") == "basic":
+                self.getConnection().authenticate_basic(login["loginName"], login["password"])
+            elif login.get("loginType") == "oidc": 
                 self.getConnection().authenticate_oidc_refresh_token()  #try logging in with refresh token
-            except Exception:
-                pass
 
     def createChildren(self):
         capabilities = self.getConnection().capabilities()
@@ -136,12 +131,13 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             self.connection = self.model.connect()
         return self.connection
     
-    def saveLogin(self, name, password):
+    def saveLogin(self, loginType, name=None, password=None):
         settings = QgsSettings()
         loginInfo = {
             "id": str(self.model.id),
             "loginName": name,
             "password": password,
+            "loginType": loginType
         }
         logins = settings.value(SettingsPath.SAVED_LOGINS.value)
         logins.append(loginInfo)

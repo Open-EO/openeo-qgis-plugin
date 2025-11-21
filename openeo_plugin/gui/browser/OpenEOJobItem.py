@@ -13,6 +13,8 @@ from qgis.PyQt.QtWidgets import QAction
 from qgis.core import Qgis
 from qgis.core import QgsDataItem
 from qgis.core import QgsApplication
+from qgis.core import QgsProject
+from qgis.core import QgsRasterLayer
 
 from . import OpenEOStacAssetItem
 
@@ -44,7 +46,7 @@ class OpenEOJobItem(QgsDataItem):
         self.job = job
         self.plugin = plugin
 
-        self.uris = []
+        self.assetItems = []
 
         self.setIcon(QgsApplication.getThemeIcon("mIconTiledScene.svg"))
 
@@ -95,12 +97,12 @@ class OpenEOJobItem(QgsDataItem):
         return stacAssets
 
     def createChildren(self):
-        assetItems = self.getResults()
+        self.assetItems = self.getResults()
 
-        for item in assetItems:
+        for item in self.assetItems:
             sip.transferto(item, self)
 
-        return assetItems
+        return self.assetItems
 
     def viewProperties(self):
         self.getJob()
@@ -120,6 +122,23 @@ class OpenEOJobItem(QgsDataItem):
     def getStatus(self):
         return self.job.get("status", "unknown")
 
+    def addResultsToProject(self):
+        if len(self.assetItems) == 0:
+            self.createChildren()
+
+        for asset in self.assetItems:
+            uri = asset.mimeUris()[0]
+        
+        # create group
+        project = QgsProject.instance()
+        group = project.layerTreeRoot().addGroup(self.name())
+
+        # create layers and add them to group
+        for asset in self.assetItems:
+            layer = QgsRasterLayer(asset.mimeUris()[0].uri, asset.name())
+            project.addMapLayer(layer, False)
+            group.addLayer(layer)
+
     def actions(self, parent):
         actions = []
 
@@ -130,5 +149,9 @@ class OpenEOJobItem(QgsDataItem):
         action_refresh = QAction(QIcon(), "Refresh", parent)
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
+
+        action_addGroup = QAction(QIcon(), "Add Results to Project", parent)
+        action_addGroup.triggered.connect(self.addResultsToProject)
+        actions.append(action_addGroup)
 
         return actions

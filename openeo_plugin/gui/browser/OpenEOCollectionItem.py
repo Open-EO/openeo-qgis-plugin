@@ -130,18 +130,18 @@ class OpenEOCollectionItem(QgsDataItem):
         QApplication.setOverrideCursor(Qt.BusyCursor)
 
         #TODO: what if operation takes way too long?
-        for link in webMapLinks:
-            try:
+        try:
+            for link in webMapLinks:
                 mimeUri = self.createUri(link)
                 mimeUris.append(mimeUri)
-            except Exception as e:
-                print(e)
-                warning(
-                    self.plugin.iface,
-                    f"Loading the map service {link['href']} failed."
-                )
-            finally:
-                QApplication.restoreOverrideCursor()
+        except Exception as e:
+            print(e)
+            warning(
+                self.plugin.iface,
+                f"Loading the map service {link['href']} failed."
+            )
+        finally:
+            QApplication.restoreOverrideCursor()
 
         self.uris = mimeUris
 

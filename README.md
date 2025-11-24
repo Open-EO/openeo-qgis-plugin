@@ -1,7 +1,7 @@
 # openeo-qgis-plugin
 QGIS Plugin to connect and use openEO compliant backends.
 
-Compatible with backends compliant wit openeo API version 0.4.0 and above. Full functionality is only provided for version 1.0.0-rc2.
+Compatible with backends compliant with openEO API version 1.0.0 and above. Full functionality is only provided for version 1.0.0-rc2.
 
 Minimum required version QGIS 3.8
 
@@ -11,8 +11,8 @@ The openEO QGIS Plugin "OpenEO" allows connecting to openEO backends, list the u
 
 ### Features
 
-* List all openeo compliant backends listed at the [openEO Hub](http://hub.openeo.org/) 
-* Connect to an openeo compliant backend
+* List all openEO compliant backends listed at the [openEO Hub](http://hub.openeo.org/) 
+* Connect to an openEO compliant backend
 * Authenticate connections to backends: Supports:
     * Basic authentication (username, password)
     * OpenID Connect authentication (device code flow)
@@ -25,7 +25,7 @@ The openEO QGIS Plugin "OpenEO" allows connecting to openEO backends, list the u
     * Batch Jobs
     * Collections
     * Web Services
-* Open the official openeo web editor in the systems system browser
+* Open the official openEO Web Editor in the systems system browser
    
 Need some additional features? Leave an issue at this repository!
 
@@ -41,7 +41,7 @@ Not yet supported (TODO)
 
 This is the recommended way if you want to get the **most recent** version of the plugin.
 
-**TODO: may need steps for the openeo python dependency**
+**TODO: may need steps for the openEO python dependency**
 
 1. Download or clone this repository
 2. compress the `./openeo_plugin` directory in a .zip file

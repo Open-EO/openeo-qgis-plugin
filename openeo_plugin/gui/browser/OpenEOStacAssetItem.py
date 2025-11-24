@@ -3,10 +3,12 @@ from qgis.PyQt.QtWidgets import QAction
 
 from qgis.core import QgsDataItem
 from qgis.core import Qgis
+from qgis.core import QgsProject
 from qgis.core import QgsIconUtils
 from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsRasterLayer
+from qgis.core import QgsCoordinateTransformContext
 #from qgis.core import QgsStacController
 
 from ...utils.logging import warning
@@ -46,8 +48,7 @@ class OpenEOStacAssetItem(QgsDataItem):
         self.uris = self.mimeUris()
         self.validLayer = None
 
-        self.setIcon(QgsIconUtils.iconRaster())
-        self.producesValidLayer()
+        self.setIcon(QgsIconUtils.iconRaster()) #TODO: determine iconType by layer Type
         self.populate()
 
     def mimeUris(self):
@@ -105,25 +106,49 @@ class OpenEOStacAssetItem(QgsDataItem):
         elif uri.layerType == QgsMapLayerFactory.typeToString(Qgis.LayerType.Vector):
             pass #TODO: implement once vector mimetypes are introduced
 
-    def addToProject(self):
+    def createLayer(self, addToProject=True):
         if self.producesValidLayer():
             uris = self.mimeUris()
             uri = uris[0]
-            self.addLayerToProject(uri)
+            layerOptions = QgsMapLayerFactory.LayerOptions(
+                transformContext=QgsCoordinateTransformContext()
+            )
+            layer = QgsMapLayerFactory.createLayer(
+                uri.uri, 
+                uri.name, 
+                QgsMapLayerFactory.typeFromString(uri.layerType)[0],
+                layerOptions, 
+                uri.providerKey
+            )
+            if addToProject:
+                QgsProject.instance().addMapLayer(layer)
+            return layer
         else:
             warning(self.plugin.iface, "The file format is not supported by the plugin")
+        return None
+    
+
+    def getLayerType(self):
+        mediaType = self.asset.get("type", "")
+        mediaType = mediaType.lower()
+        mediaTypes = {
+            "image/tiff; application=geotiff": Qgis.LayerType.Raster,
+            "image/tiff; application=geotiff; profile=cloud-optimized": Qgis.LayerType.Raster,
+            "application/geo+json": Qgis.LayerType.Vector,
+            "application/netcdf": Qgis.LayerType.Raster,
+            "application/x+netcdf": Qgis.LayerType.Raster
+        }
+        if mediaType in mediaTypes:
+            return mediaTypes[mediaType]
+        return None
 
     def producesValidLayer(self):
         if self.validLayer == None:
-            mediaType = self.asset.get("type", "")
-            valid_media_types = {
-                "image/tiff; application=geotiff",
-                "image/tiff; application=geotiff; profile=cloud-optimized",
-                "application/geo+json",
-                "application/netcdf",
-                "application/x+netcdf"
+            layerType = self.getLayerType()
+            validLayerTypes = {
+                QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster),
             }
-            self.validLayer = mediaType.lower() in valid_media_types
+            self.validLayer = QgsMapLayerFactory.typeToString(layerType) in validLayerTypes
         return self.validLayer
     
     def actions(self, parent):
@@ -131,7 +156,7 @@ class OpenEOStacAssetItem(QgsDataItem):
 
         if self.producesValidLayer():
             action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
-            action_add_to_project.triggered.connect(self.addToProject)
+            action_add_to_project.triggered.connect(self.createLayer)
             actions.append(action_add_to_project)
 
         return actions

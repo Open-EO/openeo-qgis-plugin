@@ -144,9 +144,6 @@ class OpenEOJobItem(QgsDataItem):
             if len(self.assetItems) == 0:
                 self.createChildren()
 
-            for asset in self.assetItems:
-                uri = asset.mimeUris()[0]
-
             # create group
             jobName = self.job.get("title") or self.job.get("id")
             project = QgsProject.instance()
@@ -155,10 +152,9 @@ class OpenEOJobItem(QgsDataItem):
             # create layers and add them to group
             allValid = True
             for asset in self.assetItems:
-                layer = QgsRasterLayer(asset.mimeUris()[0].uri, asset.name())
+                layer = asset.createLayer()
                 if not layer.isValid():
                     allValid = False
-                project.addMapLayer(layer, False)
                 group.addLayer(layer)
         except Exception as e:
             print(e)

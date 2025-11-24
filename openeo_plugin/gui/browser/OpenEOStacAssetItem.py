@@ -85,7 +85,7 @@ class OpenEOStacAssetItem(QgsDataItem):
         return [uri]
 
     def hasDragEnabled(self):
-        return True
+        return self.producesValidLayer()
     
     def layerName(self):
         return self.name()
@@ -109,23 +109,30 @@ class OpenEOStacAssetItem(QgsDataItem):
 
     def producesValidLayer(self):
         if self.validLayer == None:
-            uri = self.mimeUris()[0]
-            testLayer = QgsRasterLayer(uri.uri, "layer name")
-            self.validLayer = testLayer.isValid()
+            mediaType = self.asset.get("type", "")
+            match mediaType.lower():
+                case "image/tiff; application=geotiff":
+                    self.validLayer = True
+                case "image/tiff; application=geotiff; profile=cloud-optimized":
+                    self.validLayer = True
+                case "application/geo+json":
+                    self.validLayer = True
+                case "application/vnd.geo+json": #obsolete type for gejson
+                    self.validLayer = True
+                case "application/netcdf":
+                    self.validLayer = True
+                case "application/x+netcdf":
+                    self.validLayer = True
+                case _:
+                    self.validLayer = False
         return self.validLayer
-    
-    def debug(self):
-        print(self.producesValidLayer())
     
     def actions(self, parent):
         actions = []
 
-        action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
-        action_add_to_project.triggered.connect(self.addToProject)
-        actions.append(action_add_to_project)
-
-        debug = QAction(QIcon(), "Is Valid?", parent)
-        debug.triggered.connect(self.debug)
-        actions.append(debug)
+        if self.producesValidLayer():
+            action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
+            action_add_to_project.triggered.connect(self.addToProject)
+            actions.append(action_add_to_project)
 
         return actions

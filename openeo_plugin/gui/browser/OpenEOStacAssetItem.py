@@ -99,32 +99,31 @@ class OpenEOStacAssetItem(QgsDataItem):
             supportedCrs = f"EPSG:{supportedCrs}"
         return [supportedCrs] #TODO: not fully reliable
     
+    def addLayerToProject(self, uri):
+        if uri.layerType == QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster):
+            self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
+        elif uri.layerType == QgsMapLayerFactory.typeToString(Qgis.LayerType.Vector):
+            pass #TODO: implement once vector mimetypes are introduced
+
     def addToProject(self):
         if self.producesValidLayer():
             uris = self.mimeUris()
             uri = uris[0]
-            self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
+            self.addLayerToProject(uri)
         else:
-            warning(self.plugin.iface, "Asset does not produce valid Layer")
+            warning(self.plugin.iface, "The file format is not supported by the plugin")
 
     def producesValidLayer(self):
         if self.validLayer == None:
             mediaType = self.asset.get("type", "")
-            match mediaType.lower():
-                case "image/tiff; application=geotiff":
-                    self.validLayer = True
-                case "image/tiff; application=geotiff; profile=cloud-optimized":
-                    self.validLayer = True
-                case "application/geo+json":
-                    self.validLayer = True
-                case "application/vnd.geo+json": #obsolete type for gejson
-                    self.validLayer = True
-                case "application/netcdf":
-                    self.validLayer = True
-                case "application/x+netcdf":
-                    self.validLayer = True
-                case _:
-                    self.validLayer = False
+            valid_media_types = {
+                "image/tiff; application=geotiff",
+                "image/tiff; application=geotiff; profile=cloud-optimized",
+                "application/geo+json",
+                "application/netcdf",
+                "application/x+netcdf"
+            }
+            self.validLayer = mediaType.lower() in valid_media_types
         return self.validLayer
     
     def actions(self, parent):

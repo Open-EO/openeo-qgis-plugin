@@ -50,6 +50,7 @@ class OpenEOJobItem(QgsDataItem):
         self.job = job
         self.plugin = plugin
 
+        self.results = None
         self.assetItems = []
 
         self.setIcon(QgsApplication.getThemeIcon("mIconTiledScene.svg"))
@@ -84,11 +85,13 @@ class OpenEOJobItem(QgsDataItem):
         return self.job
     
     def getResults(self):
-        results = self.getConnection().job(self.job["id"]).get_results()
-        results = results.get_metadata()
+        if self.results == None: #for caching the results
+            results = self.getConnection().job(self.job["id"]).get_results()
+            results = results.get_metadata()
+            self.results = results
         stacAssets = []
         # get the stac item
-        assets = results.get("assets", [])
+        assets = self.results.get("assets", [])
         # create stac-asset items
         for key in assets:
             assetItem = OpenEOStacAssetItem(
@@ -109,19 +112,34 @@ class OpenEOJobItem(QgsDataItem):
         return self.assetItems
 
     def viewProperties(self):
-        self.getJob()
-        job_json = json.dumps(self.job)
+        QApplication.setOverrideCursor(Qt.BusyCursor)
+        try:
+            self.getJob()
+            job_json = json.dumps(self.job)
 
-        filePath = pathlib.Path(__file__).parent.resolve()
-        with open(os.path.join(filePath, "..", "jobProperties.html")) as file:
-            jobInfoHTML = file.read()
-        jobInfoHTML = jobInfoHTML.replace("{{ json }}", job_json)
-        
-        fh, path = tempfile.mkstemp(suffix='.html')
-        url = 'file://' + path
-        with open(path, 'w') as fp:
-            fp.write(jobInfoHTML)
-        webbrowser.open_new(url)
+            if self.results == None: #caching the results for better performance
+                results = self.getConnection().job(self.job["id"]).get_results()
+                results = results.get_metadata()
+                self.results = results
+            result_json = json.dumps(self.results)
+
+            filePath = pathlib.Path(__file__).parent.resolve()
+            with open(os.path.join(filePath, "..", "jobProperties.html")) as file:
+                jobInfoHTML = file.read()
+            jobInfoHTML = jobInfoHTML.replace("{{ json }}", job_json)
+            jobInfoHTML = jobInfoHTML.replace("{{ resultJson }}", result_json)
+
+            fh, path = tempfile.mkstemp(suffix='.html')
+            url = 'file://' + path
+            with open(path, 'w') as fp:
+                fp.write(jobInfoHTML)
+            webbrowser.open_new(url)
+        except Exception as e:
+            QApplication.restoreOverrideCursor()
+            raise e
+        finally:
+            QApplication.restoreOverrideCursor()
+
 
     def getStatus(self):
         return self.job.get("status", "unknown")

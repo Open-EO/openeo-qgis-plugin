@@ -121,7 +121,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                     self.getConnection().authenticate_oidc_refresh_token()  #try logging in with refresh token
                     return True
                 except openeo.rest.OpenEoClientException:
-                    print(f"No oidc token found for connection {self.model.name}")
+                    print(f"No valid oidc token found for connection {self.model.name}")
         return False
     
     def isAuthenticated(self, forceRefresh=False):

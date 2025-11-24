@@ -140,8 +140,8 @@ class OpenEOCollectionItem(QgsDataItem):
                     self.plugin.iface,
                     f"Loading the map service {link['href']} failed."
                 )
-        
-        QApplication.restoreOverrideCursor()
+            finally:
+                QApplication.restoreOverrideCursor()
 
         self.uris = mimeUris
 

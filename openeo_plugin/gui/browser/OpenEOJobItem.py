@@ -19,6 +19,7 @@ from qgis.core import QgsProject
 from qgis.core import QgsRasterLayer
 
 from . import OpenEOStacAssetItem
+from ...utils.logging import error
 
 class OpenEOJobItem(QgsDataItem):
     def __init__(self, parent, job, plugin):
@@ -126,22 +127,30 @@ class OpenEOJobItem(QgsDataItem):
 
     def addResultsToProject(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        if len(self.assetItems) == 0:
-            self.createChildren()
+        try:
+            if len(self.assetItems) == 0:
+                self.createChildren()
 
-        for asset in self.assetItems:
-            uri = asset.mimeUris()[0]
+            for asset in self.assetItems:
+                uri = asset.mimeUris()[0]
 
-        # create group
-        project = QgsProject.instance()
-        group = project.layerTreeRoot().addGroup(self.name())
-        
-        # create layers and add them to group
-        for asset in self.assetItems:
-            layer = QgsRasterLayer(asset.mimeUris()[0].uri, asset.name())
-            project.addMapLayer(layer, False)
-            group.addLayer(layer)
-        QApplication.restoreOverrideCursor()
+            # create group
+            project = QgsProject.instance()
+            group = project.layerTreeRoot().insertGroup(0, self.name())
+
+            # create layers and add them to group
+            for asset in self.assetItems:
+                layer = QgsRasterLayer(asset.mimeUris()[0].uri, asset.name())
+                project.addMapLayer(layer, False)
+                group.addLayer(layer)
+        except Exception as e:
+            print(e)
+            error(
+                self.plugin.iface,
+                f"Adding Results to Project failed"
+            )
+        finally:            
+            QApplication.restoreOverrideCursor()
 
     def actions(self, parent):
         actions = []

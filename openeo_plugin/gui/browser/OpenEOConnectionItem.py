@@ -23,6 +23,7 @@ from . import OpenEOServicesGroupItem
 from . import OpenEOCollectionsGroupItem
 from ..login_dialog import LoginDialog
 from ...utils.settings import SettingsPath
+from ...utils.logging import error
 
 class OpenEOConnectionItem(QgsDataCollectionItem):
     """
@@ -95,13 +96,22 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             return
         
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        self.dlg = LoginDialog(
-            connection=self.getConnection(),
-            model=self.model,
-            parent=self,
-            iface=self.plugin.iface
+        try:
+            self.dlg = LoginDialog(
+                connection=self.getConnection(),
+                model=self.model,
+                parent=self,
+                iface=self.plugin.iface
+                )
+        except Exception as e:
+            print(e)
+            error(
+                self.plugin.iface,
+                f"Showing authentication dialog failed"
             )
-        QApplication.restoreOverrideCursor()
+            return
+        finally:
+            QApplication.restoreOverrideCursor()
 
         result = self.dlg.exec()
 

@@ -6,6 +6,7 @@ import os
 import tempfile
 import json
 import pathlib
+import threading
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
@@ -19,7 +20,7 @@ from qgis.core import QgsProject
 from qgis.core import QgsRasterLayer
 
 from . import OpenEOStacAssetItem
-from ...utils.logging import error
+from ...utils.logging import error, warning
 
 class OpenEOJobItem(QgsDataItem):
     def __init__(self, parent, job, plugin):
@@ -139,8 +140,11 @@ class OpenEOJobItem(QgsDataItem):
             group = project.layerTreeRoot().insertGroup(0, self.name())
 
             # create layers and add them to group
+            allValid = True
             for asset in self.assetItems:
                 layer = QgsRasterLayer(asset.mimeUris()[0].uri, asset.name())
+                if not layer.isValid():
+                    allValid = False
                 project.addMapLayer(layer, False)
                 group.addLayer(layer)
         except Exception as e:
@@ -151,6 +155,8 @@ class OpenEOJobItem(QgsDataItem):
             )
         finally:            
             QApplication.restoreOverrideCursor()
+            if not allValid:
+                warning(self.plugin.iface, "One or more result assets do not produce valid layers")
 
     def actions(self, parent):
         actions = []

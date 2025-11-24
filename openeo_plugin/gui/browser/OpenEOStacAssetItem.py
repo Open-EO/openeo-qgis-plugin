@@ -6,7 +6,11 @@ from qgis.core import Qgis
 from qgis.core import QgsIconUtils
 from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
+from qgis.core import QgsRasterLayer
 #from qgis.core import QgsStacController
+
+from ...utils.logging import warning
+
 
 class OpenEOStacAssetItem(QgsDataItem):
     def __init__(self, assetDict, parent, plugin):
@@ -40,8 +44,10 @@ class OpenEOStacAssetItem(QgsDataItem):
         #self.stacController = QgsStacController()
         self.uris = None #initialise
         self.uris = self.mimeUris()
+        self.validLayer = None
 
         self.setIcon(QgsIconUtils.iconRaster())
+        self.producesValidLayer()
         self.populate()
 
     def mimeUris(self):
@@ -93,10 +99,23 @@ class OpenEOStacAssetItem(QgsDataItem):
             supportedCrs = f"EPSG:{supportedCrs}"
         return [supportedCrs] #TODO: not fully reliable
     
-    def addToProject(self):        
-        uris = self.mimeUris()
-        uri = uris[0]
-        self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
+    def addToProject(self):
+        if self.producesValidLayer():
+            uris = self.mimeUris()
+            uri = uris[0]
+            self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
+        else:
+            warning(self.plugin.iface, "Asset does not produce valid Layer")
+
+    def producesValidLayer(self):
+        if self.validLayer == None:
+            uri = self.mimeUris()[0]
+            testLayer = QgsRasterLayer(uri.uri, "layer name")
+            self.validLayer = testLayer.isValid()
+        return self.validLayer
+    
+    def debug(self):
+        print(self.producesValidLayer())
     
     def actions(self, parent):
         actions = []
@@ -104,5 +123,9 @@ class OpenEOStacAssetItem(QgsDataItem):
         action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
         action_add_to_project.triggered.connect(self.addToProject)
         actions.append(action_add_to_project)
+
+        debug = QAction(QIcon(), "Is Valid?", parent)
+        debug.triggered.connect(self.debug)
+        actions.append(debug)
 
         return actions

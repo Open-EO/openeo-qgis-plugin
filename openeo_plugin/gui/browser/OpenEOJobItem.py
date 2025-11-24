@@ -154,8 +154,9 @@ class OpenEOJobItem(QgsDataItem):
                 uri = asset.mimeUris()[0]
 
             # create group
+            jobName = self.job.get("title") or self.job.get("id")
             project = QgsProject.instance()
-            group = project.layerTreeRoot().insertGroup(0, self.name())
+            group = project.layerTreeRoot().insertGroup(0, jobName)
 
             # create layers and add them to group
             allValid = True

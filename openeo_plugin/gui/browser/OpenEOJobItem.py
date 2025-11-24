@@ -50,7 +50,6 @@ class OpenEOJobItem(QgsDataItem):
         self.job = job
         self.plugin = plugin
 
-        self.results = None
         self.assetItems = []
 
         self.setIcon(QgsApplication.getThemeIcon("mIconTiledScene.svg"))
@@ -85,13 +84,12 @@ class OpenEOJobItem(QgsDataItem):
         return self.job
     
     def getResults(self):
-        if self.results == None: #for caching the results
-            results = self.getConnection().job(self.job["id"]).get_results()
-            results = results.get_metadata()
-            self.results = results
+        results = self.getConnection().job(self.job["id"]).get_results()
+        results = results.get_metadata()
+
         stacAssets = []
         # get the stac item
-        assets = self.results.get("assets", [])
+        assets = results.get("assets", [])
         # create stac-asset items
         for key in assets:
             assetItem = OpenEOStacAssetItem(
@@ -116,12 +114,8 @@ class OpenEOJobItem(QgsDataItem):
         try:
             self.getJob()
             job_json = json.dumps(self.job)
-
-            if self.results == None: #caching the results for better performance
-                results = self.getConnection().job(self.job["id"]).get_results()
-                results = results.get_metadata()
-                self.results = results
-            result_json = json.dumps(self.results)
+            results = self.getConnection().job(self.job["id"]).get_results()
+            result_json = json.dumps(results.get_metadata())
 
             filePath = pathlib.Path(__file__).parent.resolve()
             with open(os.path.join(filePath, "..", "jobProperties.html")) as file:

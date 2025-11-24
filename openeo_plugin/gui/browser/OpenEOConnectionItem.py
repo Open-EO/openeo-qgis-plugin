@@ -54,14 +54,9 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.lastAuthCheck = datetime.datetime.min
         self.authenticated = False
 
-        login = self.getLogin()
-        if login:
-            if login.get("loginType") == "basic":
-                self.getConnection().authenticate_basic(login["loginName"], login["password"])
-            elif login.get("loginType") == "oidc": 
-                self.getConnection().authenticate_oidc_refresh_token()  #try logging in with refresh token
-
     def createChildren(self):
+        if not self.isAuthenticated():
+            self.authenticateStored()
         capabilities = self.getConnection().capabilities()
         items = []
         
@@ -95,6 +90,10 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.parent().removeConnection(self)
 
     def authenticate(self):
+        if self.authenticateStored():
+            self.refresh()
+            return
+        
         QApplication.setOverrideCursor(Qt.WaitCursor)
         self.dlg = LoginDialog(
             connection=self.getConnection(),
@@ -110,6 +109,20 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             pass
         
         self.refresh()
+
+    def authenticateStored(self):
+        login = self.getLogin()
+        if login:
+            if login.get("loginType") == "basic":
+                self.getConnection().authenticate_basic(login["loginName"], login["password"])
+                return True
+            elif login.get("loginType") == "oidc": 
+                try:
+                    self.getConnection().authenticate_oidc_refresh_token()  #try logging in with refresh token
+                    return True
+                except openeo.rest.OpenEoClientException:
+                    print(f"No oidc token found for connection {self.model.name}")
+        return False
     
     def isAuthenticated(self, forceRefresh=False):
         authCacheAge = datetime.timedelta(seconds=60)

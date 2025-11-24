@@ -109,6 +109,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                 self.plugin.iface,
                 f"Showing authentication dialog failed"
             )
+            return
         finally:
             QApplication.restoreOverrideCursor()
 

@@ -58,8 +58,8 @@ class OpenEOJobItem(QgsDataItem):
 
     # todo: Not exactly sure why the second argument is needed, but without we get errors.
     def refresh(self, children: Iterable[QgsDataItem] = None):
-        self.getJob()
         super().refresh()
+        self.getJob()
         self.updateFromData()
 
     def updateFromData(self):
@@ -84,21 +84,23 @@ class OpenEOJobItem(QgsDataItem):
         return self.job
     
     def getResults(self):
-        results = self.getConnection().job(self.job["id"]).get_results()
-        results = results.get_metadata()
-
         stacAssets = []
-        # get the stac item
-        assets = results.get("assets", [])
-        # create stac-asset items
-        for key in assets:
-            assetItem = OpenEOStacAssetItem(
-                assetDict=assets[key],
-                parent=self,
-                plugin=self.plugin
-            )
-            stacAssets.append(assetItem)
-            
+        try:
+            results = self.getConnection().job(self.job["id"]).get_results()
+            results = results.get_metadata()
+
+            # get the stac item
+            assets = results.get("assets", [])
+            # create stac-asset items
+            for key in assets:
+                assetItem = OpenEOStacAssetItem(
+                    assetDict=assets[key],
+                    parent=self,
+                    plugin=self.plugin
+                )
+                stacAssets.append(assetItem)
+        except Exception as e:
+            print(e)
         return stacAssets
 
     def createChildren(self):

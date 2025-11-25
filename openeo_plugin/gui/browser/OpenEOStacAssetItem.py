@@ -1,10 +1,16 @@
 import requests
+import pathlib
+import os
 from pathlib import Path
+import webbrowser
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtWidgets import QFileDialog
+from qgis.PyQt.QtGui import QDesktopServices
+from qgis.PyQt.QtCore import QUrl
 
 from qgis.core import QgsDataItem
 from qgis.core import Qgis
@@ -170,6 +176,21 @@ class OpenEOStacAssetItem(QgsDataItem):
         finally:
             QApplication.restoreOverrideCursor()
 
+    def downloadTo(self):
+        downloadPath = pathlib.Path.home() / 'Downloads'
+        dir = QFileDialog.getExistingDirectory(
+            caption="Save Result to...",
+            directory=str(downloadPath)
+        )
+        try:
+            self.downloadAsset(dir=dir)
+            dirStr = f"file://{str(dir)}"
+            QDesktopServices.openUrl(QUrl(dirStr, QUrl.TolerantMode))
+        except Exception as e:
+            print(e)
+        finally:
+            QApplication.restoreOverrideCursor()
+
     def actions(self, parent):
         actions = []
 
@@ -181,5 +202,9 @@ class OpenEOStacAssetItem(QgsDataItem):
         action_download = QAction(QIcon(), "Download", parent)
         action_download.triggered.connect(self.downloadAsset)
         actions.append(action_download)
+
+        action_downloadTo = QAction(QIcon(), "Download to...", parent)
+        action_downloadTo.triggered.connect(self.downloadTo)
+        actions.append(action_downloadTo)
 
         return actions

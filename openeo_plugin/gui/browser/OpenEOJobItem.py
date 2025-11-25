@@ -12,6 +12,8 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtWidgets import QFileDialog
+from qgis.PyQt.QtGui import QDesktopServices
+from qgis.PyQt.QtCore import QUrl
 
 from qgis.core import Qgis
 from qgis.core import QgsDataItem
@@ -199,6 +201,8 @@ class OpenEOJobItem(QgsDataItem):
             QApplication.setOverrideCursor(Qt.WaitCursor)
             for asset in self.assetItems:
                 asset.downloadAsset(dir=dir)
+            dirStr = f"file://{str(dir)}"
+            QDesktopServices.openUrl(QUrl(dirStr, QUrl.TolerantMode))
         except Exception as e:
             print(e)
         finally:
@@ -219,7 +223,7 @@ class OpenEOJobItem(QgsDataItem):
         action_addGroup.triggered.connect(self.addResultsToProject)
         actions.append(action_addGroup)
 
-        actions_saveResultsTo = QAction(QIcon(), "Save Results to...", parent)
+        actions_saveResultsTo = QAction(QIcon(), "Download Results to...", parent)
         actions_saveResultsTo.triggered.connect(self.saveResultsTo)
         actions.append(actions_saveResultsTo)
 

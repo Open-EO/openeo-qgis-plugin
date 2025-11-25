@@ -1,8 +1,6 @@
 import requests
 import pathlib
-import os
 from pathlib import Path
-import webbrowser
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -19,6 +17,7 @@ from qgis.core import QgsIconUtils
 from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsCoordinateTransformContext
+from qgis.core import QgsApplication
 #from qgis.core import QgsStacController
 
 from ...utils.logging import warning
@@ -59,7 +58,8 @@ class OpenEOStacAssetItem(QgsDataItem):
         if layerType: 
             icon = QgsIconUtils.iconForLayerType(layerType)
             self.setIcon(icon)
-            #TODO: icon for None?
+        else:
+            self.setIcon(QgsApplication.getThemeIcon("mIconFile.svg"))
         self.populate()
 
     def mimeUris(self):

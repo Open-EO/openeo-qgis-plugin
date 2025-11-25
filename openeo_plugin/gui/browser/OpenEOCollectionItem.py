@@ -57,7 +57,8 @@ class OpenEOCollectionItem(QgsDataItem):
 
         if self.preview:
             self.setIcon(QgsIconUtils.iconRaster())
-        self.setIcon(QgsApplication.getThemeIcon("mIconTiledScene.svg"))
+        else:
+            self.setIcon(QgsApplication.getThemeIcon("mIconTiledScene.svg"))
 
     def hasDragEnabled(self):
         return self.preview

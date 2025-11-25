@@ -1,5 +1,11 @@
+import requests
+from pathlib import Path
+
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QApplication
+from qgis.PyQt.QtWidgets import QFileDialog
+from qgis.PyQt.QtCore import Qt
 
 from qgis.core import QgsDataItem
 from qgis.core import Qgis
@@ -98,34 +104,6 @@ class OpenEOStacAssetItem(QgsDataItem):
             supportedCrs = f"EPSG:{supportedCrs}"
         return [supportedCrs] #TODO: not fully reliable
     
-    def addLayerToProject(self, uri):
-        if uri.layerType == QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster):
-            self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
-        elif uri.layerType == QgsMapLayerFactory.typeToString(Qgis.LayerType.Vector):
-            pass #TODO: implement once vector mimetypes are introduced
-
-    def createLayer(self, addToProject=True):
-        if self.producesValidLayer():
-            uris = self.mimeUris()
-            uri = uris[0]
-            layerOptions = QgsMapLayerFactory.LayerOptions(
-                transformContext=QgsCoordinateTransformContext()
-            )
-            layer = QgsMapLayerFactory.createLayer(
-                uri.uri, 
-                uri.name, 
-                QgsMapLayerFactory.typeFromString(uri.layerType)[0],
-                layerOptions, 
-                uri.providerKey
-            )
-            if addToProject:
-                QgsProject.instance().addMapLayer(layer)
-            return layer
-        else:
-            warning(self.plugin.iface, "The file format is not supported by the plugin")
-        return None
-    
-
     def getLayerType(self):
         mediaType = self.asset.get("type", "")
         mediaType = mediaType.lower()
@@ -151,6 +129,40 @@ class OpenEOStacAssetItem(QgsDataItem):
             validLayer = QgsMapLayerFactory.typeToString(layerType) in validLayerTypes
         return validLayer
     
+    def createLayer(self, addToProject=True):
+        if self.producesValidLayer():
+            uris = self.mimeUris()
+            uri = uris[0]
+            layerOptions = QgsMapLayerFactory.LayerOptions(
+                transformContext=QgsCoordinateTransformContext()
+            )
+            layer = QgsMapLayerFactory.createLayer(
+                uri.uri, 
+                uri.name, 
+                QgsMapLayerFactory.typeFromString(uri.layerType)[0],
+                layerOptions, 
+                uri.providerKey
+            )
+            if addToProject:
+                QgsProject.instance().addMapLayer(layer)
+            return layer
+        else:
+            warning(self.plugin.iface, "The file format is not supported by the plugin")
+        return None
+    
+    def downloadAsset(self, dir=None):
+        try:
+            QApplication.setOverrideCursor(Qt.BusyCursor)
+            r = requests.get(self.asset.get("href", ""))
+            path = Path.home() / 'Downloads' / self.name()
+            with open(path, 'wb') as f:
+                f.write(r.content)
+        except Exception as e:
+            warning(self.plugin.iface, "Download failed")
+            raise e
+        finally:
+            QApplication.restoreOverrideCursor()
+
     def actions(self, parent):
         actions = []
 
@@ -158,5 +170,9 @@ class OpenEOStacAssetItem(QgsDataItem):
             action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
             action_add_to_project.triggered.connect(self.createLayer)
             actions.append(action_add_to_project)
+        
+        action_download = QAction(QIcon(), "Download", parent)
+        action_download.triggered.connect(self.downloadAsset)
+        actions.append(action_download)
 
         return actions

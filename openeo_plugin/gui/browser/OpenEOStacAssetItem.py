@@ -147,7 +147,7 @@ class OpenEOStacAssetItem(QgsDataItem):
             QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster),
             QgsMapLayerFactory.typeToString(Qgis.LayerType.Vector)
         }
-        if self.layerType != None:
+        if layerType != None:
             validLayer = QgsMapLayerFactory.typeToString(layerType) in validLayerTypes
         return validLayer
     

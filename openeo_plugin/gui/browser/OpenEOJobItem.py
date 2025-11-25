@@ -17,10 +17,16 @@ from qgis.core import Qgis
 from qgis.core import QgsDataItem
 from qgis.core import QgsApplication
 from qgis.core import QgsProject
-from qgis.core import QgsRasterLayer
 
 from . import OpenEOStacAssetItem
 from ...utils.logging import error, warning
+
+mayHaveResults = [
+    "running",
+    "canceled",
+    "finished",
+    "error"
+]
 
 class OpenEOJobItem(QgsDataItem):
     def __init__(self, parent, job, plugin):
@@ -48,6 +54,7 @@ class OpenEOJobItem(QgsDataItem):
         )
 
         self.job = job
+        self.results = None
         self.plugin = plugin
 
         self.assetItems = []
@@ -56,20 +63,17 @@ class OpenEOJobItem(QgsDataItem):
 
         self.updateFromData()
 
-    # todo: Not exactly sure why the second argument is needed, but without we get errors.
-    def refresh(self, children: Iterable[QgsDataItem] = None):
-        super().refresh()
-        self.getJob()
-        self.updateFromData()
+    def refresh(self, children: Iterable[QgsDataItem] | bool = False):
+        if children is False:
+            self.getJob(force=True)
+            return super().refresh()
+        else:
+            return super().refresh(children)
 
     def updateFromData(self):
         name = self.job.get("title") or self.job.get("id")
         status = self.getStatus()
         statusString = f"({status}) "
-
-        if status != "finished":
-            #TODO: may not be foolproof. can finished jobs without assets exist?
-            self.setState(QgsDataItem.Populated)
         self.setName(statusString + name)
 
     def hasDragEnabled(self):
@@ -78,19 +82,36 @@ class OpenEOJobItem(QgsDataItem):
     def getConnection(self):
         return self.parent().getConnection()
     
-    def getJob(self):
-        self.job = self.getConnection().job(self.job["id"]).describe()
-        self.updateFromData()
-        return self.job
-    
-    def getResults(self):
-        stacAssets = []
-        try:
-            results = self.getConnection().job(self.job["id"]).get_results()
-            results = results.get_metadata()
+    def getJob(self, force=False):
+        job = self.getConnection().job(self.job["id"])
+        if force:
+            try:
+                self.job = job.describe()
+                self.updateFromData()
+            except Exception as e:
+                print(e)
+                # error(self.plugin.iface, f"Fetching job details failed: {str(e)}")
+                return self.job
 
+        if (force or self.results is None) and self.getStatus() in mayHaveResults:
+            try:
+                results = job.get_results()
+                if results is not None:
+                    self.results = results.get_metadata()
+                else:
+                    self.results = None
+            except Exception as e:
+                print(e)
+                # error(self.plugin.iface, f"Fetching job results failed: {str(e)}")
+
+        return self.job
+
+    def createChildren(self):
+        self.getJob()
+        self.assetItems = []
+        if self.results is not None:
             # get the stac item
-            assets = results.get("assets", [])
+            assets = self.results.get("assets", [])
             # create stac-asset items
             for key in assets:
                 assetItem = OpenEOStacAssetItem(
@@ -98,27 +119,18 @@ class OpenEOJobItem(QgsDataItem):
                     parent=self,
                     plugin=self.plugin
                 )
-                stacAssets.append(assetItem)
-        except Exception as e:
-            print(e)
-        return stacAssets
-
-    def createChildren(self):
-        self.assetItems = self.getResults()
-
-        for item in self.assetItems:
-            sip.transferto(item, self)
-
+                self.assetItems.append(assetItem)
+                sip.transferto(assetItem, self)
+        
         return self.assetItems
 
     def viewProperties(self):
         QApplication.setOverrideCursor(Qt.BusyCursor)
         try:
-            self.getJob()
+            self.getJob(force=True)
             jobJson = json.dumps(self.job)
-            results = self.getConnection().job(self.job["id"]).get_results().get_metadata()
-            type = results["type"]
-            resultJson = json.dumps(results)
+            type = self.results["type"]
+            resultJson = json.dumps(self.results)
 
             # Item or Collection?
             resultHtml = ""
@@ -151,9 +163,7 @@ class OpenEOJobItem(QgsDataItem):
     def addResultsToProject(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
-            if len(self.assetItems) == 0:
-                self.createChildren()
-
+            self.getJob()
             # create group
             jobName = self.job.get("title") or self.job.get("id")
             project = QgsProject.instance()

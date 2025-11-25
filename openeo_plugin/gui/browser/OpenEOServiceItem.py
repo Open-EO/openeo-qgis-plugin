@@ -59,11 +59,12 @@ class OpenEOServiceItem(QgsDataItem):
 
         self.updateFromData()
 
-    # todo: Not exactly sure why the second argument is needed, but without we get errors.
-    def refresh(self, children: Iterable[QgsDataItem] = None):
-        self.getService()
-        super().refresh()
-        self.updateFromData()
+    def refresh(self, children: Iterable[QgsDataItem] | bool = False):
+        if children is False:
+            self.getService()
+            return super().refresh()
+        else:
+            return super().refresh(children)
 
     def updateFromData(self):
         name = self.service.get("title") or self.service.get("id")

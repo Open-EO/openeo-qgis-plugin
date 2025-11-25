@@ -47,7 +47,7 @@ class OpenEOStacAssetItem(QgsDataItem):
         self.uris = self.mimeUris()
 
         self.setIcon(QgsIconUtils.iconRaster()) #TODO: determine iconType by layer Type
-        self.populate()
+        self.setState(QgsDataItem.Populated)
 
     def mimeUris(self):
         if self.uris is not None:

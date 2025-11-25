@@ -158,7 +158,10 @@ class OpenEOStacAssetItem(QgsDataItem):
         try:
             QApplication.setOverrideCursor(Qt.BusyCursor)
             r = requests.get(self.asset.get("href", ""))
-            path = Path.home() / 'Downloads' / self.name()
+            if not dir:
+                path = Path.home() / 'Downloads' / self.name()
+            else: 
+                path = Path(dir) / self.name()
             with open(path, 'wb') as f:
                 f.write(r.content)
         except Exception as e:

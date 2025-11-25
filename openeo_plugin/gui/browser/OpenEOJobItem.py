@@ -11,6 +11,7 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtWidgets import QApplication
+from qgis.PyQt.QtWidgets import QFileDialog
 
 from qgis.core import Qgis
 from qgis.core import QgsDataItem
@@ -188,6 +189,21 @@ class OpenEOJobItem(QgsDataItem):
             if not allValid:
                 warning(self.plugin.iface, "One or more result assets do not produce valid layers")
 
+    def saveResultsTo(self):
+        downloadPath = pathlib.Path.home() / 'Downloads'
+        dir = QFileDialog.getExistingDirectory(
+            caption="Save Results to...",
+            directory=str(downloadPath)
+        )
+        try:
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+            for asset in self.assetItems:
+                asset.downloadAsset(dir=dir)
+        except Exception as e:
+            print(e)
+        finally:
+            QApplication.restoreOverrideCursor()
+
     def actions(self, parent):
         actions = []
 
@@ -202,5 +218,9 @@ class OpenEOJobItem(QgsDataItem):
         action_addGroup = QAction(QIcon(), "Add Results to Project", parent)
         action_addGroup.triggered.connect(self.addResultsToProject)
         actions.append(action_addGroup)
+
+        actions_saveResultsTo = QAction(QIcon(), "Save Results to...", parent)
+        actions_saveResultsTo.triggered.connect(self.saveResultsTo)
+        actions.append(actions_saveResultsTo)
 
         return actions

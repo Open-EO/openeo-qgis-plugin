@@ -4,7 +4,6 @@ from pathlib import Path
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtWidgets import QApplication
-from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtCore import Qt
 
 from qgis.core import QgsDataItem
@@ -35,8 +34,6 @@ class OpenEOStacAssetItem(QgsDataItem):
         :param job: dict containing relevant infos about the batch job that is created.
         :type url: dict
         """
-        #TODO: might be worth using a QgsStacAsset to ensure type safety
-        # problem. Those are only introduced with 3.44
         QgsDataItem.__init__(
             self,
             type = Qgis.BrowserItemType.Custom,
@@ -52,8 +49,12 @@ class OpenEOStacAssetItem(QgsDataItem):
         self.uris = None #initialise
         self.uris = self.mimeUris()
 
-        self.setIcon(QgsIconUtils.iconRaster()) #TODO: determine iconType by layer Type
-        self.setState(QgsDataItem.Populated)
+        layerType = self.getLayerType()
+        if layerType: 
+            icon = QgsIconUtils.iconForLayerType(layerType)
+            self.setIcon(icon)
+            #TODO: icon for None?
+        self.populate()
 
     def mimeUris(self):
         if self.uris is not None:

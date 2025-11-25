@@ -6,7 +6,6 @@ import os
 import tempfile
 import json
 import pathlib
-import threading
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
@@ -62,6 +61,7 @@ class OpenEOJobItem(QgsDataItem):
         self.setIcon(QgsApplication.getThemeIcon("mIconTiledScene.svg"))
 
         self.updateFromData()
+        self.populate()
 
     def refresh(self, children: Iterable[QgsDataItem] | bool = False):
         if children is False:

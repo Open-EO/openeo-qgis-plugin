@@ -196,7 +196,7 @@ class OpenEOServiceItem(QgsDataItem):
         action_properties.triggered.connect(self.viewProperties)
         actions.append(action_properties)
 
-        action_refresh = QAction(QIcon(), "Refresh", parent)
+        action_refresh = QAction(QgsApplication.getThemeIcon("mActionRefresh.svg"), "Refresh", parent)
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
 

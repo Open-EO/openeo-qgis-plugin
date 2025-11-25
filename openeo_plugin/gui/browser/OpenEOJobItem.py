@@ -215,7 +215,7 @@ class OpenEOJobItem(QgsDataItem):
         job_properties.triggered.connect(self.viewProperties)
         actions.append(job_properties)
 
-        action_refresh = QAction(QIcon(), "Refresh", parent)
+        action_refresh = QAction(QgsApplication.getThemeIcon("mActionRefresh.svg"), "Refresh", parent)
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
 

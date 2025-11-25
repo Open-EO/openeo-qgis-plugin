@@ -92,6 +92,6 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
         return webMapLinks
     
     def actions(self, parent):        
-        action_refresh = QAction(QIcon(), "Refresh", parent)
+        action_refresh = QAction(QgsApplication.getThemeIcon("mActionRefresh.svg"), "Refresh", parent)
         action_refresh.triggered.connect(self.refresh)
         return [action_refresh]

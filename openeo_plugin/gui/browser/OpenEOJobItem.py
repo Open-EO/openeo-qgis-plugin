@@ -172,10 +172,11 @@ class OpenEOJobItem(QgsDataItem):
             # create layers and add them to group
             allValid = True
             for asset in self.assetItems:
-                layer = asset.createLayer()
+                layer = asset.createLayer(addToProject=False)
                 if not layer.isValid():
                     allValid = False
-                group.addLayer(layer)
+                project.addMapLayer(layer, False) #add to project without showing
+                group.addLayer(layer) #add to the group
         except Exception as e:
             print(e)
             error(

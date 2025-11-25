@@ -130,6 +130,8 @@ class OpenEOStacAssetItem(QgsDataItem):
         return validLayer
     
     def createLayer(self, addToProject=True):
+        if not addToProject:
+            addToProject = True #This is necessary for when the method is given as a callable
         if self.producesValidLayer():
             uris = self.mimeUris()
             uri = uris[0]
@@ -144,7 +146,8 @@ class OpenEOStacAssetItem(QgsDataItem):
                 uri.providerKey
             )
             if addToProject:
-                QgsProject.instance().addMapLayer(layer)
+                project = QgsProject.instance()
+                project.addMapLayer(layer)
             return layer
         else:
             warning(self.plugin.iface, "The file format is not supported by the plugin")

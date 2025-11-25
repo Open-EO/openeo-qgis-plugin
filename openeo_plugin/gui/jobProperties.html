@@ -30,9 +30,7 @@
   <openeo-job id="component">
     <script prop="job" type="application/json">{{ json }}</script>
   </openeo-job>
-  <openeo-item>
-    <script prop="data" type="application/json">{{ resultJson }}</script>
-  </openeo-item>
+  <!-- results -->
   <script>
     const css = document.getElementById("styles").cloneNode(true);
     document.getElementById("component").shadowRoot.appendChild(css);

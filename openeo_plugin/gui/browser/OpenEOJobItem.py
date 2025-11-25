@@ -113,15 +113,23 @@ class OpenEOJobItem(QgsDataItem):
         QApplication.setOverrideCursor(Qt.BusyCursor)
         try:
             self.getJob()
-            job_json = json.dumps(self.job)
-            results = self.getConnection().job(self.job["id"]).get_results()
-            result_json = json.dumps(results.get_metadata())
+            jobJson = json.dumps(self.job)
+            results = self.getConnection().job(self.job["id"]).get_results().get_metadata()
+            type = results["type"]
+            resultJson = json.dumps(results)
+
+            # Item or Collection?
+            resultHtml = ""
+            if type == "Collection":
+                resultHtml = f'<openeo-collection id="component"><script prop="data" type="application/json">{resultJson}</script></openeo-collection>'
+            elif type == "Feature":
+                resultHtml = f'<openeo-item id="component"><script prop="data" type="application/json">{resultJson}</script></openeo-item>'
 
             filePath = pathlib.Path(__file__).parent.resolve()
             with open(os.path.join(filePath, "..", "jobProperties.html")) as file:
                 jobInfoHTML = file.read()
-            jobInfoHTML = jobInfoHTML.replace("{{ json }}", job_json)
-            jobInfoHTML = jobInfoHTML.replace("{{ resultJson }}", result_json)
+            jobInfoHTML = jobInfoHTML.replace("<!-- results -->", resultHtml)
+            jobInfoHTML = jobInfoHTML.replace("{{ json }}", jobJson)
 
             fh, path = tempfile.mkstemp(suffix='.html')
             url = 'file://' + path

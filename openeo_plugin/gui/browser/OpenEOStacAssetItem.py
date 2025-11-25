@@ -7,7 +7,6 @@ from qgis.core import QgsProject
 from qgis.core import QgsIconUtils
 from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
-from qgis.core import QgsRasterLayer
 from qgis.core import QgsCoordinateTransformContext
 #from qgis.core import QgsStacController
 
@@ -46,7 +45,6 @@ class OpenEOStacAssetItem(QgsDataItem):
         #self.stacController = QgsStacController()
         self.uris = None #initialise
         self.uris = self.mimeUris()
-        self.validLayer = None
 
         self.setIcon(QgsIconUtils.iconRaster()) #TODO: determine iconType by layer Type
         self.populate()
@@ -143,13 +141,15 @@ class OpenEOStacAssetItem(QgsDataItem):
         return None
 
     def producesValidLayer(self):
-        if self.validLayer == None:
-            layerType = self.getLayerType()
-            validLayerTypes = {
-                QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster),
-            }
-            self.validLayer = QgsMapLayerFactory.typeToString(layerType) in validLayerTypes
-        return self.validLayer
+        validLayer = False
+        layerType = self.getLayerType()
+        validLayerTypes = {
+            QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster),
+            QgsMapLayerFactory.typeToString(Qgis.LayerType.Vector)
+        }
+        if self.layerType != None:
+            validLayer = QgsMapLayerFactory.typeToString(layerType) in validLayerTypes
+        return validLayer
     
     def actions(self, parent):
         actions = []

@@ -7,6 +7,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
 from .gui.browser import OpenEOItemProvider
 from .utils.settings import SettingsPath
+from .utils.logging import Logging
 
 
 # noinspection PyPep8Naming
@@ -57,6 +58,8 @@ class OpenEO:
 
         self.PLUGIN_NAME = "openEO"
         self.PLUGIN_ENTRY_NAME = "openEO"
+
+        self.logging = Logging(self.iface)
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads

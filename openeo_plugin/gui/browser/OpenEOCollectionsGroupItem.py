@@ -36,8 +36,8 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
             collections = self.getConnection().list_collections()
             return collections
         except Exception as e:
-            print(str(e))
-            error(self.plugin.iface, "Fetching collections failed. See log for details")
+            self.plugin.logging.logError(e)
+            self.plugin.logging.error("Fetching collections failed. See log for details")
         return []
 
     def createChildren(self):

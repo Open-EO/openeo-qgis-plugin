@@ -21,7 +21,7 @@ from qgis.core import QgsApplication
 from qgis.core import QgsProject
 
 from . import OpenEOStacAssetItem
-from ...utils.logging import error, warning
+from ...utils.logging import warning, Logging
 
 mayHaveResults = [
     "running",
@@ -92,8 +92,7 @@ class OpenEOJobItem(QgsDataItem):
                 self.job = job.describe()
                 self.updateFromData()
             except Exception as e:
-                print(e)
-                # error(self.plugin.iface, f"Fetching job details failed: {str(e)}")
+                self.plugin.logging.error(e)
                 return self.job
 
         if (force or self.results is None) and self.getStatus() in mayHaveResults:
@@ -104,8 +103,7 @@ class OpenEOJobItem(QgsDataItem):
                 else:
                     self.results = None
             except Exception as e:
-                print(e)
-                # error(self.plugin.iface, f"Fetching job results failed: {str(e)}")
+                self.plugin.logging.error(e)
 
         return self.job
 
@@ -155,7 +153,7 @@ class OpenEOJobItem(QgsDataItem):
             webbrowser.open_new(url)
         except Exception as e:
             QApplication.restoreOverrideCursor()
-            raise e
+            self.plugin.logging.error(e)
         finally:
             QApplication.restoreOverrideCursor()
 
@@ -181,15 +179,14 @@ class OpenEOJobItem(QgsDataItem):
                 project.addMapLayer(layer, False) #add to project without showing
                 group.addLayer(layer) #add to the group
         except Exception as e:
-            print(e)
-            error(
-                self.plugin.iface,
+            self.plugin.logging.logError(e)
+            self.plugin.logging.showErrorToUser(
                 f"Adding Results to Project failed"
             )
         finally:            
             QApplication.restoreOverrideCursor()
             if not allValid:
-                warning(self.plugin.iface, "One or more result assets do not produce valid layers")
+                self.plugin.logging.warning("One or more result assets do not produce valid layers")
 
     def saveResultsTo(self):
         downloadPath = pathlib.Path.home() / 'Downloads'
@@ -204,9 +201,15 @@ class OpenEOJobItem(QgsDataItem):
             dirStr = f"file://{str(dir)}"
             QDesktopServices.openUrl(QUrl(dirStr, QUrl.TolerantMode))
         except Exception as e:
-            print(e)
+            self.plugin.logging.error(e)
         finally:
             QApplication.restoreOverrideCursor()
+
+    def debug(self):
+        print(self.plugin)
+        self.plugin.logging.error("this is a test")
+        Logging.printError("this is the second test")
+
 
     def actions(self, parent):
         actions = []
@@ -226,5 +229,10 @@ class OpenEOJobItem(QgsDataItem):
         actions_saveResultsTo = QAction(QIcon(), "Download Results to...", parent)
         actions_saveResultsTo.triggered.connect(self.saveResultsTo)
         actions.append(actions_saveResultsTo)
+
+        debug = QAction(QIcon(), "test", parent)
+        debug.triggered.connect(self.debug)
+        actions.append(debug)
+    
 
         return actions

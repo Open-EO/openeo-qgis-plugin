@@ -104,9 +104,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                 iface=self.plugin.iface
                 )
         except Exception as e:
-            print(e)
-            error(
-                self.plugin.iface,
+            self.plugin.logging.logError(e)
+            self.plugin.logging.error(
                 f"Showing authentication dialog failed"
             )
             return

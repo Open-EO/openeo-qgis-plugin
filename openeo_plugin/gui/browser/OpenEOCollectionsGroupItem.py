@@ -40,6 +40,10 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
             self.plugin.logging.error("Fetching collections failed. See log for details")
         return []
 
+    def refresh(self):
+        self.depopulate()
+        super().refresh()
+
     def createChildren(self):
         items = []
         collections = self.getCollections()

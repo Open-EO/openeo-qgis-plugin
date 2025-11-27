@@ -60,7 +60,9 @@ class OpenEOStacAssetItem(QgsDataItem):
             self.setIcon(icon)
         else:
             self.setIcon(QgsApplication.getThemeIcon("mIconFile.svg"))
-        self.populate()
+        
+        # Has no children, set as populated to avoid the expand arrow
+        self.setState(QgsDataItem.Populated)
 
     def mimeUris(self):
         if self.uris is not None:

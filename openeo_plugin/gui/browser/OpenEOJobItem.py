@@ -64,9 +64,9 @@ class OpenEOJobItem(QgsDataItem):
         self.setIcon(QgsApplication.getThemeIcon("mIconTiledScene.svg"))
 
         self.updateFromData()
-        self.populate()
 
     def refresh(self, children: Iterable[QgsDataItem] | bool = False):
+        self.depopulate()
         if children is False:
             self.getJob(force=True)
             return super().refresh()

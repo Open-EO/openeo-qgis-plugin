@@ -30,8 +30,11 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         QgsDataCollectionItem.__init__(self, parent, "Web Services", plugin.PLUGIN_ENTRY_NAME)
         self.plugin = plugin
 
-        self.populate() #removes expand icon
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
+
+    def refresh(self):
+        self.depopulate()
+        super().refresh()
 
     def createChildren(self):
         items = []

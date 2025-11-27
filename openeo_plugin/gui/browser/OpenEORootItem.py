@@ -42,8 +42,7 @@ class OpenEORootItem(QgsDataCollectionItem):
         #get saved connections from QgsSettings
         settings = QgsSettings()
         models = map(ConnectionModel.fromDict, settings.value(SettingsPath.SAVED_CONNECTIONS.value))
-        self.saved_connections = list(models) # map needs to be turned into a list 
-        self.populate() # todo: not sure why this is needed
+        self.saved_connections = list(models) # map needs to be turned into a list
 
     def createChildren(self):
         items = []

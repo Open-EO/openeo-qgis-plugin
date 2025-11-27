@@ -3,7 +3,7 @@ QGIS Plugin to connect and use openEO compliant backends.
 
 Compatible with backends compliant with openEO API version 1.0.0 and above.
 
-Minimum required version QGIS 3.8
+Minimum required version QGIS 3.8. tested on 3.42
 
 ## About
 
@@ -33,9 +33,9 @@ Need some additional features? Leave an issue at this repository!
 
 There are two options on installing the plugin to your local QGIS Desktop application:
 
-### Install via Plugin Manager
+### Install via Plugin Browser
 
-Not yet supported (TODO)
+Not yet supported
 
 ### Install from GitHub repository
 

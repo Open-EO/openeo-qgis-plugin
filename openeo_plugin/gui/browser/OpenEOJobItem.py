@@ -205,12 +205,6 @@ class OpenEOJobItem(QgsDataItem):
         finally:
             QApplication.restoreOverrideCursor()
 
-    def debug(self):
-        print(self.plugin)
-        self.plugin.logging.error("this is a test")
-        Logging.printError("this is the second test")
-
-
     def actions(self, parent):
         actions = []
 
@@ -228,11 +222,6 @@ class OpenEOJobItem(QgsDataItem):
 
         actions_saveResultsTo = QAction(QIcon(), "Download Results to...", parent)
         actions_saveResultsTo.triggered.connect(self.saveResultsTo)
-        actions.append(actions_saveResultsTo)
-
-        debug = QAction(QIcon(), "test", parent)
-        debug.triggered.connect(self.debug)
-        actions.append(debug)
-    
+        actions.append(actions_saveResultsTo)    
 
         return actions

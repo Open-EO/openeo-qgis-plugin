@@ -26,7 +26,6 @@ def warning(iface, message, duration=5):
         duration=duration
     )
 
-
 def error(iface, message, duration=5):
     QgsMessageLog.logMessage(message, level=Qgis.Critical)
     iface.messageBar().pushMessage(
@@ -37,10 +36,10 @@ def error(iface, message, duration=5):
     )
 
 class Logging():
-    def __init__(self, iface, duration=5):
+    def __init__(self, iface):
         self.iface = iface
 
-    def warning(self, message):
+    def warning(self, message, duration=5):
         self.logError(f"[WARNING] {message}")
         self.iface.messageBar().pushMessage(
             "Warning",
@@ -53,7 +52,6 @@ class Logging():
         errorMessage = self.createErrorMessage(message)
         self.logError(errorMessage)
         self.printError(errorMessage)
-        self.showErrorToUser(errorMessage)
 
     def showErrorToUser(self, message, duration=5):
         message = str(message) #stringify in case it isn't
@@ -89,5 +87,5 @@ class Logging():
         timestamp = str(datetime.now())
         prefix = timestamp.ljust(28, " ") #write padded timestamp
         prefix = f"{prefix}:"
-        return f"{prefix}{message}"
+        return f"{prefix} {message}"
         

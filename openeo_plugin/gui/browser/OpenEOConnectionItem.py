@@ -55,9 +55,9 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.lastAuthCheck = datetime.datetime.min
         self.authenticated = False
 
+        self.authenticateStored()
+
     def createChildren(self):
-        if not self.isAuthenticated():
-            self.authenticateStored()
         capabilities = self.getConnection().capabilities()
         items = []
         
@@ -120,7 +120,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.refresh()
 
     def authenticateStored(self):
-        login = self.getLogin()
+        login = self.getSavedLogin()
         if login:
             if login.get("loginType") == "basic":
                 self.getConnection().authenticate_basic(login["loginName"], login["password"])
@@ -144,8 +144,9 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                     self.authenticated = True
                 else:
                     self.authenticated = False
-            except Exception:
+            except Exception as e:
                 self.authenticated = False
+                self.plugin.logging.error(e)
         return self.authenticated
 
     def getConnection(self):         
@@ -165,7 +166,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         logins.append(loginInfo)
         settings.setValue(SettingsPath.SAVED_LOGINS.value, logins)
 
-    def getLogin(self):
+    def getSavedLogin(self):
         settings = QgsSettings()
         loginInfo = None # return None if no login has been saved
         logins = settings.value(SettingsPath.SAVED_LOGINS.value)
@@ -232,14 +233,18 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
 
     def actions(self, parent):
         actions = []
+        separator = QAction(parent)
+        separator.setSeparator(True)
 
         if not self.isAuthenticated():
             action_authenticate = QAction(QIcon(), "Log In (Authenticate)", parent)
             action_authenticate.triggered.connect(self.authenticate)
             actions.append(action_authenticate)
-
-            separator = QAction(parent)
-            separator.setSeparator(True)
+            actions.append(separator)
+        else:
+            action_logout = QAction(QIcon(), "Log Out", parent)
+            action_logout.triggered.connect(self.logout)
+            actions.append(action_logout)
             actions.append(separator)
 
         action_properties = QAction(QIcon(), "Details", parent)
@@ -249,11 +254,6 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         action_refresh = QAction(QgsApplication.getThemeIcon("mActionRefresh.svg"), "Refresh", parent)
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
-        
-        if self.isAuthenticated():
-            action_logout = QAction(QIcon(), "Log Out", parent)
-            action_logout.triggered.connect(self.logout)
-            actions.append(action_logout)
         
         action_delete = QAction(QgsApplication.getThemeIcon("mActionDeleteSelected.svg"), "Remove Connection", parent)
         action_delete.triggered.connect(self.remove)

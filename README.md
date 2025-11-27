@@ -41,16 +41,22 @@ Not yet supported (TODO)
 
 This is the recommended way if you want to get the **most recent** version of the plugin.
 
-**TODO: may need steps for the openEO python dependency**
+1. Download or clone the repository `git clone https://github.com/Open-EO/openeo-qgis-plugin`
+2. navigate into the plugin directory `cd openeo-qgis-plugin`
+3. zip the plugin directory `zip -r openeo_plugin.zip openeo_plugin
+4. open QGIS and select "Plugins" > "Manage and install Plugins"
+5. select "Install from ZIP", choose the created zip file, and press "Install Plugin"
+![Install from Zip dialog](images/plugins_install.png)
+6. The plugin "qpip" will be installed as a dependency. This is currently used to install the required openeo python client dependencies
+	- Press "OK" on the Plugin Dependencies Manager prompt, then press "OK" on the qpip prompt 
+    ![plugin dependency manager asking to install qpip](images/plugin_dependencies.png)
+    ![qpip asking to install python dependencies](images/qpip.png)
+7. After a successful installation, an "openEO" entry will be visible in the QGIS browser on the left side 
+    ![alt text](images/browser_view.png)
 
-1. Download or clone this repository
-2. compress the `./openeo_plugin` directory in a .zip file
-2. Start QGIS Desktop application
-3. Go to "Plugins" and then "Manage and Install Plugins" 
-4. Click on "Install from ZIP" and choose the created zip file
-5. Press "Install Plugin"
-6. You may have to activate it in the plugin manager (in "Installed")
-7. The openEO logo should be visible in the toolbar
+#### Troubleshooting
+If the installation of qpip or openeo does not happen automatically, try installing qpip beforehand using the plugin manager.
+if use of qpip is not desired, `pip install openeo` may be used to install the necessary python dependency.
 
 ## Usage
 
@@ -60,9 +66,7 @@ This is the recommended way if you want to get the **most recent** version of th
 4. (Optional) Right click on the created connection and select "log In" to authenticate your connection.
 5. you can find collections, batch jobs, and web services that are visible to the authenticated user inside the folder icons with the corresponding names.
 
-**TODO: add screenshots**
-
-## Building
+## Development
 
 To build the plugin and deploy to your plugin directory you will need the [pb_tool](http://g-sherman.github.io/plugin_build_tool/) CLI tool.
 
@@ -71,7 +75,3 @@ To compile the plugin run the following command in the `./openeo_plugin` directo
     pb_tool compile
      
 Compiling is needed any time the resources.py file needs to be rebuilt. 
-
-## Troubleshooting 
-
-TODO

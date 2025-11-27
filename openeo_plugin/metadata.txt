@@ -5,9 +5,10 @@
 [general]
 name=openEO
 qgisMinimumVersion=3.8
+qgisMaximumVersion=4.0
 description=Plugin to access openEO compliant backends.
 version=2.0-beta.1
-author=Caro Niebl, Bernhard Goesswein, Nina Gnann
+author=Matthias Mohr, Caro Niebl, Bernhard Goesswein, Nina Gnann
 email=c.niebl@moregeo.it
 
 about=The plugin can be used to access backends compliant with the openEO specification. It can be used to define jobs, execute them at the backend and visualize the results on QGIS.

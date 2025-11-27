@@ -21,13 +21,18 @@ from qgis.core import QgsApplication
 from qgis.core import QgsProject
 
 from . import OpenEOStacAssetItem
-from ...utils.logging import warning, Logging
 
 mayHaveResults = [
     "running",
     "canceled",
     "finished",
     "error"
+]
+
+isActiveStates = [
+    "queued",
+    "running",
+    "unknown"
 ]
 
 class OpenEOJobItem(QgsDataItem):
@@ -128,7 +133,7 @@ class OpenEOJobItem(QgsDataItem):
     def viewProperties(self):
         QApplication.setOverrideCursor(Qt.BusyCursor)
         try:
-            self.getJob(force=True)
+            self.getJob(force=self.getStatus() in isActiveStates)
             jobJson = json.dumps(self.job)
             type = self.results["type"]
             resultJson = json.dumps(self.results)

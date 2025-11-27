@@ -113,6 +113,10 @@ class OpenEOJobItem(QgsDataItem):
         return self.job
 
     def createChildren(self):
+        self.populateAssetItems()
+        return self.assetItems
+    
+    def populateAssetItems(self):
         self.getJob()
         self.assetItems = []
         if self.results is not None:
@@ -127,8 +131,6 @@ class OpenEOJobItem(QgsDataItem):
                 )
                 self.assetItems.append(assetItem)
                 sip.transferto(assetItem, self)
-        
-        return self.assetItems
 
     def viewProperties(self):
         QApplication.setOverrideCursor(Qt.BusyCursor)
@@ -169,7 +171,7 @@ class OpenEOJobItem(QgsDataItem):
     def addResultsToProject(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
-            self.getJob()
+            self.populateAssetItems()
             # create group
             jobName = self.job.get("title") or self.job.get("id")
             project = QgsProject.instance()
@@ -194,6 +196,7 @@ class OpenEOJobItem(QgsDataItem):
                 self.plugin.logging.warning("One or more result assets do not produce valid layers")
 
     def saveResultsTo(self):
+        self.populateAssetItems()
         downloadPath = pathlib.Path.home() / 'Downloads'
         dir = QFileDialog.getExistingDirectory(
             caption="Save Results to...",

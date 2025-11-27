@@ -1,6 +1,7 @@
 import requests
 import pathlib
 from pathlib import Path
+import os
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -170,8 +171,18 @@ class OpenEOStacAssetItem(QgsDataItem):
                 path = Path.home() / 'Downloads' / self.name()
             else: 
                 path = Path(dir) / self.name()
+
+            #check if file exists and append a number if it does
+            filename, extension = os.path.splitext(path)
+            i = 1
+            while os.path.exists(path):
+                path = f"{filename} ({i}){extension}"
+                i += 1
+
+            #save file
             with open(path, 'wb') as f:
                 f.write(r.content)
+            self.plugin.logging.showSuccessToUser(f"File saved to {path}")
         except Exception as e:
             warning(self.plugin.iface, "Download failed")
             raise e

@@ -62,6 +62,15 @@ class Logging():
             duration=duration
         )
 
+    def showSuccessToUser(self, message, duration = 5):
+        message = str(message) #stringify in case it isn't
+        self.iface.messageBar().pushMessage(
+            "Success",
+            message,
+            level=Qgis.Success,
+            duration=duration
+        )
+
     @staticmethod
     def logError(message, dir=None):
         message = str(message) #stringify in case it isn't

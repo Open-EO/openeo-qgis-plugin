@@ -3,7 +3,11 @@ import os
 
 from qgis.core import QgsApplication
 from qgis.core import QgsSettings
+from qgis.core import QgsMessageLog
+from qgis.utils import iface
+
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
+from qgis.PyQt.QtCore import Qt, QMetaObject, Q_ARG
 
 from .gui.browser import OpenEOItemProvider
 from .utils.settings import SettingsPath
@@ -59,7 +63,8 @@ class OpenEO:
         self.PLUGIN_NAME = "openEO"
         self.PLUGIN_ENTRY_NAME = "openEO"
 
-        self.logging = Logging(self.iface)
+        # Set up logging and messaging
+        self.logging = Logging(self.iface) #this could also be where to connect to the messageReceived Signal
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads

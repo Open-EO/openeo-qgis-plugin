@@ -9,7 +9,6 @@ from qgis.core import QgsDataCollectionItem
 from qgis.core import QgsApplication
 
 from . import OpenEOJobItem
-from ...utils.logging import error
 
 class OpenEOJobsGroupItem(QgsDataCollectionItem):
     """

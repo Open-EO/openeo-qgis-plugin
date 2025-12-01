@@ -21,9 +21,6 @@ from qgis.core import QgsCoordinateTransformContext
 from qgis.core import QgsApplication
 #from qgis.core import QgsStacController
 
-from ...utils.logging import warning
-
-
 class OpenEOStacAssetItem(QgsDataItem):
     def __init__(self, assetDict, parent, plugin):
         """Constructor.

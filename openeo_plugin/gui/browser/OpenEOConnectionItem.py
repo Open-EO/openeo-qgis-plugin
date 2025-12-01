@@ -23,7 +23,6 @@ from . import OpenEOServicesGroupItem
 from . import OpenEOCollectionsGroupItem
 from ..login_dialog import LoginDialog
 from ...utils.settings import SettingsPath
-from ...utils.logging import error
 
 class OpenEOConnectionItem(QgsDataCollectionItem):
     """

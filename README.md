@@ -1,33 +1,31 @@
 # openeo-qgis-plugin
 QGIS Plugin to connect and use openEO compliant backends.
 
-Compatible with backends compialnt wit openeo API version 0.4.0 and above. Full functionality is only provided for version 1.0.0-rc2.
+Compatible with backends compliant with openEO API version 1.0.0 and above.
 
-Tested with QGIS 3.4.8-Madeira, but works with QGIS >= 3.0.0.
+Tested on Qgis 3.42
 
 ## About
 
-The openEO QGIS Plugin "OpenEO" allows connecting to an openEO backend, managing the user ([batch](https://openeo.org/documentation/1.0/glossary.html#data-processing-modes)) jobs and load the resulting images into a new QGIS Layer. It is also possible to adapt jobs by changing and adding processes. Even though it is generally possible to create own process graphs from scretch it is recommended to use the [openEO web editor](https://editor.openeo.org/).  
+The openEO QGIS Plugin "OpenEO" allows connecting to openEO backends, list the user ([batch](https://openeo.org/documentation/1.0/glossary.html#data-processing-modes)) jobs and load the resulting images into a new QGIS Layer. For creating process graphs, it is recommended to use the [openEO web editor](https://editor.openeo.org/).  
 
 ### Features
 
-* Listing all openeo compliant backends with minimum API version 0.4.0 listet at the [openEO Hub](http://hub.openeo.org/) 
-* Connecting to an openeo compliant backend (openAPI version above 0.4.0, 1.0.0-rc2 recommended)
-* Listing all available collections ("Load Collection" combobox) and processes ("Add Process" combobox) including parameters (see table under the process combobox) of the backend
-* Spatial extent selection ("Add Spatial Extent" combobox) by: 
-    * Current extent of the QGIS map canvas
-    * Drawing rectangle/boundingbox on the QGIS map 
-    * Drawing polygon on the QGIS map(generates minimum bounding box for the whole polygon area)
-    * Load Extent of a QGIS Layer
-    * Load Extent from a Shapefile on the filesystem
-    * Manual input of the spatial extent
-* Temporal extent selection via calendar widgets ("Select Star and End Date" button)
-* Creating a new job at the backend ("Create Job" button)
-* Adapt existing jobs by adapting process arguments and add new processes to the process graph.
-* Open the official openeo web editor at the system browser ("Create New Job in Web Editor" button)
-* List all jobs of the user at the backend.
-* The jobs can be executed and/or the result displayed at the QGIS map. There is also a description displayed at the job table.
-* List of openEO services of the user and possibility to show them in QGIS. 
+* List all openEO compliant backends listed at the [openEO Hub](http://hub.openeo.org/) 
+* Connect to an openEO compliant backend
+* Authenticate connections to backends: Supports:
+    * Basic authentication (username, password)
+    * OpenID Connect authentication (device code flow)
+* List available collections, Web services, and Batch Jobs in the Qgis Browser
+* Add Preview of available Collections as QGIS Layers
+* Add web services as QGIS Layers
+* Add Batch Job results as QGIS Layers
+* View Details for:
+    * Connections
+    * Batch Jobs
+    * Collections
+    * Web Services
+* Open the official openEO Web Editor in the systems system browser
    
 Need some additional features? Leave an issue at this repository!
 
@@ -35,69 +33,67 @@ Need some additional features? Leave an issue at this repository!
 
 There are two options on installing the plugin to your local QGIS Desktop application:
 
-### Install via Plugin Manager
+### Install via Plugin Browser
 
-This is the recommended way if you want to get the **most recent stable** version of the plugin.
+This is the recommended way if you want to get the most recent stable version of the plugin.
 
 1. Start QGIS Desktop application
-2. Go to "Plugins" and then "Manage and Install Plugins" 
+2. Go to "Plugins" and then "Manage and Install Plugins"
 3. Go to "Settings" and make sure that "Show also experimental plugins" is activated
-4. Go to "Not Installed" and search for "OpenEO" 
+4. Go to "Not Installed" and search for "OpenEO"
 5. Click on "OpenEO" and click "Install"
 6. The openEO logo should be visible in the toolbar
+
 
 ### Install from GitHub repository
 
 This is the recommended way if you want to get the **most recent** version of the plugin.
 
-1. Download this repository as zip file
-2. Start QGIS Desktop application
-3. Go to "Plugins" and then "Manage and Install Plugins" 
-4. Click on "Install from ZIP" and choose the downloaded zip file
-5. Press "Install Plugin"
-6. You may have to activate it in the plugin manager (in "Installed")
-7. The openEO logo should be visible in the toolbar
+1. Download or clone the repository `git clone https://github.com/Open-EO/openeo-qgis-plugin`
+2. Navigate into the plugin directory `cd openeo-qgis-plugin`
+3. Compress the plugin directory as a ZIP file `zip -r openeo_plugin.zip openeo_plugin`(on Linux/Mac)
+4. Start QGIS Desktop application
+5. Go to "Plugins" and then "Manage and Install Plugins"
+6. Go to "Install from ZIP", choose the newly created zip file, and click "Install Plugin"
+
+    ![Install from Zip dialog](images/plugins_install.png)
+7. The plugin "qpip" will be installed as a dependency. This is currently used to install the required openeo python client dependencies
+	- Press "OK" on the Plugin Dependencies Manager prompt, then press "OK" on the qpip prompt 
+
+    ![plugin dependency manager asking to install qpip](images/plugin_dependencies.png)
+    ![qpip asking to install python dependencies](images/qpip.png)
+8. After a successful installation, an "openEO" entry will be visible in the QGIS browser on the left side 
+
+    ![alt text](images/browser_view.png)
+
+#### Installation Troubleshooting
+If the installation of qpip or openeo does not happen automatically, try installing qpip beforehand using the plugin manager.
+
+If use of qpip is not possible, `pip install openeo` may be used to install the necessary python dependency.
 
 ## Usage
 
-First you have to connect to the server with your user credentials in the upper part of the Window. Then all existing jobs are displayed at the "Jobs" tab. There the jobs can be executed and displayed in QGIS. Pressing the "pencil" button on an job entry, a job adaption window will be displayed and the job can be edited and sent as a new job to the backend.  
+1. After successful installation, an "openEO" entry will be visible in the QGIS Browser (the resource manager that can usually be found on the left side).
+2. Create a new openEO connection by right clicking and either selecting a provider from the available list provided by openEO Hub or entering connection details by yourself.
+3. You may now expand the openEO entry with the little "Plus" symbol that appears next to it.
+4. (Optional) Right click on the created connection and select "log In" to authenticate your connection.
+5. You can find collections, batch jobs, and web services that are visible to the authenticated user inside the folder icons with the corresponding names.
 
-The following Screenshots show how it looks like:
+## Development
 
-<img src="https://github.com/Open-EO/openeo-qgis-plugin/raw/master/examples/create_processgraph.png" alt="create-processgraph" width="900"/>
+For setting up your development environment it is highly recommended to install the plugin-reloader plugin for qgis to prevent constant qgis restarts.
+Once you have cloned the repository in your working directory, create a Symlink of the `openeo_plugin` folder into the `./python/plugins` directory that is located within your qgis profile directory. This will ensure that changes you make to the plugin will appear within qgis upon use of the plugin reloader.
 
-<img src="https://github.com/Open-EO/openeo-qgis-plugin/raw/master/examples/job_list.png" alt="job-list" width="900"/>
+example: (linux)
+```sh
+cd openeo-qgis-plugin
+ln -s openeo_plugin /home/{USER}/.local/share/QGIS/QGIS3/profiles/default
+```
 
-## Building
+To build the plugin GUI files you will need the [pb_tool](http://g-sherman.github.io/plugin_build_tool/) CLI tool.
 
-To build the plugin and deploy to your plugin directory you will need the [pb_tool](http://g-sherman.github.io/plugin_build_tool/) CLI tool.
-
-To compile the plugin run the following command in the root directory of this repository:
+To compile the plugin run the following command in the `./openeo_plugin` directory of this repository:
  
     pb_tool compile
      
-Compiling is needed any time the resources.py file needs to be rebuilt. 
-
-To deploy the application to your QGIS plugins directory run the following command and reload the plugin within QGIS:
-
-    pb_tool deploy 
-
-It's recommended to use the Plugin Reloader plugin within QGIS to easily reload the plugin during development.
-
-## Troubleshooting 
-
-#### QGIS cannot find plugin 
-
-Change pb_tool.cfg settings:
-
-Mac
-
-    plugin_path: /Users/{USER}/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/
-
-Linux
-
-    plugin_path: /home/{USER}/.local/share/QGIS/QGIS3/profiles/default/python/plugins
-
-Windows
-
-    plugin_path: C:\Users\{USER}\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins
+Compiling is needed any time the resources.py file needs to be rebuilt and the .ui files are modified.

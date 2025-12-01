@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>openEO Batch Job</title>
+  <style id="styles">
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Ubuntu, Cantarell, 'Open Sans', sans-serif;
+    }
+    h2, h3 {
+      color: #58965A;
+      border-bottom: 1px solid black;
+      font-weight: 600;
+      padding: 0.25rem;
+    }
+    h3 {
+      font-size: 2rem;
+    }
+    h3 {
+      font-size: 1.5rem;
+    }
+    a {
+      color: #84ABD5;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@openeo/vue-components@2/assets/openeo.min.js"></script>
+</head>
+<body>
+  <openeo-job id="component">
+    <script prop="job" type="application/json">{{ json }}</script>
+  </openeo-job>
+  <!-- results -->
+  <script>
+    const css = document.getElementById("styles").cloneNode(true);
+    document.getElementById("component").shadowRoot.appendChild(css);
+  </script>
+</body> 
+</html>

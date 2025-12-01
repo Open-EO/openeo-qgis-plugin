@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/plugins/openeo_plugin" >
+        <file>images/logo.png</file>
+        <file>images/icon_small.png</file>
+        <file>images/icon.png</file>
+    </qresource>
+</RCC>

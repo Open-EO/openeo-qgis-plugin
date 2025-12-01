@@ -98,7 +98,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         try:
             self.dlg = LoginDialog(self.plugin, self.getConnection(), model=self.model)
         except Exception as e:
-            self.plugin.logging.error("Can't open dialog.", error=e)
+            self.plugin.logging.error("Can't open login dialog.", error=e)
             return
         finally:
             QApplication.restoreOverrideCursor()

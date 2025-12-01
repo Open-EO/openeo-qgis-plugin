@@ -67,7 +67,7 @@ class OpenEORootItem(QgsDataCollectionItem):
 
     def addConnection(self):
         settings = QgsSettings()
-        self.dlg = ConnectDialog(parent=self, iface=self.plugin.iface)
+        self.dlg = ConnectDialog(self.plugin)
         self.dlg.show()
         result = self.dlg.exec()
 

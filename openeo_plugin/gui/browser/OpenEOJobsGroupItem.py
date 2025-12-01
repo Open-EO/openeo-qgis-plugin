@@ -71,8 +71,7 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         except openeo.rest.OpenEoApiError:
             return [] #this happens when authentication is missing
         except Exception as e:
-            self.plugin.logging.logError(e)
-            self.plugin.logging.error("Fetching batch jobs failed. See log for details")
+            self.plugin.logging.error("Can't load list of batch jobs.", error=e)
         return []
     
     def actions(self, parent):        

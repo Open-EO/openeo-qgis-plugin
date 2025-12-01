@@ -96,17 +96,9 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
-            self.dlg = LoginDialog(
-                connection=self.getConnection(),
-                model=self.model,
-                parent=self,
-                iface=self.plugin.iface
-                )
+            self.dlg = LoginDialog(self.plugin, self.getConnection(), model=self.model)
         except Exception as e:
-            self.plugin.logging.logError(e)
-            self.plugin.logging.error(
-                f"Showing authentication dialog failed"
-            )
+            self.plugin.logging.error("Can't open dialog.", error=e)
             return
         finally:
             QApplication.restoreOverrideCursor()
@@ -114,7 +106,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         result = self.dlg.exec()
 
         if result:
-            pass
+            credentials = self.dlg.getCredentials()
+            self.saveLogin(*credentials)
         
         self.refresh()
 
@@ -128,8 +121,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                 try:
                     self.getConnection().authenticate_oidc_refresh_token()  #try logging in with refresh token
                     return True
-                except openeo.rest.OpenEoClientException:
-                    print(f"No valid oidc token found for connection {self.model.name}")
+                except openeo.rest.OpenEoClientException as e:
+                    self.plugin.logging.debug(f"No valid OpenID Connect refresh token found for connection {self.model.name}", error=e)
         return False
     
     def isAuthenticated(self, forceRefresh=False):
@@ -145,7 +138,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                     self.authenticated = False
             except Exception as e:
                 self.authenticated = False
-                self.plugin.logging.error(e)
+                self.plugin.logging.debug("Can't check authentication status.", error=e)
         return self.authenticated
 
     def getConnection(self):         
@@ -197,8 +190,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             # overwrite refresh tokens
             RefreshTokenStore().set(client_info.provider.issuer, value={})
         except openeo.rest.OpenEoClientException as e:
-            print(e)
-            # this happens when the connection does not support oidc
+            self.plugin.logging.debug("Can't delete stored OpenID Connect refresh token. Connection may not support OpenID Connect.", error=e)
             return
     
     def logout(self):

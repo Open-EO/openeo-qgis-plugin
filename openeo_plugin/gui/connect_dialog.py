@@ -19,19 +19,17 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
     """
     This class is responsible for showing the provider-connection window and to let the user connect to an openEO backend.
     """
-    def __init__(self, parent, iface=None):
+    def __init__(self, plugin):
         """
         Constructor method: Initializing the button behaviours and the backend combobox.
-        :param parent: parent dialog of this dialog (e.g. OpenEODialog).
-        :param iface: Interface to show the dialog.
+        :param plugin: reference to the main plugin object.
         """
         super(ConnectDialog, self).__init__()
 
         self.HUB_URL = "https://hub.openeo.org"
 
         QApplication.setStyle("cleanlooks")
-        self.iface = iface
-        self.plugin = parent.plugin
+        self.plugin = plugin
         self.setupUi(self)
         self.connection = None
         self.model = None
@@ -47,9 +45,10 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
             for item in self.backends:
                 self.server_selector.addItem(item["name"])
         except Exception as e:
-            print(e)
-            self.plugin.logging.warning(self.iface, "The plugin was not able to connect to openEO Hub. "
-                                "Are you connected to the internet?")
+            self.plugin.logging.warning(
+                "Can't load the list of backends from the openEO Hub. Are you connected to the internet?",
+                error=e
+            )
         
         self.server_selector.setCurrentIndex(-1) # don't select anything by default
         self.server_selector.currentIndexChanged.connect(self.serverSelectorUpdated)
@@ -69,7 +68,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         name = self.conn_name_edit.text()
 
         if not url:
-            self.plugin.logging.warning("Please provide a URL to connect to.")
+            self.plugin.logging.info("Please provide a URL.")
             return
 
         self.connect_button.setDisabled(True)
@@ -82,8 +81,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         try:
             self.connection = openeo.connect(url)
         except Exception as e:
-            print(e)
-            self.plugin.logging.warning("Connection could not be established. Please check the URL and your internet connection.")
+            self.plugin.logging.warning("Connection could not be established. Please check the URL and your internet connection.", error=e)
 
             self.connect_button.setDisabled(False)
             self.connect_button.setText(btn_text)

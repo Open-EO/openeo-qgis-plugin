@@ -107,7 +107,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
 
         if result:
             credentials = self.dlg.getCredentials()
-            self.saveLogin(*credentials)
+            if credentials is not None:
+                self.saveLogin(*credentials)
         
         self.refresh()
 

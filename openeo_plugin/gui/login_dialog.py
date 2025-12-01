@@ -6,9 +6,7 @@ import time
 import sys
 import webbrowser
 import openeo
-import traceback
 
-#from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtWidgets import QMessageBox

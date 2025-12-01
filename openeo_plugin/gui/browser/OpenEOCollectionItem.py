@@ -124,7 +124,7 @@ class OpenEOCollectionItem(QgsDataItem):
 
         webMapLinks = self.parent().getWebMapLinks(self.collection)
         if len(webMapLinks) == 0:
-            self.plugin.logging.info("The collection does not provide any web map services for preview.")
+            self.plugin.logging.warning("The collection does not provide any web map services for preview.")
             return mimeUris
 
         QApplication.setOverrideCursor(Qt.BusyCursor)

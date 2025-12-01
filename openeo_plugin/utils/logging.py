@@ -13,7 +13,6 @@ class Logging():
         self.messageLog.messageReceived.connect(self.on_message)
 
     def on_message(self, message, tag, level):
-        print(message, tag, level)
         if tag != self.tag:
             return
 
@@ -62,7 +61,6 @@ class Logging():
     def _handleMessage(
             self,
             message: str,
-            title: str="",
             level: Qgis.MessageLevel=Qgis.Info,
             error: Exception=None,
             show: bool=True
@@ -88,8 +86,9 @@ class Logging():
                 logFile.write('\n')
         except Exception as e:
             self.logPath = None
-            self.messageLog.logMessage(
+            self.logMessage(
                 f"Failed to write to log file: {str(e)}",
                 tag='openEO',
-                level=Qgis.Warning
+                level=Qgis.Info,
+                show=False
             )

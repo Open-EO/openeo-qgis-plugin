@@ -159,13 +159,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                 self.reject()
                 return False
             except Exception as e:
-                msg = QMessageBox()
-                self.plugin.logging.error(e)
-                msg.setText("Authentication Failed")
-                msg.setInformativeText('See logs for details')
-                msg.setWindowTitle("Authentication Failed")
-                msg.exec_()
-                self.plugin.logging.debug("Can't log in with OpenID Connect.", error=e)
+                self.plugin.logging.error("Can't log in with OpenID Connect.", error=e)
                 return False
             finally:
                 # reset waiting indicator

@@ -19,7 +19,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
     """
     This class is responsible for showing the provider-connection window and to let the user connect to an openEO backend.
     """
-    def __init__(self, parent=None, iface=None):
+    def __init__(self, parent, iface=None):
         """
         Constructor method: Initializing the button behaviours and the backend combobox.
         :param parent: parent dialog of this dialog (e.g. OpenEODialog).
@@ -69,7 +69,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         name = self.conn_name_edit.text()
 
         if not url:
-            self.parent.logging.warning(self.iface, "Please provide a URL to connect to.")
+            self.plugin.logging.warning("Please provide a URL to connect to.")
             return
 
         self.connect_button.setDisabled(True)
@@ -83,7 +83,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
             self.connection = openeo.connect(url)
         except Exception as e:
             print(e)
-            self.parent.logging.warning(self.iface, "Connection could not be established. Please check the URL and your internet connection.")
+            self.plugin.logging.warning("Connection could not be established. Please check the URL and your internet connection.")
 
             self.connect_button.setDisabled(False)
             self.connect_button.setText(btn_text)

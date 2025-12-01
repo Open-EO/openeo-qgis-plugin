@@ -6,6 +6,7 @@ from datetime import datetime
 
 class Logging():
     def __init__(self, iface):
+        self.developerMode = False
         self.iface = iface
         self.messageLog = QgsMessageLog()
         self.logPath = pathlib.Path.home() / 'openeo_qgis_log.txt'
@@ -57,7 +58,8 @@ class Logging():
             level=level
         )
 
-        self.addToLogFile(f"[{title}] {message}")
+        if self.developerMode:
+            self.addToLogFile(f"[{title}] {message}")
 
         if show and isUiThread:
             self.iface.messageBar().pushMessage(
@@ -75,7 +77,7 @@ class Logging():
 
         try:
             with open(self.logPath, 'a') as logFile:
-                logFile.write(str(datetime.now()).ljust(28, " ")) 
+                logFile.write(str(datetime.now()).ljust(28))
                 logFile.write(message)
                 logFile.write('\n')
         except Exception as e:

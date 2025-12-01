@@ -75,7 +75,7 @@ class Logging():
 
         try:
             with open(self.logPath, 'a') as logFile:
-                logFile.write(str(datetime.now()).ljust(28, " ")) 
+                logFile.write(str(datetime.now()).ljust(28))
                 logFile.write(message)
                 logFile.write('\n')
         except Exception as e:

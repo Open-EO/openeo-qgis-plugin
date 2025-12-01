@@ -160,7 +160,7 @@ class OpenEOStacAssetItem(QgsDataItem):
                 project.addMapLayer(layer)
             return layer
         else:
-            warning(self.plugin.iface, "The file format is not supported by the plugin")
+            self.plugin.logging.warning(self.plugin.iface, "The file format is not supported by the plugin")
         return None
     
     def downloadAsset(self, dir=None):
@@ -184,7 +184,7 @@ class OpenEOStacAssetItem(QgsDataItem):
                 f.write(r.content)
             self.plugin.logging.showSuccessToUser(f"File saved to {path}")
         except Exception as e:
-            warning(self.plugin.iface, "Download failed")
+            self.plugin.logging.warning(self.plugin.iface, "Download failed")
             raise e
         finally:
             QApplication.restoreOverrideCursor()

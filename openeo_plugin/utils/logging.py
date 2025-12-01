@@ -1,40 +1,6 @@
 import pathlib
 from qgis.core import QgsMessageLog, Qgis
-from qgis.PyQt.QtCore import pyqtSignal 
 from datetime import datetime
-
-
-def debug(message):
-    QgsMessageLog.logMessage(message, level=Qgis.Info)
-
-
-def info(iface, message, duration=5):
-    QgsMessageLog.logMessage(message, level=Qgis.Info)
-    iface.messageBar().pushMessage(
-        "Info",
-        message,
-        level=Qgis.Info,
-        duration=duration
-    )
-
-
-def warning(iface, message, duration=5):
-    QgsMessageLog.logMessage(message, level=Qgis.Warning)
-    iface.messageBar().pushMessage(
-        "Warning",
-        message,
-        level=Qgis.Warning,
-        duration=duration
-    )
-
-def error(iface, message, duration=5):
-    QgsMessageLog.logMessage(message, level=Qgis.Critical)
-    iface.messageBar().pushMessage(
-        "Error",
-        message,
-        level=Qgis.Critical,
-        duration=duration
-    )
 
 class Logging():
     def __init__(self, iface):
@@ -67,6 +33,15 @@ class Logging():
             "Success",
             message,
             level=Qgis.Success,
+            duration=duration
+        )
+
+    def info(self, message, duration = 5):
+        message = str(message) #stringify in case it isn't
+        self.iface.messageBar().pushMessage(
+            "Info",
+            message,
+            level=Qgis.Info,
             duration=duration
         )
 

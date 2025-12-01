@@ -8,7 +8,6 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication
 from qgis.PyQt.QtWidgets import QApplication
 
-from ..utils.logging import warning
 #from .ui.connect_dialog import Ui_ConnectDialog as FORM_CLASS
 from ..models.ConnectionModel import ConnectionModel
 
@@ -32,7 +31,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
 
         QApplication.setStyle("cleanlooks")
         self.iface = iface
-
+        self.plugin = parent.plugin
         self.setupUi(self)
         self.connection = None
         self.model = None
@@ -49,7 +48,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.server_selector.addItem(item["name"])
         except Exception as e:
             print(e)
-            warning(self.iface, "The plugin was not able to connect to openEO Hub. "
+            self.plugin.logging.warning(self.iface, "The plugin was not able to connect to openEO Hub. "
                                 "Are you connected to the internet?")
         
         self.server_selector.setCurrentIndex(-1) # don't select anything by default
@@ -70,7 +69,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         name = self.conn_name_edit.text()
 
         if not url:
-            warning(self.iface, "Please provide a URL to connect to.")
+            self.plugin.logging.warning(self.iface, "Please provide a URL to connect to.")
             return
 
         self.connect_button.setDisabled(True)
@@ -84,7 +83,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
             self.connection = openeo.connect(url)
         except Exception as e:
             print(e)
-            warning(self.iface, "Connection could not be established. Please check the URL and your internet connection.")
+            self.plugin.logging.warning(self.iface, "Connection could not be established. Please check the URL and your internet connection.")
 
             self.connect_button.setDisabled(False)
             self.connect_button.setText(btn_text)

@@ -13,7 +13,6 @@ from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtWidgets import QMessageBox
 
 from .ui.login_dialog_tab import Ui_DynamicLoginDialog
-from ..utils.logging import warning, info
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 # use this if the pb_tool compiled version of the dialog doesn't work
@@ -30,6 +29,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
 
         self.iface = iface
         self.parent = parent
+        self.plugin = parent.plugin
         self.connection = connection
         self.activeAuthProvider = None
         
@@ -68,7 +68,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                         provider["type"] = "oidc"
                         providers.append(provider)
             except openeo.rest.OpenEoApiError as e:
-                warning(self.iface, f"Unable to load the OpenID Connect provider list: {e.message}")
+                self.parent.logging.warning(self.iface, f"Unable to load the OpenID Connect provider list: {e.message}")
 
         # Add Basic provider
         basic_path = "/credentials/basic"
@@ -118,7 +118,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                 msg.setWindowTitle("Login Failed")
                 msg.exec_()
             except Exception as e:
-                warning(self.iface, "Login Failed: something went wrong. See log for details")
+                self.parent.logging.warning(self.iface, "Login Failed: something went wrong. See log for details")
                 print(str(e))
                 return False
 
@@ -147,7 +147,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
 
                 if url_found:
                     msg = f"Opening browser to: {url_found}"
-                    info(self.iface, msg)
+                    self.parent.logging.info(self.iface, msg)
                     webbrowser.open(url_found)
                 else:
                     #self.iface.messageBar().pushMessage("Error", "No URL found before the login has been cancelled by QGIS. Please try again.")

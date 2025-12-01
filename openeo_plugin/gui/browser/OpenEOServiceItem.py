@@ -11,7 +11,6 @@ from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
-from qgis.core import QgsIconUtils
 from qgis.core import Qgis
 from qgis.core import QgsDataItem
 from qgis.core import QgsMimeDataUtils
@@ -19,7 +18,6 @@ from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsApplication
 
 from ...utils.wmts import WebMapTileService
-from ...utils.logging import warning
 
 class OpenEOServiceItem(QgsDataItem):
     def __init__(self, parent, service, plugin):
@@ -138,7 +136,7 @@ class OpenEOServiceItem(QgsDataItem):
 
         service = self.service
         if not service:
-            warning(self.plugin.iface, "Could not detect a layer from the given source.")
+            self.plugin.logging.warning(self.plugin.iface, "Could not detect a layer from the given source.")
             return mimeUris
 
         QApplication.setOverrideCursor(Qt.BusyCursor)
@@ -150,7 +148,7 @@ class OpenEOServiceItem(QgsDataItem):
                 mimeUris.append(mimeUri)
         except Exception as e:
             print(e)
-            warning(
+            self.plugin.logging.warning(
                 self.plugin.iface,
                 f"Loading the map service {service['url']} failed."
             )

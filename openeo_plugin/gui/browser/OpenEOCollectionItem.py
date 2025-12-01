@@ -19,7 +19,6 @@ from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsApplication
 
 from ...utils.wmts import WebMapTileService
-from ...utils.logging import warning
 
 class OpenEOCollectionItem(QgsDataItem):
     def __init__(self, parent, collection, plugin, preview=False):
@@ -125,7 +124,7 @@ class OpenEOCollectionItem(QgsDataItem):
 
         webMapLinks = self.parent().getWebMapLinks(self.collection)
         if len(webMapLinks) == 0:
-            warning(self.plugin.iface, "Could not detect a layer from the given source.")
+            self.plugin.logging.warning(self.plugin.iface, "Could not detect a layer from the given source.")
             return mimeUris
 
         QApplication.setOverrideCursor(Qt.BusyCursor)
@@ -137,7 +136,7 @@ class OpenEOCollectionItem(QgsDataItem):
                 mimeUris.append(mimeUri)
             except Exception as e:
                 print(e)
-                warning(
+                self.plugin.logging.warning(
                     self.plugin.iface,
                     f"Loading the map service {link['href']} failed."
                 )

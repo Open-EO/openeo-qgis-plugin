@@ -154,7 +154,7 @@ class OpenEOStacAssetItem(QgsDataItem):
                 project.addMapLayer(layer)
             return layer
         else:
-            self.plugin.logging.error("The file format is not supported by the plugin.")
+            self.plugin.logging.warning("The file format is not supported by the plugin.")
         return None
     
     def downloadAsset(self, dir=None):

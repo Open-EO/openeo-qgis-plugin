@@ -6,6 +6,7 @@ import time
 import sys
 import webbrowser
 import openeo
+import traceback
 
 #from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
@@ -29,7 +30,9 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
 
         self.iface = iface
         self.parent = parent
-        self.plugin = parent.plugin
+        self.plugin = None
+        if parent:
+            self.plugin = parent.plugin
         self.connection = connection
         self.activeAuthProvider = None
         
@@ -147,7 +150,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
 
                 if url_found:
                     msg = f"Opening browser to: {url_found}"
-                    self.parent.logging.info(self.iface, msg)
+                    self.plugin.logging.info(msg)
                     webbrowser.open(url_found)
                 else:
                     #self.iface.messageBar().pushMessage("Error", "No URL found before the login has been cancelled by QGIS. Please try again.")
@@ -157,20 +160,25 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                 self.parent.saveLogin(auth_provider["type"])
                 self.accept() # Close the dialog
                 return
-            except AttributeError:
+            except AttributeError as e:
+                self.plugin.logging.error()
                 self.iface.messageBar().pushMessage("Error", "Login failed as the connection is missing. Please try again.")
                 
                 self.reject()
                 return
             except Exception as e:
                 msg = QMessageBox()
-                msg.setIcon(QMessageBox.Critical)
+                self.plugin.logging.error(e)
                 msg.setText("Authentication Failed")
                 msg.setInformativeText('See logs for details')
                 msg.setWindowTitle("Authentication Failed")
                 msg.exec_()
                 print(str(e))
                 return False
+            finally:
+                # reset waiting indicator
+                tab["authButton"].setDisabled(False)
+                tab["authButton"].setText(btn_text)
 
     def _run_auth(self, capture_buffer):
         # Redirect stdout for this thread only

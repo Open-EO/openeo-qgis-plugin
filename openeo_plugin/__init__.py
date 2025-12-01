@@ -3,11 +3,8 @@ import os
 
 from qgis.core import QgsApplication
 from qgis.core import QgsSettings
-from qgis.core import QgsMessageLog
-from qgis.utils import iface
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
-from qgis.PyQt.QtCore import Qt, QMetaObject, Q_ARG
 
 from .gui.browser import OpenEOItemProvider
 from .utils.settings import SettingsPath

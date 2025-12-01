@@ -5,9 +5,9 @@
 [general]
 name=openEO
 qgisMinimumVersion=3.42
-qgisMaximumVersion=4.0
+qgisMaximumVersion=3.44
 description=Plugin to access openEO compliant backends.
-version=2.0-beta.2
+version=2.0-beta.1
 author=Matthias Mohr, Caro Niebl
 email=m.mohr@moregeo.it
 
@@ -26,9 +26,10 @@ hasProcessingProvider=no
 # Tags are comma separated with spaces allowed
 tags=openEO
 
-homepage=https://github.com/Open-EO/openeo-qgis-plugin
+homepage=https://openeo.org
 category=Plugins
-icon=images/icon_small.png
+icon=images/logo.png
+
 # experimental flag
 experimental=True
 
@@ -40,8 +41,8 @@ deprecated=False
 # Check the documentation for more information.
 plugin_dependencies=qpip
 
-Category of the plugin: Raster, Vector, Database or Web
-category=Web
+# Category of the plugin: Raster, Vector, Database or Web
+# category=Web
 
 # If the plugin can run on QGIS Server.
 server=False

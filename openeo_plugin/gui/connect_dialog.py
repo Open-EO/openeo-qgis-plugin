@@ -25,7 +25,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         :param parent: parent dialog of this dialog (e.g. OpenEODialog).
         :param iface: Interface to show the dialog.
         """
-        super(ConnectDialog, self).__init__()
+        super(ConnectDialog, self).__init__(parent)
 
         self.HUB_URL = "https://hub.openeo.org"
 
@@ -69,7 +69,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         name = self.conn_name_edit.text()
 
         if not url:
-            self.parent.logging.warning(self.iface, "Please provide a URL to connect to.")
+            self.plugin.logging.warning(self.iface, "Please provide a URL to connect to.")
             return
 
         self.connect_button.setDisabled(True)
@@ -83,7 +83,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
             self.connection = openeo.connect(url)
         except Exception as e:
             print(e)
-            self.parent.logging.warning(self.iface, "Connection could not be established. Please check the URL and your internet connection.")
+            self.plugin.logging.warning(self.iface, "Connection could not be established. Please check the URL and your internet connection.")
 
             self.connect_button.setDisabled(False)
             self.connect_button.setText(btn_text)

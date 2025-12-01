@@ -1,32 +1,65 @@
 import pathlib
-from qgis.core import QgsMessageLog, Qgis
-from qgis.PyQt.QtWidgets import QApplication
-from qgis.PyQt.QtCore import QThread
+
+from qgis.core import QgsApplication, QgsMessageLog, Qgis
 from datetime import datetime
 
 class Logging():
-    def __init__(self, iface):
+    def __init__(self, iface, logger: QgsMessageLog=None):
         self.developerMode = False
         self.iface = iface
-        self.messageLog = QgsMessageLog()
+        self.tag = 'openEO'
         self.logPath = pathlib.Path.home() / 'openeo_qgis_log.txt'
+        self.messageLog = logger if logger else QgsApplication.messageLog()
+        self.messageLog.messageReceived.connect(self.on_message)
 
-    def success(self, message, title="Success"):
-        self.handleMessage(message, title=title, level=Qgis.Success)
+    def on_message(self, message, tag, level):
+        print(message, tag, level)
+        if tag != self.tag:
+            return
 
-    def warning(self, message, title="Warning", error=None):
-        self.handleMessage(message, title=title, level=Qgis.Warning, error=error)
+        title = self.getTitle(level)
+        match level:
+            case Qgis.Warning:
+                duration = 20
+            case Qgis.Critical:
+                duration = 20
+            case _: # Info & Success
+                duration = 10
+        
+        self.iface.messageBar().pushMessage(
+            title,
+            message,
+            level=level,
+            duration=duration
+        )
 
-    def error(self, message, title="Error", error=None):
-        self.handleMessage(message, title=title, level=Qgis.Critical, error=error)
+    def success(self, message):
+        self._handleMessage(message, level=Qgis.Success)
 
-    def info(self, message, title="Info"):
-        self.handleMessage(message, title=title, level=Qgis.Info)
+    def warning(self, message, error=None):
+        self._handleMessage(message, level=Qgis.Warning, error=error)
+
+    def error(self, message, error=None):
+        self._handleMessage(message, level=Qgis.Critical, error=error)
+
+    def info(self, message):
+        self._handleMessage(message, level=Qgis.Info)
 
     def debug(self, message, error=None):
-        self.handleMessage(message, level=Qgis.Info, show=False, error=error)
+        self._handleMessage(message, level=Qgis.Info, show=False, error=error)
 
-    def handleMessage(
+    def getTitle(self, level: Qgis.MessageLevel, show = True) -> str:
+        match level:
+            case Qgis.Success:
+                return "Success"
+            case Qgis.Warning:
+                return "Warning"
+            case Qgis.Critical:
+                return "Error"
+            case _:
+                return "Info" if show else "Debug"
+
+    def _handleMessage(
             self,
             message: str,
             title: str="",
@@ -36,42 +69,15 @@ class Logging():
         ):
         message = str(message)
         if isinstance(error, Exception):
-            message += f" | Reason: {str(error)}"
+            message += f" Reason: {str(error)}"
 
-        match level:
-            case Qgis.Success:
-                duration = 10
-            case Qgis.Warning:
-                duration = 20
-            case Qgis.Critical:
-                duration = 20
-            case _: # Info
-                duration = 10
-
-        app = QApplication.instance()
-        isUiThread = app is not None and QThread.currentThread() == app.thread()
-
-        self.messageLog.logMessage(
-            message,
-            tag='openEO',
-            notifyUser=not isUiThread,
-            level=level
-        )
+        self.messageLog.logMessage(message, self.tag, level, notifyUser=show)
 
         if self.developerMode:
-            self.addToLogFile(f"[{title}] {message}")
+            title = self.getTitle(level, show)
+            self._addToLogFile(f"[{title}] {message}")
 
-        if show and isUiThread:
-            self.iface.messageBar().pushMessage(
-                title,
-                message,
-                level=level,
-                duration=duration
-            )
-        # todo: We should also handle non-UI thread messages in a better way (e.g. via signals)
-        
-
-    def addToLogFile(self, message):
+    def _addToLogFile(self, message):
         if not self.logPath:
             return
 

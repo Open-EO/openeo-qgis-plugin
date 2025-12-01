@@ -4,14 +4,14 @@
 
 [general]
 name=openEO
-qgisMinimumVersion=3.8
+qgisMinimumVersion=3.42
 qgisMaximumVersion=4.0
 description=Plugin to access openEO compliant backends.
-version=2.0-beta.1
-author=Matthias Mohr, Caro Niebl, Bernhard Goesswein, Nina Gnann
-email=c.niebl@moregeo.it
+version=2.0-beta.2
+author=Matthias Mohr, Caro Niebl
+email=m.mohr@moregeo.it
 
-about=The plugin can be used to access backends compliant with the openEO specification. It can be used to define jobs, execute them at the backend and visualize the results on QGIS.
+about=A plugin to access openEO compliant services. It integrates into the QGIS Browser and can inspect and visualize Collections, Batch Jobs and Web Services.
 
 tracker=https://github.com/Open-EO/openeo-qgis-plugin/issues
 repository=https://github.com/Open-EO/openeo-qgis-plugin
@@ -24,13 +24,13 @@ hasProcessingProvider=no
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=project, remote sensing, web, webservice, wms
+tags=openEO
 
 homepage=https://github.com/Open-EO/openeo-qgis-plugin
 category=Plugins
 icon=images/icon_small.png
 # experimental flag
-experimental=False
+experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
@@ -41,7 +41,7 @@ deprecated=False
 plugin_dependencies=qpip
 
 Category of the plugin: Raster, Vector, Database or Web
-# category=
+category=Web
 
 # If the plugin can run on QGIS Server.
 server=False

@@ -19,7 +19,6 @@ from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsCoordinateTransformContext
 from qgis.core import QgsApplication
-#from qgis.core import QgsStacController
 
 class OpenEOStacAssetItem(QgsDataItem):
     def __init__(self, assetDict, parent, plugin):
@@ -48,7 +47,6 @@ class OpenEOStacAssetItem(QgsDataItem):
 
         self.asset = assetDict
         self.plugin = plugin
-        #self.stacController = QgsStacController()
         self.uris = None #initialise
         self.uris = self.mimeUris()
 
@@ -80,7 +78,6 @@ class OpenEOStacAssetItem(QgsDataItem):
             # create the uri string
             uriString = ""
             href = self.asset.get("href", "")
-            #authcfg = self.stacController.authCfg()
             if href.startswith("http") or href.startswith("ftp"):
                 uriString = f"/vsicurl/{href}"
                 #if len(authcfg) > 0:

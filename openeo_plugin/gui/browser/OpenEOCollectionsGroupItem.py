@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 import sip
 
-from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
 from qgis.core import QgsDataCollectionItem
 from qgis.core import QgsApplication
 
 from . import OpenEOCollectionItem
-from ...utils.logging import error
 
 class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
     """

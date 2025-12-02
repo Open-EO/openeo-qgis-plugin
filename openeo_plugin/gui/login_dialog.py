@@ -147,7 +147,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                     self.plugin.logging.info(f"Opening browser to: {url_found}")
                     webbrowser.open(url_found)
                 else:
-                    self.plugin.logging.warning("Authentication timed out without receiving confirmation from the identity provider.")
+                    pass
 
                 auth_thread.join()
                 self.credentials = (auth_provider["type"], )

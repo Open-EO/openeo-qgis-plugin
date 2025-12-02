@@ -9,12 +9,14 @@ from qgis.core import QgsApplication
 
 from . import OpenEOJobItem
 
+
 class OpenEOJobsGroupItem(QgsDataCollectionItem):
     """
     QgsDataCollectionItem that groups together all Batch jobs offered by the corresponding
     openEO provider to the logged in account. Requires Authentication.
     Direct parent to:
     """
+
     def __init__(self, plugin, parent):
         """Constructor.
 
@@ -25,7 +27,9 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         :param parent_connection: the parent DataItem. expected to be OpenEOConnectionItem.
         :type parent: QgsDataItem
         """
-        QgsDataCollectionItem.__init__(self, parent, "Batch Jobs", plugin.PLUGIN_ENTRY_NAME)
+        QgsDataCollectionItem.__init__(
+            self, parent, "Batch Jobs", plugin.PLUGIN_ENTRY_NAME
+        )
         self.plugin = plugin
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
@@ -39,14 +43,14 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         jobs = self.getJobs()
         for job in jobs:
             item = OpenEOJobItem(
-                parent = self,
-                job = job,
-                plugin = self.plugin,
+                parent=self,
+                job=job,
+                plugin=self.plugin,
             )
             sip.transferto(item, self)
             items.append(item)
         return items
-    
+
     def addChildren(self, children):
         for child in children:
             self.addChildItem(child)
@@ -54,27 +58,33 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
     def getConnection(self):
         return self.parent().getConnection()
-    
+
     def isAuthenticated(self):
         return self.parent().isAuthenticated()
-    
+
     def handleDoubleClick(self):
         if not self.isAuthenticated():
             self.parent().authenticate()
             self.refresh()
         return super().handleDoubleClick()
-    
+
     def getJobs(self):
         try:
             jobs = self.getConnection().list_jobs()
             return jobs
         except openeo.rest.OpenEoApiError:
-            return [] #this happens when authentication is missing
+            return []  # this happens when authentication is missing
         except Exception as e:
-            self.plugin.logging.error("Can't load list of batch jobs.", error=e)
+            self.plugin.logging.error(
+                "Can't load list of batch jobs.", error=e
+            )
         return []
-    
-    def actions(self, parent):        
-        action_refresh = QAction(QgsApplication.getThemeIcon("mActionRefresh.svg"), "Refresh", parent)
+
+    def actions(self, parent):
+        action_refresh = QAction(
+            QgsApplication.getThemeIcon("mActionRefresh.svg"),
+            "Refresh",
+            parent,
+        )
         action_refresh.triggered.connect(self.refresh)
         return [action_refresh]

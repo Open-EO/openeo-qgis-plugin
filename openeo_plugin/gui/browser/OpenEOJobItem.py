@@ -22,18 +22,10 @@ from qgis.core import QgsProject
 
 from . import OpenEOStacAssetItem
 
-mayHaveResults = [
-    "running",
-    "canceled",
-    "finished",
-    "error"
-]
+mayHaveResults = ["running", "canceled", "finished", "error"]
 
-isActiveStates = [
-    "queued",
-    "running",
-    "unknown"
-]
+isActiveStates = ["queued", "running", "unknown"]
+
 
 class OpenEOJobItem(QgsDataItem):
     def __init__(self, parent, job, plugin):
@@ -45,7 +37,7 @@ class OpenEOJobItem(QgsDataItem):
         :param plugin: Reference to the qgis plugin object. Passing this object
             to the children allows for access to important attributes like
             PLUGIN_NAME and PLUGIN_ENTRY_NAME.
-        
+
         :param job: dict containing relevant infos about the batch job that is created.
         :type url: dict
         """
@@ -53,11 +45,11 @@ class OpenEOJobItem(QgsDataItem):
         name = job.get("title") or job.get("id")
         QgsDataItem.__init__(
             self,
-            type = Qgis.BrowserItemType.Custom,
-            parent = parent,
-            name = name,
-            path = None,
-            providerKey = plugin.PLUGIN_ENTRY_NAME
+            type=Qgis.BrowserItemType.Custom,
+            parent=parent,
+            name=name,
+            path=None,
+            providerKey=plugin.PLUGIN_ENTRY_NAME,
         )
 
         self.job = job
@@ -86,10 +78,10 @@ class OpenEOJobItem(QgsDataItem):
 
     def hasDragEnabled(self):
         return False
-    
+
     def getConnection(self):
         return self.parent().getConnection()
-    
+
     def getJob(self, force=False):
         job = self.getConnection().job(self.job["id"])
         if force:
@@ -97,10 +89,14 @@ class OpenEOJobItem(QgsDataItem):
                 self.job = job.describe()
                 self.updateFromData()
             except Exception as e:
-                self.plugin.logging.error(f"Can't load job '{self.getTitle()}'.", error=e)
+                self.plugin.logging.error(
+                    f"Can't load job '{self.getTitle()}'.", error=e
+                )
                 return self.job
 
-        if (force or self.results is None) and self.getStatus() in mayHaveResults:
+        if (
+            force or self.results is None
+        ) and self.getStatus() in mayHaveResults:
             try:
                 results = job.get_results()
                 if results is not None:
@@ -108,14 +104,16 @@ class OpenEOJobItem(QgsDataItem):
                 else:
                     self.results = None
             except Exception as e:
-                self.plugin.logging.error(f"Can't load results for job {self.getTitle()}.", error=e)
+                self.plugin.logging.error(
+                    f"Can't load results for job {self.getTitle()}.", error=e
+                )
 
         return self.job
 
     def createChildren(self):
         self.populateAssetItems()
         return self.assetItems
-    
+
     def populateAssetItems(self):
         self.getJob()
         self.assetItems = []
@@ -128,7 +126,7 @@ class OpenEOJobItem(QgsDataItem):
                     assetDict=assets[key],
                     key=key,
                     parent=self,
-                    plugin=self.plugin
+                    plugin=self.plugin,
                 )
                 self.assetItems.append(assetItem)
                 sip.transferto(assetItem, self)
@@ -149,21 +147,24 @@ class OpenEOJobItem(QgsDataItem):
                 resultHtml = f'<openeo-item id="component"><script prop="data" type="application/json">{resultJson}</script></openeo-item>'
 
             filePath = pathlib.Path(__file__).parent.resolve()
-            with open(os.path.join(filePath, "..", "jobProperties.html")) as file:
+            with open(
+                os.path.join(filePath, "..", "jobProperties.html")
+            ) as file:
                 jobInfoHTML = file.read()
             jobInfoHTML = jobInfoHTML.replace("<!-- results -->", resultHtml)
             jobInfoHTML = jobInfoHTML.replace("{{ json }}", jobJson)
 
-            fh, path = tempfile.mkstemp(suffix='.html')
-            url = 'file://' + path
-            with open(path, 'w') as fp:
+            fh, path = tempfile.mkstemp(suffix=".html")
+            url = "file://" + path
+            with open(path, "w") as fp:
                 fp.write(jobInfoHTML)
             webbrowser.open_new(url)
         except Exception as e:
-            self.plugin.logging.error(f"Can't show job details for job {self.getTitle()}.", error=e)
+            self.plugin.logging.error(
+                f"Can't show job details for job {self.getTitle()}.", error=e
+            )
         finally:
             QApplication.restoreOverrideCursor()
-
 
     def getStatus(self):
         if not self.job:
@@ -174,6 +175,7 @@ class OpenEOJobItem(QgsDataItem):
         if not self.job:
             return "n/a"
         return self.job.get("title") or self.job.get("id")
+
     def addResultsToProject(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
@@ -189,21 +191,27 @@ class OpenEOJobItem(QgsDataItem):
                 layer = asset.createLayer(addToProject=False)
                 if not layer.isValid():
                     allValid = False
-                project.addMapLayer(layer, False) #add to project without showing
-                group.addLayer(layer) #add to the group
+                project.addMapLayer(
+                    layer, False
+                )  # add to project without showing
+                group.addLayer(layer)  # add to the group
         except Exception as e:
-            self.plugin.logging.error(f"Can't add results to project for job {self.getTitle()}.", error=e)
-        finally:            
+            self.plugin.logging.error(
+                f"Can't add results to project for job {self.getTitle()}.",
+                error=e,
+            )
+        finally:
             QApplication.restoreOverrideCursor()
             if not allValid:
-                self.plugin.logging.warning(f"One or more result assets for job {self.getTitle()} can't be visualized")
+                self.plugin.logging.warning(
+                    f"One or more result assets for job {self.getTitle()} can't be visualized"
+                )
 
     def saveResultsTo(self):
         self.populateAssetItems()
-        downloadPath = pathlib.Path.home() / 'Downloads'
+        downloadPath = pathlib.Path.home() / "Downloads"
         dir = QFileDialog.getExistingDirectory(
-            caption="Save Results to...",
-            directory=str(downloadPath)
+            caption="Save Results to...", directory=str(downloadPath)
         )
 
         QApplication.setOverrideCursor(Qt.BusyCursor)
@@ -214,21 +222,26 @@ class OpenEOJobItem(QgsDataItem):
                 self.plugin.logging.debug(f"File saved to {path}")
             except Exception as e:
                 errors += 1
-                self.plugin.logging.error(f"Can't download the asset {asset.name()}.", error=e)
-        
+                self.plugin.logging.error(
+                    f"Can't download the asset {asset.name()}.", error=e
+                )
+
         QApplication.restoreOverrideCursor()
         if errors == len(self.assetItems):
             if errors == 1:
-                pass # Error already logged above
+                pass  # Error already logged above
             else:
                 self.plugin.logging.error("No results were downloaded.")
         else:
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
             if errors > 0:
-                self.plugin.logging.warning(f"Finished downloading results with {errors} errors to {dir}.")
+                self.plugin.logging.warning(
+                    f"Finished downloading results with {errors} errors to {dir}."
+                )
             else:
-                self.plugin.logging.success(f"Finished downloading all results to {dir}.")
-        
+                self.plugin.logging.success(
+                    f"Finished downloading all results to {dir}."
+                )
 
     def actions(self, parent):
         actions = []
@@ -237,7 +250,11 @@ class OpenEOJobItem(QgsDataItem):
         job_properties.triggered.connect(self.viewProperties)
         actions.append(job_properties)
 
-        action_refresh = QAction(QgsApplication.getThemeIcon("mActionRefresh.svg"), "Refresh", parent)
+        action_refresh = QAction(
+            QgsApplication.getThemeIcon("mActionRefresh.svg"),
+            "Refresh",
+            parent,
+        )
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
 
@@ -245,8 +262,10 @@ class OpenEOJobItem(QgsDataItem):
         action_addGroup.triggered.connect(self.addResultsToProject)
         actions.append(action_addGroup)
 
-        actions_saveResultsTo = QAction(QIcon(), "Download Results to...", parent)
+        actions_saveResultsTo = QAction(
+            QIcon(), "Download Results to...", parent
+        )
         actions_saveResultsTo.triggered.connect(self.saveResultsTo)
-        actions.append(actions_saveResultsTo)    
+        actions.append(actions_saveResultsTo)
 
         return actions

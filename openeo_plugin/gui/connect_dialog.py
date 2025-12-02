@@ -7,17 +7,21 @@ from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QApplication
 
-#from .ui.connect_dialog import Ui_ConnectDialog as FORM_CLASS
+# from .ui.connect_dialog import Ui_ConnectDialog as FORM_CLASS
 from ..models.ConnectionModel import ConnectionModel
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 # use this if the pb_tool compiled version of the dialog doesn't work
-FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'ui/connect_dialog.ui'))
+FORM_CLASS, _ = uic.loadUiType(
+    os.path.join(os.path.dirname(__file__), "ui/connect_dialog.ui")
+)
+
 
 class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
     """
     This class is responsible for showing the provider-connection window and to let the user connect to an openEO backend.
     """
+
     def __init__(self, plugin):
         """
         Constructor method: Initializing the button behaviours and the backend combobox.
@@ -46,15 +50,19 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         except Exception as e:
             self.plugin.logging.warning(
                 "Can't load the list of backends from the openEO Hub. Are you connected to the internet?",
-                error=e
+                error=e,
             )
-        
-        self.server_selector.setCurrentIndex(-1) # don't select anything by default
-        self.server_selector.currentIndexChanged.connect(self.serverSelectorUpdated)
+
+        self.server_selector.setCurrentIndex(
+            -1
+        )  # don't select anything by default
+        self.server_selector.currentIndexChanged.connect(
+            self.serverSelectorUpdated
+        )
 
     def getModel(self):
         return self.model
-    
+
     def getConnection(self):
         return self.connection
 
@@ -80,7 +88,10 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         try:
             self.connection = openeo.connect(url)
         except Exception as e:
-            self.plugin.logging.warning("Connection could not be established. Please check the URL and your internet connection.", error=e)
+            self.plugin.logging.warning(
+                "Connection could not be established. Please check the URL and your internet connection.",
+                error=e,
+            )
 
             self.connect_button.setDisabled(False)
             self.connect_button.setText(btn_text)
@@ -93,7 +104,6 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
             self.model = ConnectionModel(name, url)
             self.accept()  # Close the dialog on success
 
-    
     def serverSelectorUpdated(self, index):
         if index < 0:
             return
@@ -103,10 +113,12 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         self.conn_name_edit.setText(new_name)
         self.url_edit.setText(new_url)
         return
-    
+
     def getHubBackends(self):
         try:
-            backendUrl = requests.get('{}/api/backends'.format(self.HUB_URL), timeout=5)
+            backendUrl = requests.get(
+                "{}/api/backends".format(self.HUB_URL), timeout=5
+            )
         except Exception:
             hubBackends = {}
 

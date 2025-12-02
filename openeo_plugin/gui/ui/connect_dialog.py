@@ -20,54 +20,82 @@ class Ui_ConnectDialog(object):
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
         self.url_label = QtWidgets.QLabel(ConnectDialog)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.url_label.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.url_label.sizePolicy().hasHeightForWidth()
+        )
         self.url_label.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
         font.setBold(True)
         self.url_label.setFont(font)
-        self.url_label.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
+        self.url_label.setLocale(
+            QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates)
+        )
         self.url_label.setObjectName("url_label")
         self.verticalLayout.addWidget(self.url_label)
         self.url_edit = QtWidgets.QLineEdit(ConnectDialog)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.url_edit.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.url_edit.sizePolicy().hasHeightForWidth()
+        )
         self.url_edit.setSizePolicy(sizePolicy)
         self.url_edit.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.url_edit.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
+        self.url_edit.setLocale(
+            QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates)
+        )
         self.url_edit.setObjectName("url_edit")
         self.verticalLayout.addWidget(self.url_edit)
         self.name_label = QtWidgets.QLabel(ConnectDialog)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.name_label.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.name_label.sizePolicy().hasHeightForWidth()
+        )
         self.name_label.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
         font.setBold(True)
         self.name_label.setFont(font)
-        self.name_label.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
+        self.name_label.setLocale(
+            QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates)
+        )
         self.name_label.setObjectName("name_label")
         self.verticalLayout.addWidget(self.name_label)
         self.conn_name_edit = QtWidgets.QLineEdit(ConnectDialog)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.conn_name_edit.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.conn_name_edit.sizePolicy().hasHeightForWidth()
+        )
         self.conn_name_edit.setSizePolicy(sizePolicy)
         self.conn_name_edit.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.conn_name_edit.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
+        self.conn_name_edit.setLocale(
+            QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates)
+        )
         self.conn_name_edit.setObjectName("conn_name_edit")
         self.verticalLayout.addWidget(self.conn_name_edit)
         self.connect_button = QtWidgets.QPushButton(ConnectDialog)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.connect_button.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.connect_button.sizePolicy().hasHeightForWidth()
+        )
         self.connect_button.setSizePolicy(sizePolicy)
         self.connect_button.setObjectName("connect_button")
         self.verticalLayout.addWidget(self.connect_button)
@@ -75,24 +103,36 @@ class Ui_ConnectDialog(object):
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.name_label_2 = QtWidgets.QLabel(ConnectDialog)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.name_label_2.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.name_label_2.sizePolicy().hasHeightForWidth()
+        )
         self.name_label_2.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
         font.setBold(True)
         self.name_label_2.setFont(font)
-        self.name_label_2.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
+        self.name_label_2.setLocale(
+            QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates)
+        )
         self.name_label_2.setObjectName("name_label_2")
         self.verticalLayout_2.addWidget(self.name_label_2)
         self.server_selector = QtWidgets.QComboBox(ConnectDialog)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.server_selector.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.server_selector.sizePolicy().hasHeightForWidth()
+        )
         self.server_selector.setSizePolicy(sizePolicy)
-        self.server_selector.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
+        self.server_selector.setLocale(
+            QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates)
+        )
         self.server_selector.setObjectName("server_selector")
         self.verticalLayout_2.addWidget(self.server_selector)
         self.gridLayout_2.addLayout(self.verticalLayout_2, 3, 0, 1, 1)
@@ -107,8 +147,14 @@ class Ui_ConnectDialog(object):
 
     def retranslateUi(self, ConnectDialog):
         _translate = QtCore.QCoreApplication.translate
-        ConnectDialog.setWindowTitle(_translate("ConnectDialog", "New openEO Connection"))
+        ConnectDialog.setWindowTitle(
+            _translate("ConnectDialog", "New openEO Connection")
+        )
         self.url_label.setText(_translate("ConnectDialog", "URL"))
         self.name_label.setText(_translate("ConnectDialog", "Name"))
-        self.connect_button.setText(_translate("ConnectDialog", "Create Connection"))
-        self.name_label_2.setText(_translate("ConnectDialog", "Select Server from openEO Hub"))
+        self.connect_button.setText(
+            _translate("ConnectDialog", "Create Connection")
+        )
+        self.name_label_2.setText(
+            _translate("ConnectDialog", "Select Server from openEO Hub")
+        )

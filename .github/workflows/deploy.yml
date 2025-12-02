@@ -1,0 +1,44 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - '*'  # triggers on tags starting with "deploy"
+
+jobs:
+  precommit:
+    uses: ./.github/workflows/linter.yml
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Check metadata.txt for version number
+    - name: Check metadata
+      run: |
+        grep -Fxq version=${{ github.ref_name }} openeo_plugin/metadata.txt
+
+    # Create the zip
+    - name: Run deploy script
+      run: |
+        cp LICENSE openeo_plugin/LICENSE
+        zip -r openeo_plugin.zip openeo_plugin
+
+    # Upload ZIP file as an artifact. to inspect the ZIP in the workflow UI
+    - uses: actions/upload-artifact@v3
+      with:
+        name: openeo_plugin.zip
+        path: openeo_plugin.zip
+
+    # Create or update GitHub Release and upload ZIP as asset
+    - name: Create Release and upload ZIP
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: ${{ github.ref_name }}
+        files: openeo_plugin.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

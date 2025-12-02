@@ -195,6 +195,7 @@ class OpenEOStacAssetItem(QgsDataItem):
             directory=str(downloadPath)
         )
         try:
+            QApplication.setOverrideCursor(Qt.BusyCursor)
             self.downloadAsset(dir=dir)
             dirStr = f"file://{str(dir)}"
             QDesktopServices.openUrl(QUrl(dirStr, QUrl.TolerantMode))

@@ -6,11 +6,13 @@ from qgis.core import QgsDataItemProvider
 
 from .OpenEORootItem import OpenEORootItem
 
+
 class OpenEOItemProvider(QgsDataItemProvider):
     """
     QgsDataItemProvider class implementation that is necessary to provide data-items to
     the QGIS browser (the tree-structured menu on the left to the map screen by default)
     """
+
     def __init__(self, plugin):
         """Constructor.
 
@@ -26,8 +28,8 @@ class OpenEOItemProvider(QgsDataItemProvider):
         return "OpenEO"
 
     def capabilities(self):
-        return QgsDataProvider.Net #dont understand that yet
-    
+        return QgsDataProvider.Net  # dont understand that yet
+
     def createDataItem(self, path, parentItem):
         if not parentItem:
             ri = OpenEORootItem(plugin=self.plugin)

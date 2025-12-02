@@ -19,68 +19,72 @@ from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsCoordinateTransformContext
 from qgis.core import QgsApplication
 
+
 class OpenEOStacAssetItem(QgsDataItem):
     def __init__(self, assetDict, key, parent, plugin):
         """Constructor.
         :param assetDict: a dict representing a STAC asset according to stac specifications
         :type assetDict: dict
-        
+
         :param parent: the parent DataItem. expected to be an OpenEOJobItem.
         :type parent: OpenEOJobItem
 
         :param plugin: Reference to the qgis plugin object. Passing this object
             to the children allows for access to important attributes like
             PLUGIN_NAME and PLUGIN_ENTRY_NAME.
-        
+
         :param job: dict containing relevant infos about the batch job that is created.
         :type url: dict
         """
         QgsDataItem.__init__(
             self,
-            type = Qgis.BrowserItemType.Custom,
-            parent = parent,
-            name = assetDict.get("title", key),
-            path = None,
-            providerKey = plugin.PLUGIN_ENTRY_NAME
+            type=Qgis.BrowserItemType.Custom,
+            parent=parent,
+            name=assetDict.get("title", key),
+            path=None,
+            providerKey=plugin.PLUGIN_ENTRY_NAME,
         )
 
         self.asset = assetDict
         self.key = key
         self.plugin = plugin
-        self.uris = None #initialise
+        self.uris = None  # initialise
         self.uris = self.mimeUris()
 
         layerType = self.getLayerType()
-        if layerType: 
+        if layerType:
             icon = QgsIconUtils.iconForLayerType(layerType)
             self.setIcon(icon)
         else:
             self.setIcon(QgsApplication.getThemeIcon("mIconFile.svg"))
-        
+
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
 
     def mimeUris(self):
         if self.uris is not None:
             return self.uris
-        
-        uri = QgsMimeDataUtils.Uri() 
 
-        #TODO: support for other types needed? like jpeg?
-        if (("image/tiff; application=geotiff" in self.asset.get("type", "")) or
-            ("image/vnd.stac.geotiff" in self.asset.get("type", ""))):
-            uri.layerType = QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster)
+        uri = QgsMimeDataUtils.Uri()
+
+        # TODO: support for other types needed? like jpeg?
+        if (
+            "image/tiff; application=geotiff" in self.asset.get("type", "")
+        ) or ("image/vnd.stac.geotiff" in self.asset.get("type", "")):
+            uri.layerType = QgsMapLayerFactory.typeToString(
+                Qgis.LayerType.Raster
+            )
             uri.providerKey = "gdal"
             uri.name = self.layerName()
             uri.supportedFormats = self.supportedFormats()
             uri.supportedCrs = self.supportedCrs()
-            
+
             # create the uri string
             uriString = ""
             href = self.asset.get("href", "")
             if href.startswith("http") or href.startswith("ftp"):
                 uriString = f"/vsicurl/{href}"
-                #if len(authcfg) > 0:
+                # if len(authcfg) > 0:
                 #    uriString += f" authcfg='{authcfg}'"
             elif href.startswith("s3://"):
                 uriString = f"/vsis3/{href[5:]}"
@@ -95,19 +99,24 @@ class OpenEOStacAssetItem(QgsDataItem):
 
     def hasDragEnabled(self):
         return self.producesValidLayer()
-    
+
     def layerName(self):
         return self.name()
-    
+
     def supportedFormats(self):
-        return [] #TODO: determine more closely from capabilities
+        return []  # TODO: determine more closely from capabilities
 
     def supportedCrs(self):
-        supportedCrs = self.asset.get("proj:epsg") or self.asset.get("epsg") or self.asset.get("crs") or "3857"
+        supportedCrs = (
+            self.asset.get("proj:epsg")
+            or self.asset.get("epsg")
+            or self.asset.get("crs")
+            or "3857"
+        )
         if type(supportedCrs) is int:
             supportedCrs = f"EPSG:{supportedCrs}"
-        return [supportedCrs] #TODO: not fully reliable
-    
+        return [supportedCrs]  # TODO: not fully reliable
+
     def getLayerType(self):
         mediaType = self.asset.get("type", "")
         mediaType = mediaType.lower()
@@ -116,7 +125,7 @@ class OpenEOStacAssetItem(QgsDataItem):
             "image/tiff; application=geotiff; profile=cloud-optimized": Qgis.LayerType.Raster,
             "application/geo+json": Qgis.LayerType.Vector,
             "application/netcdf": Qgis.LayerType.Raster,
-            "application/x+netcdf": Qgis.LayerType.Raster
+            "application/x+netcdf": Qgis.LayerType.Raster,
         }
         if mediaType in mediaTypes:
             return mediaTypes[mediaType]
@@ -127,15 +136,17 @@ class OpenEOStacAssetItem(QgsDataItem):
         layerType = self.getLayerType()
         validLayerTypes = {
             QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster),
-            QgsMapLayerFactory.typeToString(Qgis.LayerType.Vector)
+            QgsMapLayerFactory.typeToString(Qgis.LayerType.Vector),
         }
-        if layerType != None:
-            validLayer = QgsMapLayerFactory.typeToString(layerType) in validLayerTypes
+        if layerType is not None:
+            validLayer = (
+                QgsMapLayerFactory.typeToString(layerType) in validLayerTypes
+            )
         return validLayer
-    
+
     def createLayer(self, addToProject=True):
         if not addToProject:
-            addToProject = True #This is necessary for when the method is given as a callable
+            addToProject = True  # This is necessary for when the method is given as a callable
         if self.producesValidLayer():
             uris = self.mimeUris()
             uri = uris[0]
@@ -143,38 +154,44 @@ class OpenEOStacAssetItem(QgsDataItem):
                 transformContext=QgsCoordinateTransformContext()
             )
             layer = QgsMapLayerFactory.createLayer(
-                uri.uri, 
-                uri.name, 
+                uri.uri,
+                uri.name,
                 QgsMapLayerFactory.typeFromString(uri.layerType)[0],
-                layerOptions, 
-                uri.providerKey
+                layerOptions,
+                uri.providerKey,
             )
             if addToProject:
                 project = QgsProject.instance()
                 project.addMapLayer(layer)
             return layer
         else:
-            self.plugin.logging.warning("The file format is not supported by the plugin.")
+            self.plugin.logging.warning(
+                "The file format is not supported by the plugin."
+            )
         return None
-    
+
     def download(self):
         QApplication.setOverrideCursor(Qt.BusyCursor)
         try:
             path = self.downloadAsset()
             self.plugin.logging.success(f"File saved to {path}")
         except Exception as e:
-            self.plugin.logging.error(f"Can't download the asset {self.name()}.", error=e)
+            self.plugin.logging.error(
+                f"Can't download the asset {self.name()}.", error=e
+            )
         finally:
             QApplication.restoreOverrideCursor()
-    
+
     def downloadAsset(self, dir=None):
         href = self.asset.get("href")
-    
+
         if not href:
-            raise ValueError("Asset is missing 'href' and cannot be downloaded.")
-    
+            raise ValueError(
+                "Asset is missing 'href' and cannot be downloaded."
+            )
+
         dir = Path(dir) if dir else self.downloadFolder()
-        
+
         local = self.asset.get("file:local_path")
         if local:
             path = dir / local
@@ -194,26 +211,29 @@ class OpenEOStacAssetItem(QgsDataItem):
         # stream data to file
         with requests.get(href, stream=True) as r:
             r.raise_for_status()
-            with open(path, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=10 * 1024 * 1024): # 10 MB chunk size
+            with open(path, "wb") as f:
+                for chunk in r.iter_content(
+                    chunk_size=10 * 1024 * 1024
+                ):  # 10 MB chunk size
                     f.write(chunk)
 
         return path
-    
+
     def downloadFolder(self):
-        return Path.home() / 'Downloads'
+        return Path.home() / "Downloads"
 
     def downloadTo(self):
         dir = QFileDialog.getExistingDirectory(
-            caption="Save Result to...",
-            directory=str(self.downloadFolder())
+            caption="Save Result to...", directory=str(self.downloadFolder())
         )
         try:
             QApplication.setOverrideCursor(Qt.BusyCursor)
             self.downloadAsset(dir=dir)
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
         except Exception as e:
-            self.plugin.logging.error(f"Can't download the asset {self.name()} to {dir}.", error=e)
+            self.plugin.logging.error(
+                f"Can't download the asset {self.name()} to {dir}.", error=e
+            )
         finally:
             QApplication.restoreOverrideCursor()
 
@@ -221,10 +241,12 @@ class OpenEOStacAssetItem(QgsDataItem):
         actions = []
 
         if self.producesValidLayer():
-            action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
+            action_add_to_project = QAction(
+                QIcon(), "Add Layer to Project", parent
+            )
             action_add_to_project.triggered.connect(self.createLayer)
             actions.append(action_add_to_project)
-        
+
         action_download = QAction(QIcon(), "Download", parent)
         action_download.triggered.connect(self.download)
         actions.append(action_download)

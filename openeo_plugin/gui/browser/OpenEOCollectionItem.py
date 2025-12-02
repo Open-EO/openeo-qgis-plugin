@@ -20,6 +20,7 @@ from qgis.core import QgsApplication
 
 from ...utils.wmts import WebMapTileService
 
+
 class OpenEOCollectionItem(QgsDataItem):
     def __init__(self, parent, collection, plugin, preview=False):
         """Constructor.
@@ -30,7 +31,7 @@ class OpenEOCollectionItem(QgsDataItem):
         :param plugin: Reference to the qgis plugin object. Passing this object
             to the children allows for access to important attributes like
             PLUGIN_NAME and PLUGIN_ENTRY_NAME.
-        
+
         :param collection: dict containing relevant infos about the collection.
         :type url: dict
         """
@@ -38,16 +39,18 @@ class OpenEOCollectionItem(QgsDataItem):
         name = collection.get("title") or collection.get("id")
         QgsDataItem.__init__(
             self,
-            type = Qgis.BrowserItemType.Custom,
-            parent = parent,
-            name = name,
-            path = None,
-            providerKey = plugin.PLUGIN_ENTRY_NAME
+            type=Qgis.BrowserItemType.Custom,
+            parent=parent,
+            name=name,
+            path=None,
+            providerKey=plugin.PLUGIN_ENTRY_NAME,
         )
 
         self.collection = collection
         self.plugin = plugin
-        self.preview = preview #whether the collection contains a wmts preview
+        self.preview = (
+            preview  # whether the collection contains a wmts preview
+        )
 
         self.uris = []
 
@@ -61,16 +64,16 @@ class OpenEOCollectionItem(QgsDataItem):
 
     def hasDragEnabled(self):
         return self.preview
-    
+
     def layerName(self):
         return self.name()
-    
+
     def supportedFormats(self):
-        return [] #TODO: determine more closely from capabilities
-    
+        return []  # TODO: determine more closely from capabilities
+
     def supportedCrs(self):
-        return ["EPSG:3857"] #TODO: determine more closely from capabilities
-    
+        return ["EPSG:3857"]  # TODO: determine more closely from capabilities
+
     def getConnection(self):
         return self.parent().getConnection()
 
@@ -79,43 +82,46 @@ class OpenEOCollectionItem(QgsDataItem):
         rel = link.get("rel") or ""
 
         uri = QgsMimeDataUtils.Uri()
-        uri.layerType = QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster)  
+        uri.layerType = QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster)
         uri.providerKey = "wms"
         uri.name = self.layerName()
         if len(title) > 0 and title != uri.name:
             uri.name += f" - {title}"
-        uri.supportedFormats = self.supportedFormats() # todo: do we need to set this more specifically?
-        uri.supportedCrs = self.supportedCrs() # todo: set more specific supportedCrs below
+        uri.supportedFormats = (
+            self.supportedFormats()
+        )  # todo: do we need to set this more specifically?
+        uri.supportedCrs = (
+            self.supportedCrs()
+        )  # todo: set more specific supportedCrs below
 
         # different map service formats
         if rel == "xyz":
-            uri.uri = f"type=xyz&url={link["href"]}/"+quote("{z}/{y}/{x}")
+            uri.uri = f"type=xyz&url={link['href']}/" + quote("{z}/{y}/{x}")
             return uri
         elif rel == "wmts":
-            wmtsUrl = link["href"]+"?service=wmts&request=getCapabilities"
+            wmtsUrl = link["href"] + "?service=wmts&request=getCapabilities"
             wmts = WebMapTileService(wmtsUrl)
             targetCRS = "EPSG::3857"
-            
+
             tileMatrixSet = None
             for tms_id, tms in list(wmts.tilematrixsets.items()):
-                if targetCRS in tms.crs: 
+                if targetCRS in tms.crs:
                     tileMatrixSet = tms_id
                     break
             layerID = None
             layerID = list(wmts.contents)[0]
-            styleID = wmts.contents[layerID].styles
 
-            #TODO: determine more URI parameters programmatically
-            uri.uri = f"crs=EPSG:3857&styles=default&tilePixelRatio=0&format=image/png&layers={layerID}&tileMatrixSet={tileMatrixSet}&url={link["href"]}"
+            # TODO: determine more URI parameters programmatically
+            uri.uri = f"crs=EPSG:3857&styles=default&tilePixelRatio=0&format=image/png&layers={layerID}&tileMatrixSet={tileMatrixSet}&url={link['href']}"
             return uri
         else:
             return None
-    
+
     def mimeUris(self):
         if not self.preview:
             return []
 
-        #see if uri has already been created
+        # see if uri has already been created
         # TODO: in the current state this only supports single URIs, should not be an issue for the used types.
         if len(self.uris) != 0:
             return self.uris
@@ -124,30 +130,34 @@ class OpenEOCollectionItem(QgsDataItem):
 
         webMapLinks = self.parent().getWebMapLinks(self.collection)
         if len(webMapLinks) == 0:
-            self.plugin.logging.warning("The collection does not provide any web map services for preview.")
+            self.plugin.logging.warning(
+                "The collection does not provide any web map services for preview."
+            )
             return mimeUris
 
         QApplication.setOverrideCursor(Qt.BusyCursor)
 
-        #TODO: what if operation takes way too long?
+        # TODO: what if operation takes way too long?
         for link in webMapLinks:
             try:
                 mimeUri = self.createUri(link)
                 mimeUris.append(mimeUri)
             except Exception as e:
-                self.plugin.logging.error(f"Can't visualize the mapping service {link['href']} for collection {self.collection['id']}.", error=e)
-        
+                self.plugin.logging.error(
+                    f"Can't visualize the mapping service {link['href']} for collection {self.collection['id']}.",
+                    error=e,
+                )
+
         QApplication.restoreOverrideCursor()
 
         self.uris = mimeUris
 
         return mimeUris
 
-    
     def addToProject(self):
         if not self.preview:
             return
-        
+
         uris = self.mimeUris()
         uri = uris[0]
         self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
@@ -161,18 +171,21 @@ class OpenEOCollectionItem(QgsDataItem):
                 break
         collection_json = requests.get(collection_link).json()
         collection_json = json.dumps(collection_json)
-        
-        filePath = pathlib.Path(__file__).parent.resolve()
-        with open(os.path.join(filePath, "..", "collectionProperties.html")) as file:
-            collectionInfoHTML = file.read()
-        collectionInfoHTML = collectionInfoHTML.replace("{{ json }}", collection_json)
 
-        fh, path = tempfile.mkstemp(suffix='.html')
-        url = 'file://' + path
-        with open(path, 'w') as fp:
+        filePath = pathlib.Path(__file__).parent.resolve()
+        with open(
+            os.path.join(filePath, "..", "collectionProperties.html")
+        ) as file:
+            collectionInfoHTML = file.read()
+        collectionInfoHTML = collectionInfoHTML.replace(
+            "{{ json }}", collection_json
+        )
+
+        fh, path = tempfile.mkstemp(suffix=".html")
+        url = "file://" + path
+        with open(path, "w") as fp:
             fp.write(collectionInfoHTML)
         webbrowser.open_new(url)
-
 
     def actions(self, parent):
         actions = []
@@ -186,7 +199,9 @@ class OpenEOCollectionItem(QgsDataItem):
             separator.setSeparator(True)
             actions.append(separator)
 
-            action_add_to_project = QAction(QIcon(), "Add Layer to Project", parent)
+            action_add_to_project = QAction(
+                QIcon(), "Add Layer to Project", parent
+            )
             action_add_to_project.triggered.connect(self.addToProject)
             actions.append(action_add_to_project)
 

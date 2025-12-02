@@ -26,15 +26,21 @@ class Ui_LoginDialog(object):
         self.tabWidget.setObjectName("tabWidget")
         self.gridLayout_2.addWidget(self.tabWidget, 9, 0, 1, 1)
         self.titleLabel = QtWidgets.QLabel(LoginDialog)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.titleLabel.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.titleLabel.sizePolicy().hasHeightForWidth()
+        )
         self.titleLabel.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
         font.setBold(True)
         self.titleLabel.setFont(font)
-        self.titleLabel.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
+        self.titleLabel.setLocale(
+            QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates)
+        )
         self.titleLabel.setObjectName("titleLabel")
         self.gridLayout_2.addWidget(self.titleLabel, 0, 0, 1, 1)
 
@@ -43,5 +49,7 @@ class Ui_LoginDialog(object):
 
     def retranslateUi(self, LoginDialog):
         _translate = QtCore.QCoreApplication.translate
-        LoginDialog.setWindowTitle(_translate("LoginDialog", "Authenticate connection"))
+        LoginDialog.setWindowTitle(
+            _translate("LoginDialog", "Authenticate connection")
+        )
         self.titleLabel.setText(_translate("LoginDialog", "Log in to"))

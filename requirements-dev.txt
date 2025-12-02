@@ -1,0 +1,4 @@
+#requirements for your dev environment
+openeo
+ruff
+pre-commit

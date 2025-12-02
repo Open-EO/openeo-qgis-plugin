@@ -1,22 +1,27 @@
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QStyle
 
 from .login_dialog import Ui_LoginDialog
+
 
 class Ui_DynamicLoginDialog(Ui_LoginDialog):
     """
     Derived class of Ui_LoginDialog.
     dynamically creates authentication options from a list of authentication providers
     """
+
     def setupUi(self, DynamicLoginDialog, auth_provider_list):
         super().setupUi(DynamicLoginDialog)
 
         self.internal = QtWidgets.QWidget()
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.internal.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.internal.sizePolicy().hasHeightForWidth()
+        )
         self.internal.setSizePolicy(sizePolicy)
         self.internal.setMaximumSize(QtCore.QSize(523, 16777215))
         self.internal.setObjectName("internal")
@@ -60,7 +65,12 @@ class Ui_DynamicLoginDialog(Ui_LoginDialog):
                 tab["verticalLayout"].addWidget(tab["description"])
                 tab["description"].setWordWrap(True)
 
-            tab["spacerItem"] = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+            tab["spacerItem"] = QtWidgets.QSpacerItem(
+                20,
+                40,
+                QtWidgets.QSizePolicy.Minimum,
+                QtWidgets.QSizePolicy.Expanding,
+            )
             tab["verticalLayout"].addItem(tab["spacerItem"])
 
             if auth_provider["type"] == "oidc":
@@ -76,25 +86,48 @@ class Ui_DynamicLoginDialog(Ui_LoginDialog):
 
             self.tabWidget.addTab(tab["widget"], auth_provider["title"])
             self.provider_tabs.append(tab)
-            
+
         self.retranslateUi(DynamicLoginDialog)
         QtCore.QMetaObject.connectSlotsByName(DynamicLoginDialog)
 
     def retranslateUi(self, DynamicLoginDialog):
         super().retranslateUi(DynamicLoginDialog)
-        
+
         _translate = QtCore.QCoreApplication.translate
         if hasattr(self, "provider_tabs"):
             for idx, tab in enumerate(self.provider_tabs):
                 auth_provider = self.auth_provider_list[idx]
                 if auth_provider["type"] == "basic":
-                    tab["usernameLabel"].setText(_translate("LoginDialog", "Username"))
-                    tab["passwordLabel"].setText(_translate("LoginDialog", "Password"))
-                    tab["warningLabel"].setText(_translate("LoginDialog", "<html><head/><body><p><span style=\" font-weight:700; color:#c01c28;\">Warning: </span><span style=\" color:#000000;\">Credentials are stored as plain text in the project file!</span></p></body></html>"))
-                    tab["authButton"].setText(_translate("LoginDialog", "Authenticate with internal log in"))
+                    tab["usernameLabel"].setText(
+                        _translate("LoginDialog", "Username")
+                    )
+                    tab["passwordLabel"].setText(
+                        _translate("LoginDialog", "Password")
+                    )
+                    tab["warningLabel"].setText(
+                        _translate(
+                            "LoginDialog",
+                            '<html><head/><body><p><span style=" font-weight:700; color:#c01c28;">Warning: </span><span style=" color:#000000;">Credentials are stored as plain text in the project file!</span></p></body></html>',
+                        )
+                    )
+                    tab["authButton"].setText(
+                        _translate(
+                            "LoginDialog", "Authenticate with internal log in"
+                        )
+                    )
                 else:
-                    tab["oidcInfoLabel"].setText(_translate("LoginDialog","Pressing the button below may open a new browser window for login"))    
-                    tab["authButton"].setText(_translate("LoginDialog", "Log in to ") + auth_provider["title"])
-                
+                    tab["oidcInfoLabel"].setText(
+                        _translate(
+                            "LoginDialog",
+                            "Pressing the button below may open a new browser window for login",
+                        )
+                    )
+                    tab["authButton"].setText(
+                        _translate("LoginDialog", "Log in to ")
+                        + auth_provider["title"]
+                    )
+
                 if "description" in auth_provider:
-                    tab["description"].setText(auth_provider["description"]) #TODO: use qt info icon
+                    tab["description"].setText(
+                        auth_provider["description"]
+                    )  # TODO: use qt info icon

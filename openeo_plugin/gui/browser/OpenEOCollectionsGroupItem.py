@@ -8,6 +8,7 @@ from qgis.core import QgsApplication
 
 from . import OpenEOCollectionItem
 
+
 class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
     """
     QgsDataCollectionItem that groups together all collections offered by the corresponding
@@ -15,6 +16,7 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
     Direct parent to:
      - OpenEOCollectionLayerItem
     """
+
     def __init__(self, plugin, parent):
         """Constructor.
 
@@ -25,7 +27,9 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
         :param parent_connection: the parent DataItem. expected to be OpenEOConnectionItem.
         :type parent: QgsDataItem
         """
-        QgsDataCollectionItem.__init__(self, parent, "Collections", plugin.PLUGIN_ENTRY_NAME)
+        QgsDataCollectionItem.__init__(
+            self, parent, "Collections", plugin.PLUGIN_ENTRY_NAME
+        )
         self.plugin = plugin
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
@@ -34,7 +38,9 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
             collections = self.getConnection().list_collections()
             return collections
         except Exception as e:
-            self.plugin.logging.error("Can't load list of collections.", error=e)
+            self.plugin.logging.error(
+                "Can't load list of collections.", error=e
+            )
         return []
 
     def refresh(self):
@@ -48,30 +54,28 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
             # determine whether collectionItem or LayerItem
             if len(self.getWebMapLinks(collection)) > 0:
                 item = OpenEOCollectionItem(
-                    parent=self, 
+                    parent=self,
                     collection=collection,
                     plugin=self.plugin,
-                    preview=True
+                    preview=True,
                 )
                 sip.transferto(item, self)
                 items.append(item)
             else:
                 item = OpenEOCollectionItem(
-                    parent=self, 
-                    collection=collection,
-                    plugin=self.plugin
+                    parent=self, collection=collection, plugin=self.plugin
                 )
                 sip.transferto(item, self)
                 items.append(item)
         return items
-    
+
     def getConnection(self):
         return self.parent().getConnection()
-    
+
     def getWebMapLinks(self, collection):
         """
-        helper-function that determines whether or not a collection of this 
-        connection contains a web-map-link 
+        helper-function that determines whether or not a collection of this
+        connection contains a web-map-link
         """
         webMapLinks = []
         links = collection["links"]
@@ -91,8 +95,12 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
                 #     webMapLinks.append(link)
 
         return webMapLinks
-    
-    def actions(self, parent):        
-        action_refresh = QAction(QgsApplication.getThemeIcon("mActionRefresh.svg"), "Refresh", parent)
+
+    def actions(self, parent):
+        action_refresh = QAction(
+            QgsApplication.getThemeIcon("mActionRefresh.svg"),
+            "Refresh",
+            parent,
+        )
         action_refresh.triggered.connect(self.refresh)
         return [action_refresh]

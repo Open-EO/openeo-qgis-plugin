@@ -1,7 +1,6 @@
 import requests
-import pathlib
 from pathlib import Path
-import os
+from urllib.parse import urlparse
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -21,7 +20,7 @@ from qgis.core import QgsCoordinateTransformContext
 from qgis.core import QgsApplication
 
 class OpenEOStacAssetItem(QgsDataItem):
-    def __init__(self, assetDict, parent, plugin):
+    def __init__(self, assetDict, key, parent, plugin):
         """Constructor.
         :param assetDict: a dict representing a STAC asset according to stac specifications
         :type assetDict: dict
@@ -40,12 +39,13 @@ class OpenEOStacAssetItem(QgsDataItem):
             self,
             type = Qgis.BrowserItemType.Custom,
             parent = parent,
-            name = assetDict.get("title", "asset"),
+            name = assetDict.get("title", key),
             path = None,
             providerKey = plugin.PLUGIN_ENTRY_NAME
         )
 
         self.asset = assetDict
+        self.key = key
         self.plugin = plugin
         self.uris = None #initialise
         self.uris = self.mimeUris()
@@ -156,54 +156,64 @@ class OpenEOStacAssetItem(QgsDataItem):
         else:
             self.plugin.logging.warning("The file format is not supported by the plugin.")
         return None
-
-    def _downloadAsset(self, dir=None):
-        r = requests.get(href)
+    
+    def download(self):
+        QApplication.setOverrideCursor(Qt.BusyCursor)
+        try:
+            path = self.downloadAsset()
+            self.plugin.logging.success(f"File saved to {path}")
+        except Exception as e:
+            self.plugin.logging.error(f"Can't download the asset {self.name()}.", error=e)
+        finally:
+            QApplication.restoreOverrideCursor()
+    
+    def downloadAsset(self, dir=None):
         href = self.asset.get("href")
     
         if not href:
-            self.plugin.logging.error("Asset is missing 'href' and cannot be downloaded.")
-            return
+            raise ValueError("Asset is missing 'href' and cannot be downloaded.")
+    
+        dir = Path(dir) if dir else self.downloadFolder()
+        
+        local = self.asset.get("file:local_path")
+        if local:
+            path = dir / local
+        else:
+            remote_path = Path(urlparse(href).path)
+            path = dir / remote_path.name
 
-        if not dir:
-            path = Path.home() / 'Downloads' / self.name()
-        else: 
-            path = Path(dir) / self.name()
+        path.parent.mkdir(parents=True, exist_ok=True)
 
-        #check if file exists and append a number if it does
-        filename, extension = os.path.splitext(path)
-        i = 1
-        while os.path.exists(path):
-            path = f"{filename} ({i}){extension}"
+        # check if file exists and append a number if it does
+        filename = path.stem
+        i = 2
+        while path.exists():
+            path = path.with_stem(f"{filename}_({i})")
             i += 1
 
-        #save file
-        with open(path, 'wb') as f:
-            f.write(r.content)
-        self.plugin.logging.success(f"File saved to {path}")
+        # stream data to file
+        with requests.get(href, stream=True) as r:
+            r.raise_for_status()
+            with open(path, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=10 * 1024 * 1024): # 10 MB chunk size
+                    f.write(chunk)
+
+        return path
+    
+    def downloadFolder(self):
+        return Path.home() / 'Downloads'
 
     def downloadTo(self):
-        downloadPath = pathlib.Path.home() / 'Downloads'
         dir = QFileDialog.getExistingDirectory(
             caption="Save Result to...",
-            directory=str(downloadPath)
+            directory=str(self.downloadFolder())
         )
         try:
             QApplication.setOverrideCursor(Qt.BusyCursor)
-            self._downloadAsset(dir)
-            dirStr = f"file://{str(dir)}"
-            QDesktopServices.openUrl(QUrl(dirStr, QUrl.TolerantMode))
+            self.downloadAsset(dir=dir)
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
         except Exception as e:
-            self.plugin.logging.error(f"Can't save the asset {link} to directory {dir}.", error=e)
-        finally:
-            QApplication.restoreOverrideCursor()
-
-    def saveToDownloads(self, dir=None):
-        try:
-            QApplication.setOverrideCursor(Qt.BusyCursor)
-            self._downloadAsset(dir)
-        except Exception as e:
-            self.plugin.logging.error(f"Can't download the asset {self.asset.get("href", "[unknown url]")}.", error=e)
+            self.plugin.logging.error(f"Can't download the asset {self.name()} to {dir}.", error=e)
         finally:
             QApplication.restoreOverrideCursor()
 
@@ -216,7 +226,7 @@ class OpenEOStacAssetItem(QgsDataItem):
             actions.append(action_add_to_project)
         
         action_download = QAction(QIcon(), "Download", parent)
-        action_download.triggered.connect(self.saveToDownloads)
+        action_download.triggered.connect(self.download)
         actions.append(action_download)
 
         action_downloadTo = QAction(QIcon(), "Download to...", parent)

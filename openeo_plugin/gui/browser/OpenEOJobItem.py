@@ -126,6 +126,7 @@ class OpenEOJobItem(QgsDataItem):
             for key in assets:
                 assetItem = OpenEOStacAssetItem(
                     assetDict=assets[key],
+                    key=key,
                     parent=self,
                     plugin=self.plugin
                 )
@@ -204,16 +205,30 @@ class OpenEOJobItem(QgsDataItem):
             caption="Save Results to...",
             directory=str(downloadPath)
         )
-        try:
-            QApplication.setOverrideCursor(Qt.WaitCursor)
-            for asset in self.assetItems:
-                asset._downloadAsset(dir)
-            dirStr = f"file://{str(dir)}"
-            QDesktopServices.openUrl(QUrl(dirStr, QUrl.TolerantMode))
-        except Exception as e:
-            self.plugin.logging.error(f"Can't save results to directory for job {self.getTitle()}.", error=e)
-        finally:
-            QApplication.restoreOverrideCursor()
+
+        QApplication.setOverrideCursor(Qt.BusyCursor)
+        errors = 0
+        for asset in self.assetItems:
+            try:
+                path = asset.downloadAsset(dir=dir)
+                self.plugin.logging.debug(f"File saved to {path}")
+            except Exception as e:
+                errors += 1
+                self.plugin.logging.error(f"Can't download the asset {asset.name()}.", error=e)
+        
+        QApplication.restoreOverrideCursor()
+        if errors == len(self.assetItems):
+            if errors == 1:
+                pass # Error already logged above
+            else:
+                self.plugin.logging.error("No results were downloaded.")
+        else:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
+            if errors > 0:
+                self.plugin.logging.warning(f"Finished downloading results with {errors} errors to {dir}.")
+            else:
+                self.plugin.logging.success(f"Finished downloading all results to {dir}.")
+        
 
     def actions(self, parent):
         actions = []

@@ -69,7 +69,9 @@ class Logging():
         if isinstance(error, Exception):
             message += f" Reason: {str(error)}"
 
-        self.messageLog.logMessage(message, self.tag, level, notifyUser=show)
+        debug = level == Qgis.Info and not show
+        if not debug or self.developerMode:
+            self.messageLog.logMessage(message, self.tag, level, notifyUser=show)
 
         if self.developerMode:
             title = self.getTitle(level, show)

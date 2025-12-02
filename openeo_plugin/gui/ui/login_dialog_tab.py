@@ -1,6 +1,5 @@
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QStyle
 
 from .login_dialog import Ui_LoginDialog
 

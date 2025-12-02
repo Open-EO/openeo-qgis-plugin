@@ -115,7 +115,6 @@ class OpenEOServiceItem(QgsDataItem):
                     break
             layerID = None
             layerID = list(wmts.contents)[0]
-            styleID = wmts.contents[layerID].styles
 
             #TODO: determine more URI parameters programmatically
             uri.uri = f"crs=EPSG:3857&styles=default&tilePixelRatio=0&format=image/png&layers={layerID}&tileMatrixSet={tileMatrixSet}&url={link["href"]}"

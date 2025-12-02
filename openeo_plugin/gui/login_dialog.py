@@ -66,7 +66,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                         provider["type"] = "oidc"
                         providers.append(provider)
             except openeo.rest.OpenEoApiError as e:
-                self.plugin.logging.error(f"Can't load the OpenID Connect provider list.", error=e)
+                self.plugin.logging.error("Can't load the OpenID Connect provider list.", error=e)
 
         # Add Basic provider
         basic_path = "/credentials/basic"
@@ -108,7 +108,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                 #TODO: add checkmark to select whether to save login
                 self.credentials = (auth_provider["type"], self.username, self.password)
                 return True
-            except openeo.rest.OpenEoApiError as e:
+            except openeo.rest.OpenEoApiError:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Critical)
                 msg.setText("Login Failed")

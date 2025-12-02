@@ -35,8 +35,6 @@ from urllib.parse import (urlencode, urlparse, urlunparse, parse_qs,
                           ParseResult)
 from owslib.etree import etree
 from owslib.util import clean_ows_url, testXMLValue, getXMLInteger, Authentication, openURL, getXMLTree, nspath
-from owslib.fgdc import Metadata
-from owslib.iso import MD_Metadata
 from owslib.ows import ServiceProvider, ServiceIdentification, OperationsMetadata
 
 

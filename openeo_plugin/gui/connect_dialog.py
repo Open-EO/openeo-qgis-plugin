@@ -4,8 +4,7 @@ import openeo
 import requests
 
 from qgis.PyQt import uic
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication
+from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QApplication
 
 #from .ui.connect_dialog import Ui_ConnectDialog as FORM_CLASS
@@ -108,7 +107,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
     def getHubBackends(self):
         try:
             backendUrl = requests.get('{}/api/backends'.format(self.HUB_URL), timeout=5)
-        except:
+        except Exception:
             hubBackends = {}
 
         if backendUrl.status_code == 200:

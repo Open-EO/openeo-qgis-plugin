@@ -97,3 +97,5 @@ To compile the plugin run the following command in the `./openeo_plugin` directo
     pb_tool compile
      
 Compiling is needed any time the resources.py file needs to be rebuilt and the .ui files are modified.
+
+Upon changes to `.pre-commit-config.yaml`, run `pre-commit install`

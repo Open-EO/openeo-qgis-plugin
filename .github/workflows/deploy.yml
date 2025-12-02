@@ -6,15 +6,20 @@ on:
       - '*'  # triggers on tags starting with "deploy"
 
 jobs:
-  precommit:
-    uses: ./.github/workflows/linter.yml
-
   deploy:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+
+    - name: Run pre-commit hooks
+      run: pre-commit run --all-files
 
     # Check metadata.txt for version number
     - name: Check metadata
@@ -28,14 +33,14 @@ jobs:
         zip -r openeo_plugin.zip openeo_plugin
 
     # Upload ZIP file as an artifact. to inspect the ZIP in the workflow UI
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v5
       with:
         name: openeo_plugin.zip
         path: openeo_plugin.zip
 
     # Create or update GitHub Release and upload ZIP as asset
     - name: Create Release and upload ZIP
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ github.ref_name }}
         name: ${{ github.ref_name }}

@@ -19,20 +19,17 @@ from .ui.login_dialog_tab import Ui_DynamicLoginDialog
 
 class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
     """
-    This class is responsible for showing the provider-authencication window to set up authentication with the backend.
+    This class is responsible for showing the provider-authentication window to set up authentication with the backend.
     """
-    def __init__(self, connection=None, model=None, parent=None, iface=None):
+    def __init__(self, plugin, connection, model=None):
 
         super(LoginDialog, self).__init__()
         QApplication.setStyle("cleanlooks")
 
-        self.iface = iface
-        self.parent = parent
-        self.plugin = None
-        if parent:
-            self.plugin = parent.plugin
+        self.plugin = plugin
         self.connection = connection
         self.activeAuthProvider = None
+        self.credentials = None
         
         if hasattr(self.connection, 'list_auth_providers'):
             self.auth_provider_list = self.connection.list_auth_providers()
@@ -69,7 +66,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                         provider["type"] = "oidc"
                         providers.append(provider)
             except openeo.rest.OpenEoApiError as e:
-                self.parent.logging.warning(self.iface, f"Unable to load the OpenID Connect provider list: {e.message}")
+                self.plugin.logging.error(f"Can't load the OpenID Connect provider list.", error=e)
 
         # Add Basic provider
         basic_path = "/credentials/basic"
@@ -107,9 +104,9 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
     def authenticate(self, auth_provider, tab=None):
         if auth_provider["type"] == "basic":
             try:
-                self.parent.getConnection().authenticate_basic(self.username, self.password)
+                self.connection.authenticate_basic(self.username, self.password)
                 #TODO: add checkmark to select whether to save login
-                self.parent.saveLogin(auth_provider["type"],self.username, self.password)
+                self.credentials = (auth_provider["type"], self.username, self.password)
                 return True
             except openeo.rest.OpenEoApiError as e:
                 msg = QMessageBox()
@@ -118,9 +115,9 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                 msg.setInformativeText('Account name or password incorrect')
                 msg.setWindowTitle("Login Failed")
                 msg.exec_()
+                return False
             except Exception as e:
-                self.parent.logging.warning(self.iface, "Login Failed: something went wrong. See log for details")
-                print(str(e))
+                self.plugin.logging.error("Can't log in with HTTP Basic.", error=e)
                 return False
 
         elif auth_provider["type"] == "oidc":
@@ -147,36 +144,30 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                     time.sleep(0.1)  # short wait before checking again
 
                 if url_found:
-                    msg = f"Opening browser to: {url_found}"
-                    self.plugin.logging.info(msg)
+                    self.plugin.logging.info(f"Opening browser to: {url_found}")
                     webbrowser.open(url_found)
                 else:
-                    #self.iface.messageBar().pushMessage("Error", "No URL found before the login has been cancelled by QGIS. Please try again.")
-                    print("No URL found before auth finished.")
+                    pass
 
                 auth_thread.join()
-                self.parent.saveLogin(auth_provider["type"])
+                self.credentials = (auth_provider["type"], )
                 self.accept() # Close the dialog
-                return
-            except AttributeError as e:
-                self.plugin.logging.error()
-                self.iface.messageBar().pushMessage("Error", "Login failed as the connection is missing. Please try again.")
+                return True
+            except AttributeError:
+                self.plugin.logging.error("Can't log in with OpenID Connect as the connection is missing.")
                 
                 self.reject()
-                return
+                return False
             except Exception as e:
-                msg = QMessageBox()
-                self.plugin.logging.error(e)
-                msg.setText("Authentication Failed")
-                msg.setInformativeText('See logs for details')
-                msg.setWindowTitle("Authentication Failed")
-                msg.exec_()
-                print(str(e))
+                self.plugin.logging.error("Can't log in with OpenID Connect.", error=e)
                 return False
             finally:
                 # reset waiting indicator
                 tab["authButton"].setDisabled(False)
                 tab["authButton"].setText(btn_text)
+
+    def getCredentials(self):
+        return self.credentials
 
     def _run_auth(self, capture_buffer):
         # Redirect stdout for this thread only

@@ -34,8 +34,7 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
             collections = self.getConnection().list_collections()
             return collections
         except Exception as e:
-            self.plugin.logging.logError(e)
-            self.plugin.logging.error("Fetching collections failed. See log for details")
+            self.plugin.logging.error("Can't load list of collections.", error=e)
         return []
 
     def refresh(self):

@@ -66,8 +66,7 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         except openeo.rest.OpenEoApiError:
             return [] #this happens when authentication is missing
         except Exception as e:
-            self.plugin.logging.logError(e)
-            self.plugin.logging.error("Fetching services failed. See log for details")
+            self.plugin.logging.error("Can't load list of services.", error=e)
         return []
     
     def actions(self, parent):

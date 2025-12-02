@@ -136,7 +136,7 @@ class OpenEOServiceItem(QgsDataItem):
 
         service = self.service
         if not service:
-            self.plugin.logging.warning(self.plugin.iface, "Could not detect a layer from the given source.")
+            self.plugin.logging.warning("The given service is not supported or is invalid.")
             return mimeUris
 
         QApplication.setOverrideCursor(Qt.BusyCursor)
@@ -147,11 +147,7 @@ class OpenEOServiceItem(QgsDataItem):
             if mimeUri:
                 mimeUris.append(mimeUri)
         except Exception as e:
-            print(e)
-            self.plugin.logging.warning(
-                self.plugin.iface,
-                f"Loading the map service {service['url']} failed."
-            )
+            self.plugin.logging.error(f"Can't visualize the service {service['url']}.", error=e)
         finally:
             QApplication.restoreOverrideCursor()
 

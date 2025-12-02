@@ -124,7 +124,7 @@ class OpenEOCollectionItem(QgsDataItem):
 
         webMapLinks = self.parent().getWebMapLinks(self.collection)
         if len(webMapLinks) == 0:
-            self.plugin.logging.warning(self.plugin.iface, "Could not detect a layer from the given source.")
+            self.plugin.logging.warning("The collection does not provide any web map services for preview.")
             return mimeUris
 
         QApplication.setOverrideCursor(Qt.BusyCursor)
@@ -135,11 +135,7 @@ class OpenEOCollectionItem(QgsDataItem):
                 mimeUri = self.createUri(link)
                 mimeUris.append(mimeUri)
             except Exception as e:
-                print(e)
-                self.plugin.logging.warning(
-                    self.plugin.iface,
-                    f"Loading the map service {link['href']} failed."
-                )
+                self.plugin.logging.error(f"Can't visualize the mapping service {link['href']} for collection {self.collection['id']}.", error=e)
         
         QApplication.restoreOverrideCursor()
 

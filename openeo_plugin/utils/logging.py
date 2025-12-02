@@ -1,75 +1,94 @@
 import pathlib
-from qgis.core import QgsMessageLog, Qgis
+
+from qgis.core import QgsApplication, QgsMessageLog, Qgis
 from datetime import datetime
 
 class Logging():
-    def __init__(self, iface):
-        self.iface = iface 
-        self.messageLog = QgsMessageLog()
+    def __init__(self, iface, logger: QgsMessageLog=None):
+        self.developerMode = False
+        self.iface = iface
+        self.tag = 'openEO'
+        self.logPath = pathlib.Path.home() / 'openeo_qgis_log.txt'
+        self.messageLog = logger if logger else QgsApplication.messageLog()
+        self.messageLog.messageReceived.connect(self.on_message)
 
-    def warning(self, message, duration=5):
-        self.logError(f"[WARNING] {message}")
+    def on_message(self, message, tag, level):
+        if tag != self.tag:
+            return
+
+        title = self.getTitle(level)
+        match level:
+            case Qgis.Warning:
+                duration = 20
+            case Qgis.Critical:
+                duration = 20
+            case _: # Info & Success
+                duration = 10
+        
         self.iface.messageBar().pushMessage(
-            "Warning",
+            title,
             message,
-            level=Qgis.Warning,
+            level=level,
             duration=duration
         )
 
-    def error(self, message, errorMessage=None):
-        error = self.createErrorMessage(message)
-        if not errorMessage:
-            errorMessage = error
-        self.logError(error)
-        self.showErrorToUser(errorMessage)
+    def success(self, message):
+        self._handleMessage(message, level=Qgis.Success)
 
-    def showErrorToUser(self, message, duration=5):
-        message = str(message) #stringify in case it isn't
-        self.messageLog.logMessage(message, tag='openEO', notifyUser=True, level=Qgis.Critical)
+    def warning(self, message, error=None):
+        self._handleMessage(message, level=Qgis.Warning, error=error)
 
-    def showSuccessToUser(self, message, duration = 5):
-        message = str(message) #stringify in case it isn't
-        self.iface.messageBar().pushMessage(
-            "Success",
-            message,
-            level=Qgis.Success,
-            duration=duration
-        )
+    def error(self, message, error=None):
+        self._handleMessage(message, level=Qgis.Critical, error=error)
 
-    def info(self, message, duration = 5):
-        message = str(message) #stringify in case it isn't
-        self.iface.messageBar().pushMessage(
-            "Info",
-            message,
-            level=Qgis.Info,
-            duration=duration
-        )
+    def info(self, message):
+        self._handleMessage(message, level=Qgis.Info)
 
-    @staticmethod
-    def logError(message, dir=None):
-        message = str(message) #stringify in case it isn't
-        if not dir:
-            #log to home directory
-            dir = pathlib.Path.home() / 'openeo_qgis_log.txt'
-        # create logfile if not exists
+    def debug(self, message, error=None):
+        self._handleMessage(message, level=Qgis.Info, show=False, error=error)
+
+    def getTitle(self, level: Qgis.MessageLevel, show = True) -> str:
+        match level:
+            case Qgis.Success:
+                return "Success"
+            case Qgis.Warning:
+                return "Warning"
+            case Qgis.Critical:
+                return "Error"
+            case _:
+                return "Info" if show else "Debug"
+
+    def _handleMessage(
+            self,
+            message: str,
+            level: Qgis.MessageLevel=Qgis.Info,
+            error: Exception=None,
+            show: bool=True
+        ):
+        message = str(message)
+        if isinstance(error, Exception):
+            message += f" Reason: {str(error)}"
+
+        self.messageLog.logMessage(message, self.tag, level, notifyUser=show)
+
+        if self.developerMode:
+            title = self.getTitle(level, show)
+            self._addToLogFile(f"[{title}] {message}")
+
+    def _addToLogFile(self, message):
+        if not self.logPath:
+            return
+
         try:
-            open(dir, 'x')
-        except FileExistsError:
-            pass #nothing because file exists
-        
-        with open(dir, 'a') as logFile:    
-            logFile.write(message)
-            logFile.write('\n')
-
-    @staticmethod
-    def printError(message):
-        print(message)
-    
-    @staticmethod
-    def createErrorMessage(message):
-        message = str(message) #stringify in case it isn't
-        timestamp = str(datetime.now())
-        prefix = timestamp.ljust(28, " ") #write padded timestamp
-        prefix = f"{prefix}:"
-        return f"{prefix} {message}"
-        
+            with open(self.logPath, 'a') as logFile:
+                logFile.write(str(datetime.now()).ljust(28))
+                logFile.write(message)
+                logFile.write('\n')
+        except Exception as e:
+            self.logPath = None
+            self.logMessage(
+                f"Failed to write to log file: {str(e)}",
+                tag='openEO',
+                level=Qgis.Info,
+                show=False
+            )

@@ -154,13 +154,19 @@ class OpenEOStacAssetItem(QgsDataItem):
                 project.addMapLayer(layer)
             return layer
         else:
-            self.plugin.logging.warning(self.plugin.iface, "The file format is not supported by the plugin")
+            self.plugin.logging.warning("The file format is not supported by the plugin.")
         return None
     
     def downloadAsset(self, dir=None):
+        href = self.asset.get("href")
+        if not href:
+            self.plugin.logging.error("Asset is missing 'href' and cannot be downloaded.")
+            return
+
         try:
             QApplication.setOverrideCursor(Qt.BusyCursor)
-            r = requests.get(self.asset.get("href", ""))
+            
+            r = requests.get(href)
             if not dir:
                 path = Path.home() / 'Downloads' / self.name()
             else: 
@@ -176,10 +182,9 @@ class OpenEOStacAssetItem(QgsDataItem):
             #save file
             with open(path, 'wb') as f:
                 f.write(r.content)
-            self.plugin.logging.showSuccessToUser(f"File saved to {path}")
+            self.plugin.logging.success(f"File saved to {path}")
         except Exception as e:
-            self.plugin.logging.warning(self.plugin.iface, "Download failed")
-            raise e
+            self.plugin.logging.error(f"Can't download the asset {href}.", error=e)
         finally:
             QApplication.restoreOverrideCursor()
 
@@ -190,11 +195,12 @@ class OpenEOStacAssetItem(QgsDataItem):
             directory=str(downloadPath)
         )
         try:
+            QApplication.setOverrideCursor(Qt.BusyCursor)
             self.downloadAsset(dir=dir)
             dirStr = f"file://{str(dir)}"
             QDesktopServices.openUrl(QUrl(dirStr, QUrl.TolerantMode))
         except Exception as e:
-            print(e)
+            self.plugin.logging.error(f"Can't save asset to directory {dir}.", error=e)
         finally:
             QApplication.restoreOverrideCursor()
 

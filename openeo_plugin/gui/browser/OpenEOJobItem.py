@@ -97,7 +97,7 @@ class OpenEOJobItem(QgsDataItem):
                 self.job = job.describe()
                 self.updateFromData()
             except Exception as e:
-                self.plugin.logging.error(e)
+                self.plugin.logging.error(f"Can't load job '{self.getTitle()}'.", error=e)
                 return self.job
 
         if (force or self.results is None) and self.getStatus() in mayHaveResults:
@@ -108,7 +108,7 @@ class OpenEOJobItem(QgsDataItem):
                 else:
                     self.results = None
             except Exception as e:
-                self.plugin.logging.error(e)
+                self.plugin.logging.error(f"Can't load results for job {self.getTitle()}.", error=e)
 
         return self.job
 
@@ -159,21 +159,26 @@ class OpenEOJobItem(QgsDataItem):
                 fp.write(jobInfoHTML)
             webbrowser.open_new(url)
         except Exception as e:
-            QApplication.restoreOverrideCursor()
-            self.plugin.logging.error(e)
+            self.plugin.logging.error(f"Can't show job details for job {self.getTitle()}.", error=e)
         finally:
             QApplication.restoreOverrideCursor()
 
 
     def getStatus(self):
+        if not self.job:
+            return "unknown"
         return self.job.get("status", "unknown")
 
+    def getTitle(self):
+        if not self.job:
+            return "n/a"
+        return self.job.get("title") or self.job.get("id")
     def addResultsToProject(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
             self.populateAssetItems()
             # create group
-            jobName = self.job.get("title") or self.job.get("id")
+            jobName = self.getTitle()
             project = QgsProject.instance()
             group = project.layerTreeRoot().insertGroup(0, jobName)
 
@@ -186,14 +191,11 @@ class OpenEOJobItem(QgsDataItem):
                 project.addMapLayer(layer, False) #add to project without showing
                 group.addLayer(layer) #add to the group
         except Exception as e:
-            self.plugin.logging.logError(e)
-            self.plugin.logging.showErrorToUser(
-                f"Adding Results to Project failed"
-            )
+            self.plugin.logging.error(f"Can't add results to project for job {self.getTitle()}.", error=e)
         finally:            
             QApplication.restoreOverrideCursor()
             if not allValid:
-                self.plugin.logging.warning("One or more result assets do not produce valid layers")
+                self.plugin.logging.warning(f"One or more result assets for job {self.getTitle()} can't be visualized")
 
     def saveResultsTo(self):
         self.populateAssetItems()
@@ -209,7 +211,7 @@ class OpenEOJobItem(QgsDataItem):
             dirStr = f"file://{str(dir)}"
             QDesktopServices.openUrl(QUrl(dirStr, QUrl.TolerantMode))
         except Exception as e:
-            self.plugin.logging.error(e)
+            self.plugin.logging.error(f"Can't save results to directory for job {self.getTitle()}.", error=e)
         finally:
             QApplication.restoreOverrideCursor()
 

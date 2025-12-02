@@ -207,7 +207,8 @@ class OpenEOJobItem(QgsDataItem):
         try:
             QApplication.setOverrideCursor(Qt.WaitCursor)
             for asset in self.assetItems:
-                asset.downloadAsset(dir=dir)
+                link = asset.asset.get("href")
+                asset._downloadAsset(link, dir)
             dirStr = f"file://{str(dir)}"
             QDesktopServices.openUrl(QUrl(dirStr, QUrl.TolerantMode))
         except Exception as e:

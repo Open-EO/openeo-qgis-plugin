@@ -165,7 +165,7 @@ class OpenEOJobItem(QgsDataItem):
 
 
     def getStatus(self):
-        if not self.job or "status":
+        if not self.job:
             return "unknown"
         return self.job.get("status", "unknown")
 
@@ -173,7 +173,6 @@ class OpenEOJobItem(QgsDataItem):
         if not self.job:
             return "n/a"
         return self.job.get("title") or self.job.get("id")
-
     def addResultsToProject(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:

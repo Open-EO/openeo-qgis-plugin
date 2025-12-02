@@ -19,6 +19,7 @@ jobs:
     # Add your deploy steps below
     - name: Run deploy script
       run: |
+        cp LICENSE openeo_plugin/LICENSE
         zip -r openeo_plugin.zip openeo_plugin
 
     # Upload ZIP file as an artifact. to inspect the ZIP in the workflow UI
@@ -32,7 +33,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ github.ref_name }}
-        name: Release ${{ github.ref_name }}
+        name: ${{ github.ref_name }}
         files: openeo_plugin.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

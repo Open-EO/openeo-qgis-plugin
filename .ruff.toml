@@ -1,0 +1,7 @@
+# Set line length
+# PEP8 specified 79 chars
+line-length = 79
+
+[format]
+# Use double quotes for strings
+quote-style = "double"

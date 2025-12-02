@@ -158,12 +158,13 @@ class OpenEOStacAssetItem(QgsDataItem):
         return None
     
     def downloadAsset(self, dir=None):
+        href = self.asset.get("href")
+        if not href:
+            self.plugin.logging.error("Asset is missing 'href' and cannot be downloaded.")
+            return
+
         try:
             QApplication.setOverrideCursor(Qt.BusyCursor)
-            href = self.asset.get("href")
-            if not href:
-                self.plugin.logging.error("Asset is missing 'href' and cannot be downloaded.")
-                return
             
             r = requests.get(href)
             if not dir:

@@ -159,16 +159,19 @@ class OpenEOJobItem(QgsDataItem):
                 fp.write(jobInfoHTML)
             webbrowser.open_new(url)
         except Exception as e:
-            QApplication.restoreOverrideCursor()
             self.plugin.logging.error(f"Can't show job details for job {self.getTitle()}.", error=e)
         finally:
             QApplication.restoreOverrideCursor()
 
 
     def getStatus(self):
+        if not self.job or "status":
+            return "unknown"
         return self.job.get("status", "unknown")
 
     def getTitle(self):
+        if not self.job:
+            return "n/a"
         return self.job.get("title") or self.job.get("id")
 
     def addResultsToProject(self):

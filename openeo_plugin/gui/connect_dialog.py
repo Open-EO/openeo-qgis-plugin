@@ -68,7 +68,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         name = self.conn_name_edit.text()
 
         if not url:
-            self.plugin.logging.info("Please provide a URL.")
+            self.plugin.logging.error("Please provide a URL.")
             return
 
         self.connect_button.setDisabled(True)

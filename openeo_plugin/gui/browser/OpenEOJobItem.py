@@ -269,7 +269,9 @@ class OpenEOJobItem(QgsDataItem):
                             )
                     QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
                 else:
-                    self.plugin.logging.error("Download failed", e=exception)
+                    self.plugin.logging.error(
+                        "Download failed", error=exception
+                    )
 
             downloadTask = QgsTask.fromFunction(
                 f"Download job results: {self.job.get('title') or self.job.get('id')}",

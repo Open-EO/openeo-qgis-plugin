@@ -18,6 +18,7 @@ from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsCoordinateTransformContext
 from qgis.core import QgsApplication
+from qgis.core import QgsTask
 
 
 class OpenEOStacAssetItem(QgsDataItem):
@@ -223,19 +224,46 @@ class OpenEOStacAssetItem(QgsDataItem):
         return Path.home() / "Downloads"
 
     def downloadTo(self):
-        dir = QFileDialog.getExistingDirectory(
-            caption="Save Result to...", directory=str(self.downloadFolder())
-        )
-        try:
-            QApplication.setOverrideCursor(Qt.BusyCursor)
-            self.downloadAsset(dir=dir)
-            QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
-        except Exception as e:
-            self.plugin.logging.error(
-                f"Can't download the asset {self.name()} to {dir}.", error=e
+        downloadPath = self.downloadFolder()
+
+        # prepare file dialog
+        dlg = QFileDialog()
+        dlg.setFileMode(QFileDialog.FileMode.Directory)
+        dlg.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
+        dlg.setDirectory(str(downloadPath))
+        dlg.setWindowTitle("Download Results to...")
+
+        result = dlg.exec()
+
+        if result:
+            dir = dlg.selectedUrls()[0]
+            if dir.isLocalFile() or dir.isEmpty():
+                dir = dir.toLocalFile()
+            else:
+                dir = dir.toString()
+
+            def downloadAsset(task):
+                self.downloadAsset(dir=dir)
+
+            def downloadFinished(exception, result=None):
+                if exception:
+                    self.plugin.logging.error(
+                        f"Can't download the asset {self.name()} to {dir}.",
+                        error=exception,
+                    )
+                else:
+                    self.plugin.logging.success(
+                        f"Finished downloading asset {self.name()} to {dir}."
+                    )
+                    QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
+
+            downloadTask = QgsTask.fromFunction(
+                f"Download Asset: {self.name()}",
+                downloadAsset,
+                on_finished=downloadFinished,
             )
-        finally:
-            QApplication.restoreOverrideCursor()
+            taskManager = QgsApplication.taskManager()
+            taskManager.addTask(downloadTask)
 
     def actions(self, parent):
         actions = []

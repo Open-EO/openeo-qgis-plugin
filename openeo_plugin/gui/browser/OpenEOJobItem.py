@@ -210,38 +210,49 @@ class OpenEOJobItem(QgsDataItem):
     def saveResultsTo(self):
         self.populateAssetItems()
         downloadPath = pathlib.Path.home() / "Downloads"
-        dir = QFileDialog.getExistingDirectory(
-            caption="Save Results to...", directory=str(downloadPath)
-        )
+        dlg = QFileDialog()
+        dlg.setFileMode(QFileDialog.FileMode.Directory)
+        dlg.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
+        dlg.setDirectory(str(downloadPath))
+        dlg.setWindowTitle("Download Results to...")
 
-        QApplication.setOverrideCursor(Qt.BusyCursor)
-        errors = 0
-        for asset in self.assetItems:
-            try:
-                path = asset.downloadAsset(dir=dir)
-                self.plugin.logging.debug(f"File saved to {path}")
-            except Exception as e:
-                errors += 1
-                self.plugin.logging.error(
-                    f"Can't download the asset {asset.name()}.", error=e
-                )
+        result = dlg.exec()
 
-        QApplication.restoreOverrideCursor()
-        if errors == len(self.assetItems):
-            if errors == 1:
-                pass  # Error already logged above
+        if result:
+            dir = dlg.selectedUrls()[0]
+            if dir.isLocalFile() or dir.isEmpty():
+                dir = dir.toLocalFile()
             else:
-                self.plugin.logging.error("No results were downloaded.")
-        else:
-            QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
-            if errors > 0:
-                self.plugin.logging.warning(
-                    f"Finished downloading results with {errors} errors to {dir}."
-                )
+                dir = dir.toString()
+
+            QApplication.setOverrideCursor(Qt.BusyCursor)
+            errors = 0
+            for asset in self.assetItems:
+                try:
+                    path = asset.downloadAsset(dir=dir)
+                    self.plugin.logging.debug(f"File saved to {path}")
+                except Exception as e:
+                    errors += 1
+                    self.plugin.logging.error(
+                        f"Can't download the asset {asset.name()}.", error=e
+                    )
+
+            QApplication.restoreOverrideCursor()
+            if errors == len(self.assetItems):
+                if errors == 1:
+                    pass  # Error already logged above
+                else:
+                    self.plugin.logging.error("No results were downloaded.")
             else:
-                self.plugin.logging.success(
-                    f"Finished downloading all results to {dir}."
-                )
+                QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
+                if errors > 0:
+                    self.plugin.logging.warning(
+                        f"Finished downloading results with {errors} errors to {dir}."
+                    )
+                else:
+                    self.plugin.logging.success(
+                        f"Finished downloading all results to {dir}."
+                    )
 
     def actions(self, parent):
         actions = []

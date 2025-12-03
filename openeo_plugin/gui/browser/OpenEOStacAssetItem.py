@@ -4,8 +4,6 @@ from urllib.parse import urlparse
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
-from qgis.PyQt.QtWidgets import QApplication
-from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtCore import QUrl
@@ -172,16 +170,25 @@ class OpenEOStacAssetItem(QgsDataItem):
         return None
 
     def download(self):
-        QApplication.setOverrideCursor(Qt.BusyCursor)
-        try:
+        def downloadAsset(task):
             path = self.downloadAsset()
-            self.plugin.logging.success(f"File saved to {path}")
-        except Exception as e:
-            self.plugin.logging.error(
-                f"Can't download the asset {self.name()}.", error=e
-            )
-        finally:
-            QApplication.restoreOverrideCursor()
+            return path
+
+        def downloadFinished(exception, result=None):
+            if exception:
+                self.plugin.logging.error(
+                    f"Can't download the asset {self.name()}.", error=exception
+                )
+            else:
+                self.plugin.logging.success(f"File saved to {result}")
+
+        downloadTask = QgsTask.fromFunction(
+            f"Download Asset: {self.name()}",
+            downloadAsset,
+            on_finished=downloadFinished,
+        )
+        taskManager = QgsApplication.taskManager()
+        taskManager.addTask(downloadTask)
 
     def downloadAsset(self, dir=None):
         href = self.asset.get("href")

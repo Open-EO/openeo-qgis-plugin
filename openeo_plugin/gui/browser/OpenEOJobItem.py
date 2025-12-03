@@ -13,6 +13,7 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtWidgets import QFileDialog
+from qgis.PyQt.QtWidgets import QProgressBar
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtCore import QUrl
 
@@ -209,8 +210,9 @@ class OpenEOJobItem(QgsDataItem):
                 )
 
     def saveResultsTo(self):
-        self.populateAssetItems()
         downloadPath = pathlib.Path.home() / "Downloads"
+
+        # prepare file dialog
         dlg = QFileDialog()
         dlg.setFileMode(QFileDialog.FileMode.Directory)
         dlg.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
@@ -220,6 +222,11 @@ class OpenEOJobItem(QgsDataItem):
         result = dlg.exec()
 
         if result:
+            # prepare progress bar
+            progressbar = QProgressBar()
+            self.plugin.iface.messageBar().pushWidget(progressbar)
+            progressBarWidget = self.plugin.iface.messageBar().currentItem()
+
             dir = dlg.selectedUrls()[0]
             if dir.isLocalFile() or dir.isEmpty():
                 dir = dir.toLocalFile()
@@ -227,12 +234,13 @@ class OpenEOJobItem(QgsDataItem):
                 dir = dir.toString()
 
             def downloadAssets():
-                QApplication.setOverrideCursor(Qt.BusyCursor)
+                self.populateAssetItems()
                 errors = 0
-                for asset in self.assetItems:
+                for i, asset in enumerate(self.assetItems):
                     try:
-                        path = asset.downloadAsset(dir=dir)
-                        self.plugin.logging.debug(f"File saved to {path}")
+                        asset.downloadAsset(dir=dir)
+                        progress = int((i / len(self.assetItems)) * 100)
+                        progressbar.setValue(progress)
                     except Exception as e:
                         errors += 1
                         self.plugin.logging.error(
@@ -240,21 +248,29 @@ class OpenEOJobItem(QgsDataItem):
                             error=e,
                         )
 
-                QApplication.restoreOverrideCursor()
                 if errors == len(self.assetItems):
                     if errors == 1:
                         pass  # Error already logged above
                     else:
+                        self.plugin.iface.messageBar().popWidget(
+                            progressBarWidget
+                        )
                         self.plugin.logging.error(
                             "No results were downloaded."
                         )
                 else:
                     QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
                     if errors > 0:
+                        self.plugin.iface.messageBar().popWidget(
+                            progressBarWidget
+                        )
                         self.plugin.logging.warning(
                             f"Finished downloading results with {errors} errors to {dir}."
                         )
                     else:
+                        self.plugin.iface.messageBar().popWidget(
+                            progressBarWidget
+                        )
                         self.plugin.logging.success(
                             f"Finished downloading all results to {dir}."
                         )

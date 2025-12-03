@@ -6,14 +6,12 @@ import os
 import tempfile
 import json
 import pathlib
-import threading
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtWidgets import QFileDialog
-from qgis.PyQt.QtWidgets import QProgressBar
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtCore import QUrl
 
@@ -21,6 +19,7 @@ from qgis.core import Qgis
 from qgis.core import QgsDataItem
 from qgis.core import QgsApplication
 from qgis.core import QgsProject
+from qgis.core import QgsTask
 
 from . import OpenEOStacAssetItem
 
@@ -222,25 +221,24 @@ class OpenEOJobItem(QgsDataItem):
         result = dlg.exec()
 
         if result:
-            # prepare progress bar
-            progressbar = QProgressBar()
-            self.plugin.iface.mainWindow().statusBar().addPermanentWidget(
-                progressbar, stretch=2
-            )
-
             dir = dlg.selectedUrls()[0]
             if dir.isLocalFile() or dir.isEmpty():
                 dir = dir.toLocalFile()
             else:
                 dir = dir.toString()
 
-            def downloadAssets():
+            def downloadAssets(task):
                 self.populateAssetItems()
                 errors = 0
                 for i, asset in enumerate(self.assetItems):
+                    if task.isCanceled():
+                        self.plugin.logging.info(
+                            f"Download canceled: {self.job.get('title') or self.job.get('id')}"
+                        )
+                        return None
                     try:
                         progress = int((i / len(self.assetItems)) * 100)
-                        progressbar.setValue(progress)
+                        task.setProgress(progress)
                         asset.downloadAsset(dir=dir)
                     except Exception as e:
                         errors += 1
@@ -248,33 +246,41 @@ class OpenEOJobItem(QgsDataItem):
                             f"Can't download the asset {asset.name()}.",
                             error=e,
                         )
-                progressbar.hide()
-                progressbar.setParent(None)
-                progressbar.deleteLater()
+                return errors
 
-                if errors == len(self.assetItems):
-                    if errors == 1:
-                        pass  # Error already logged above
+            def downloadFinished(exception, result=None):
+                if not exception:
+                    errors = result
+                    if errors == len(self.assetItems):
+                        if errors == 1:
+                            pass  # Error already logged above
+                        else:
+                            self.plugin.logging.error(
+                                "No results were downloaded."
+                            )
                     else:
-                        self.plugin.logging.error(
-                            "No results were downloaded."
-                        )
-                else:
+                        if errors > 0:
+                            self.plugin.logging.warning(
+                                f"Finished downloading results with {errors} errors to {dir}."
+                            )
+                        else:
+                            self.plugin.logging.success(
+                                f"Finished downloading all results to {dir}."
+                            )
                     QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
-                    if errors > 0:
-                        self.plugin.logging.warning(
-                            f"Finished downloading results with {errors} errors to {dir}."
-                        )
-                    else:
-                        self.plugin.logging.success(
-                            f"Finished downloading all results to {dir}."
-                        )
+                else:
+                    self.plugin.logging.error("Download failed", e=exception)
 
-            threading.Thread(target=downloadAssets, daemon=True).start()
+            downloadTask = QgsTask.fromFunction(
+                f"Download job results: {self.job.get('title') or self.job.get('id')}",
+                downloadAssets,
+                on_finished=downloadFinished,
+            )
+            taskManager = QgsApplication.taskManager()
+            taskManager.addTask(downloadTask)
 
     def actions(self, parent):
         actions = []
-
         job_properties = QAction(QIcon(), "Details", parent)
         job_properties.triggered.connect(self.viewProperties)
         actions.append(job_properties)

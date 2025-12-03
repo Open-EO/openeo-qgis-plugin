@@ -224,8 +224,9 @@ class OpenEOJobItem(QgsDataItem):
         if result:
             # prepare progress bar
             progressbar = QProgressBar()
-            self.plugin.iface.messageBar().pushWidget(progressbar)
-            progressBarWidget = self.plugin.iface.messageBar().currentItem()
+            self.plugin.iface.mainWindow().statusBar().addPermanentWidget(
+                progressbar, stretch=2
+            )
 
             dir = dlg.selectedUrls()[0]
             if dir.isLocalFile() or dir.isEmpty():
@@ -238,39 +239,33 @@ class OpenEOJobItem(QgsDataItem):
                 errors = 0
                 for i, asset in enumerate(self.assetItems):
                     try:
-                        asset.downloadAsset(dir=dir)
                         progress = int((i / len(self.assetItems)) * 100)
                         progressbar.setValue(progress)
+                        asset.downloadAsset(dir=dir)
                     except Exception as e:
                         errors += 1
                         self.plugin.logging.error(
                             f"Can't download the asset {asset.name()}.",
                             error=e,
                         )
+                progressbar.hide()
+                progressbar.setParent(None)
+                progressbar.deleteLater()
 
                 if errors == len(self.assetItems):
                     if errors == 1:
                         pass  # Error already logged above
                     else:
-                        self.plugin.iface.messageBar().popWidget(
-                            progressBarWidget
-                        )
                         self.plugin.logging.error(
                             "No results were downloaded."
                         )
                 else:
                     QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
                     if errors > 0:
-                        self.plugin.iface.messageBar().popWidget(
-                            progressBarWidget
-                        )
                         self.plugin.logging.warning(
                             f"Finished downloading results with {errors} errors to {dir}."
                         )
                     else:
-                        self.plugin.iface.messageBar().popWidget(
-                            progressBarWidget
-                        )
                         self.plugin.logging.success(
                             f"Finished downloading all results to {dir}."
                         )

@@ -6,6 +6,7 @@ import os
 import tempfile
 import json
 import pathlib
+import threading
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
@@ -225,34 +226,40 @@ class OpenEOJobItem(QgsDataItem):
             else:
                 dir = dir.toString()
 
-            QApplication.setOverrideCursor(Qt.BusyCursor)
-            errors = 0
-            for asset in self.assetItems:
-                try:
-                    path = asset.downloadAsset(dir=dir)
-                    self.plugin.logging.debug(f"File saved to {path}")
-                except Exception as e:
-                    errors += 1
-                    self.plugin.logging.error(
-                        f"Can't download the asset {asset.name()}.", error=e
-                    )
+            def downloadAssets():
+                QApplication.setOverrideCursor(Qt.BusyCursor)
+                errors = 0
+                for asset in self.assetItems:
+                    try:
+                        path = asset.downloadAsset(dir=dir)
+                        self.plugin.logging.debug(f"File saved to {path}")
+                    except Exception as e:
+                        errors += 1
+                        self.plugin.logging.error(
+                            f"Can't download the asset {asset.name()}.",
+                            error=e,
+                        )
 
-            QApplication.restoreOverrideCursor()
-            if errors == len(self.assetItems):
-                if errors == 1:
-                    pass  # Error already logged above
+                QApplication.restoreOverrideCursor()
+                if errors == len(self.assetItems):
+                    if errors == 1:
+                        pass  # Error already logged above
+                    else:
+                        self.plugin.logging.error(
+                            "No results were downloaded."
+                        )
                 else:
-                    self.plugin.logging.error("No results were downloaded.")
-            else:
-                QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
-                if errors > 0:
-                    self.plugin.logging.warning(
-                        f"Finished downloading results with {errors} errors to {dir}."
-                    )
-                else:
-                    self.plugin.logging.success(
-                        f"Finished downloading all results to {dir}."
-                    )
+                    QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
+                    if errors > 0:
+                        self.plugin.logging.warning(
+                            f"Finished downloading results with {errors} errors to {dir}."
+                        )
+                    else:
+                        self.plugin.logging.success(
+                            f"Finished downloading all results to {dir}."
+                        )
+
+            threading.Thread(target=downloadAssets, daemon=True).start()
 
     def actions(self, parent):
         actions = []

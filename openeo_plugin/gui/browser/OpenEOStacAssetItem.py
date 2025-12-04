@@ -4,7 +4,6 @@ from urllib.parse import urlparse
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
-from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtCore import QUrl
 
@@ -17,6 +16,8 @@ from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsCoordinateTransformContext
 from qgis.core import QgsApplication
 from qgis.core import QgsTask
+
+from ..directory_dialog import DirectoryDialog
 
 
 class OpenEOStacAssetItem(QgsDataItem):
@@ -234,43 +235,37 @@ class OpenEOStacAssetItem(QgsDataItem):
         downloadPath = self.downloadFolder()
 
         # prepare file dialog
-        dlg = QFileDialog()
-        dlg.setFileMode(QFileDialog.FileMode.Directory)
-        dlg.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
+        dlg = DirectoryDialog()
         dlg.setDirectory(str(downloadPath))
-        dlg.setWindowTitle("Download Results to...")
 
-        result = dlg.exec()
+        # get directory to download to
+        dir = dlg.selectDirectory()
+        if not dir:
+            return
 
-        if result:
-            dir = dlg.selectedUrls()[0]
-            if dir.isLocalFile() or dir.isEmpty():
-                dir = dir.toLocalFile()
+        def downloadAsset(task):
+            self.downloadAsset(dir=dir)
+
+        def downloadFinished(exception, result=None):
+            if exception:
+                self.plugin.logging.error(
+                    f"Can't download the asset {self.name()} to {dir}.",
+                    error=exception,
+                )
             else:
-                dir = dir.toString()
+                self.plugin.logging.success(
+                    f"Finished downloading asset {self.name()} to {dir}."
+                )
+                QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
 
-            def downloadAsset(task):
-                self.downloadAsset(dir=dir)
-
-            def downloadFinished(exception, result=None):
-                if exception:
-                    self.plugin.logging.error(
-                        f"Can't download the asset {self.name()} to {dir}.",
-                        error=exception,
-                    )
-                else:
-                    self.plugin.logging.success(
-                        f"Finished downloading asset {self.name()} to {dir}."
-                    )
-                    QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
-
-            downloadTask = QgsTask.fromFunction(
-                f"Download Asset: {self.name()}",
-                downloadAsset,
-                on_finished=downloadFinished,
-            )
-            taskManager = QgsApplication.taskManager()
-            taskManager.addTask(downloadTask)
+        downloadTask = QgsTask.fromFunction(
+            f"Download Asset: {self.name()}",
+            downloadAsset,
+            on_finished=downloadFinished,
+        )
+        taskManager = QgsApplication.taskManager()
+        taskManager.addTask(downloadTask)
+        self.plugin.logging.info(f"Downloading: {self.name()}")
 
     def actions(self, parent):
         actions = []

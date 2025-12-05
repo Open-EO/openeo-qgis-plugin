@@ -75,8 +75,8 @@ class OpenEORootItem(QgsDataCollectionItem):
         self.dlg.show()
         result = self.dlg.exec()
 
-        if result:
-            model = self.dlg.getModel()
+        model = self.dlg.getModel()
+        if result and model:
             connection = self.dlg.getConnection()
             self.saved_connections.append(model)
 

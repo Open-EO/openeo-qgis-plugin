@@ -136,7 +136,7 @@ class OpenEOJobItem(QgsDataItem):
         try:
             self.getJob(force=self.getStatus() in isActiveStates)
             jobJson = json.dumps(self.job)
-            type = self.results["type"]
+            type = self.results["type"] if self.results else None
             resultJson = json.dumps(self.results)
 
             # Item or Collection?
@@ -178,6 +178,7 @@ class OpenEOJobItem(QgsDataItem):
 
     def addResultsToProject(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
+        allValid = True
         try:
             self.populateAssetItems()
             # create group
@@ -186,7 +187,6 @@ class OpenEOJobItem(QgsDataItem):
             group = project.layerTreeRoot().insertGroup(0, jobName)
 
             # create layers and add them to group
-            allValid = True
             for asset in self.assetItems:
                 layer = asset.createLayer(addToProject=False)
                 if not layer.isValid():

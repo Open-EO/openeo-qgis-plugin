@@ -162,13 +162,19 @@ class OpenEOCollectionItem(QgsDataItem):
         uri = uris[0]
         self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
 
-    def viewProperties(self):
+    def get_url(self):
         collection_link = None
         links = self.collection["links"]
         for link in links:
             if link["rel"] == "self":
                 collection_link = link["href"]
                 break
+        if collection_link is None:
+            collection_link = self.getConnection().build_url(f"/collections/{self.collection['id']}")
+        return collection_link
+
+    def viewProperties(self):
+        collection_link = self.get_url()
         collection_json = requests.get(collection_link).json()
         collection_json = json.dumps(collection_json)
 

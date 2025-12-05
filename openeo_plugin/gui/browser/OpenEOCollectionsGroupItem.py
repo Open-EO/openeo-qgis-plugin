@@ -52,21 +52,15 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
         collections = self.getCollections()
         for collection in collections:
             # determine whether collectionItem or LayerItem
-            if len(self.getWebMapLinks(collection)) > 0:
-                item = OpenEOCollectionItem(
-                    parent=self,
-                    collection=collection,
-                    plugin=self.plugin,
-                    preview=True,
-                )
-                sip.transferto(item, self)
-                items.append(item)
-            else:
-                item = OpenEOCollectionItem(
-                    parent=self, collection=collection, plugin=self.plugin
-                )
-                sip.transferto(item, self)
-                items.append(item)
+            preview = len(self.getWebMapLinks(collection)) > 0
+            item = OpenEOCollectionItem(
+                parent=self,
+                collection=collection,
+                plugin=self.plugin,
+                preview=preview,
+            )
+            sip.transferto(item, self)
+            items.append(item)
         return items
 
     def getConnection(self):

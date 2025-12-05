@@ -4,9 +4,6 @@ from urllib.parse import urlparse
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
-from qgis.PyQt.QtWidgets import QApplication
-from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtCore import QUrl
 
@@ -18,6 +15,9 @@ from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsCoordinateTransformContext
 from qgis.core import QgsApplication
+
+from ..directory_dialog import DirectoryDialog
+from ...utils.downloadTask import DownloadAssetTask
 
 
 class OpenEOStacAssetItem(QgsDataItem):
@@ -171,16 +171,8 @@ class OpenEOStacAssetItem(QgsDataItem):
         return None
 
     def download(self):
-        QApplication.setOverrideCursor(Qt.BusyCursor)
-        try:
-            path = self.downloadAsset()
-            self.plugin.logging.success(f"File saved to {path}")
-        except Exception as e:
-            self.plugin.logging.error(
-                f"Can't download the asset {self.name()}.", error=e
-            )
-        finally:
-            QApplication.restoreOverrideCursor()
+        path = self.downloadFolder()
+        self.queueDownloadTask(path)
 
     def downloadAsset(self, dir=None):
         href = self.asset.get("href")
@@ -223,19 +215,51 @@ class OpenEOStacAssetItem(QgsDataItem):
         return Path.home() / "Downloads"
 
     def downloadTo(self):
-        dir = QFileDialog.getExistingDirectory(
-            caption="Save Result to...", directory=str(self.downloadFolder())
+        downloadPath = self.downloadFolder()
+
+        # prepare file dialog
+        dlg = DirectoryDialog()
+        dlg.setDirectory(str(downloadPath))
+
+        # get directory to download to
+        dir = dlg.selectDirectory()
+        if not dir:
+            return
+
+        self.queueDownloadTask(dir)
+
+    def queueDownloadTask(self, dir, openDestination=True):
+        # Store references for signal handlers
+        plugin = self.plugin
+        assetName = self.name()
+
+        # Create custom task with signals
+        downloadTask = DownloadAssetTask(
+            f"Download Asset: {assetName}", self.downloadAsset, dir
         )
-        try:
-            QApplication.setOverrideCursor(Qt.BusyCursor)
-            self.downloadAsset(dir=dir)
-            QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
-        except Exception as e:
-            self.plugin.logging.error(
-                f"Can't download the asset {self.name()} to {dir}.", error=e
+
+        # Connect signals to slots that can safely interact with GUI
+        def on_download_complete():
+            plugin.logging.success(
+                f"Finished downloading asset {assetName} to {dir}."
             )
-        finally:
-            QApplication.restoreOverrideCursor()
+            if openDestination:
+                QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
+
+        def on_download_error():
+            plugin.logging.error(
+                f"Can't download the asset {assetName} to {dir}.",
+                error=downloadTask.exception,
+            )
+
+        # Connect task finished signal based on success/failure
+        downloadTask.taskCompleted.connect(on_download_complete)
+        downloadTask.taskTerminated.connect(on_download_error)
+
+        # Add task to manager
+        taskManager = QgsApplication.taskManager()
+        taskManager.addTask(downloadTask)
+        plugin.logging.info(f"Downloading: {assetName}")
 
     def actions(self, parent):
         actions = []

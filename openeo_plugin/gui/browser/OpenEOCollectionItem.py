@@ -170,7 +170,9 @@ class OpenEOCollectionItem(QgsDataItem):
                 collection_link = link["href"]
                 break
         if collection_link is None:
-            collection_link = self.getConnection().build_url(f"/collections/{self.collection['id']}")
+            collection_link = self.getConnection().build_url(
+                f"/collections/{self.collection['id']}"
+            )
         return collection_link
 
     def viewProperties(self):

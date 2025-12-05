@@ -11,7 +11,6 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtWidgets import QApplication
-from qgis.PyQt.QtWidgets import QFileDialog
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtCore import QUrl
 
@@ -21,6 +20,8 @@ from qgis.core import QgsApplication
 from qgis.core import QgsProject
 
 from . import OpenEOStacAssetItem
+from ..directory_dialog import DirectoryDialog
+from ...utils.downloadTask import DownloadJobAssetsTask
 
 mayHaveResults = ["running", "canceled", "finished", "error"]
 
@@ -208,44 +209,69 @@ class OpenEOJobItem(QgsDataItem):
                 )
 
     def saveResultsTo(self):
-        self.populateAssetItems()
         downloadPath = pathlib.Path.home() / "Downloads"
-        dir = QFileDialog.getExistingDirectory(
-            caption="Save Results to...", directory=str(downloadPath)
+
+        # prepare file dialog
+        dlg = DirectoryDialog()
+        dlg.setDirectory(str(downloadPath))
+
+        # get directory to download to
+        dir = dlg.selectDirectory()
+        if not dir:
+            return
+
+        # Store references for signal handlers
+        plugin = self.plugin
+        job_title = self.job.get("title") or self.job.get("id")
+
+        # Create custom task
+        downloadTask = DownloadJobAssetsTask(
+            f"Download job results: {job_title}", self, dir
         )
 
-        QApplication.setOverrideCursor(Qt.BusyCursor)
-        errors = 0
-        for asset in self.assetItems:
-            try:
-                path = asset.downloadAsset(dir=dir)
-                self.plugin.logging.debug(f"File saved to {path}")
-            except Exception as e:
-                errors += 1
-                self.plugin.logging.error(
-                    f"Can't download the asset {asset.name()}.", error=e
+        # Connect signals to slots that can safely interact with GUI
+        def on_download_complete():
+            if downloadTask.canceled:
+                plugin.logging.info(f"Download canceled: {job_title}")
+                return
+
+            errors = downloadTask.errors
+            total = downloadTask.total_assets
+
+            if errors == total:
+                if errors > 1:
+                    plugin.logging.error("No results were downloaded.")
+                # Single error already logged during download
+            else:
+                if errors > 0:
+                    plugin.logging.warning(
+                        f"Finished downloading results with {errors} errors to {dir}."
+                    )
+                else:
+                    plugin.logging.success(
+                        f"Finished downloading all results to {dir}."
+                    )
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
+
+        def on_download_error():
+            if downloadTask.canceled:
+                plugin.logging.info(f"Download canceled: {job_title}")
+            else:
+                plugin.logging.error(
+                    "Download failed", error=downloadTask.exception
                 )
 
-        QApplication.restoreOverrideCursor()
-        if errors == len(self.assetItems):
-            if errors == 1:
-                pass  # Error already logged above
-            else:
-                self.plugin.logging.error("No results were downloaded.")
-        else:
-            QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
-            if errors > 0:
-                self.plugin.logging.warning(
-                    f"Finished downloading results with {errors} errors to {dir}."
-                )
-            else:
-                self.plugin.logging.success(
-                    f"Finished downloading all results to {dir}."
-                )
+        # Connect task finished signals
+        downloadTask.taskCompleted.connect(on_download_complete)
+        downloadTask.taskTerminated.connect(on_download_error)
+
+        # Add task to manager
+        taskManager = QgsApplication.taskManager()
+        taskManager.addTask(downloadTask)
+        plugin.logging.info(f"Downloading: {job_title}")
 
     def actions(self, parent):
         actions = []
-
         job_properties = QAction(QIcon(), "Details", parent)
         job_properties.triggered.connect(self.viewProperties)
         actions.append(job_properties)

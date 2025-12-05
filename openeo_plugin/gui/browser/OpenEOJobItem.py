@@ -121,6 +121,14 @@ class OpenEOJobItem(QgsDataItem):
         if self.results is not None:
             # get the stac item
             assets = self.results.get("assets", [])
+            jobLink = next(
+                (
+                    link
+                    for link in self.results.get("links", [])
+                    if link.get("rel") == "canonical" and link.get("href")
+                ),
+                None,
+            )
             # create stac-asset items
             for key in assets:
                 assetItem = OpenEOStacAssetItem(
@@ -128,6 +136,7 @@ class OpenEOJobItem(QgsDataItem):
                     key=key,
                     parent=self,
                     plugin=self.plugin,
+                    joblink=jobLink["href"],
                 )
                 self.assetItems.append(assetItem)
                 sip.transferto(assetItem, self)

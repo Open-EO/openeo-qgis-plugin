@@ -12,7 +12,6 @@ class DirectoryDialog(QFileDialog):
         result = self.exec()
         dir = None
         if result:
-            print("woof")
             dir = self.selectedUrls()[0]
             if dir.isLocalFile() or dir.isEmpty():
                 dir = dir.toLocalFile()

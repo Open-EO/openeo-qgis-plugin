@@ -171,25 +171,8 @@ class OpenEOStacAssetItem(QgsDataItem):
         return None
 
     def download(self):
-        def downloadAsset(task):
-            path = self.downloadAsset()
-            return path
-
-        def downloadFinished(exception, result=None):
-            if exception:
-                self.plugin.logging.error(
-                    f"Can't download the asset {self.name()}.", error=exception
-                )
-            else:
-                self.plugin.logging.success(f"File saved to {result}")
-
-        downloadTask = QgsTask.fromFunction(
-            f"Download Asset: {self.name()}",
-            downloadAsset,
-            on_finished=downloadFinished,
-        )
-        taskManager = QgsApplication.taskManager()
-        taskManager.addTask(downloadTask)
+        path = self.downloadFolder()
+        self.queueDownloadTask(path, openDestination=False)
 
     def downloadAsset(self, dir=None):
         href = self.asset.get("href")
@@ -243,6 +226,9 @@ class OpenEOStacAssetItem(QgsDataItem):
         if not dir:
             return
 
+        self.queueDownloadTask(dir)
+
+    def queueDownloadTask(self, dir, openDestination=True):
         def downloadAsset(task):
             self.downloadAsset(dir=dir)
 
@@ -256,7 +242,8 @@ class OpenEOStacAssetItem(QgsDataItem):
                 self.plugin.logging.success(
                     f"Finished downloading asset {self.name()} to {dir}."
                 )
-                QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
+                if openDestination:
+                    QDesktopServices.openUrl(QUrl.fromLocalFile(str(dir)))
 
         downloadTask = QgsTask.fromFunction(
             f"Download Asset: {self.name()}",

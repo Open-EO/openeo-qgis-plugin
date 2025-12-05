@@ -4,12 +4,12 @@
 
 [general]
 name=openEO
-qgisMinimumVersion=3.42
-qgisMaximumVersion=3.44
+qgisMinimumVersion=3.40
+qgisMaximumVersion=3.99
 description=Plugin to access openEO compliant backends.
-version=2.0-beta.1
-author=Matthias Mohr, Caro Niebl
-email=m.mohr@moregeo.it
+version=2.0-beta.2
+author=moreGeo GmbH
+email=mail@moregeo.it
 
 about=A plugin to access openEO compliant services. It integrates into the QGIS Browser and can inspect and visualize Collections, Batch Jobs and Web Services.
 

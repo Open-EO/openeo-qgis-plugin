@@ -8,7 +8,7 @@ class CredentialsModel:
         id=None,
         loginName=None,
         password=None,
-        tokenStore=None,
+        tokenStore={},
     ):
         self.id = id
         self.loginType = loginType
@@ -30,8 +30,11 @@ class CredentialsModel:
         id = str(id)
         self.id = id
 
+    def setTokenStore(self, tokenStore):
+        self.tokenStore = tokenStore
+
     def __str__(self):
-        dict = self.toDict
+        dict = self.toDict()
         return json.dumps(dict)
 
     def toDict(self):

@@ -2,6 +2,8 @@ import json
 import openeo
 import uuid
 
+from ..utils.PluginRefreshTokenStore import PluginRefreshTokenStore
+
 
 class ConnectionModel:
     def __init__(self, name, url, id=None):
@@ -21,7 +23,10 @@ class ConnectionModel:
         return cls(name=name, url=url, id=id)
 
     def connect(self):
-        return openeo.connect(self.url)
+        refreshTokenStore = PluginRefreshTokenStore(self.id)
+        return openeo.rest.connection.Connection(
+            self.url, refresh_token_store=refreshTokenStore
+        )
 
     def __str__(self):
         dict = self.toDict

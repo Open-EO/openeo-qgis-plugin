@@ -102,6 +102,8 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
                 # Fallback to default naming if no title is provided
                 name = capabilities.get("title") or url
             self.model = ConnectionModel(name, url)
+            # update the connection to use PluginRefreshTokenStore
+            self.connection = self.model.connect()
             self.accept()  # Close the dialog on success
 
     def serverSelectorUpdated(self, index):

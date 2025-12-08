@@ -121,6 +121,14 @@ class OpenEOJobItem(QgsDataItem):
         if self.results is not None:
             # get the stac item
             assets = self.results.get("assets", [])
+            jobResultLink = next(
+                (
+                    link
+                    for link in self.results.get("links", [])
+                    if link.get("rel") == "self" and link.get("href")
+                ),
+                None,
+            )
             # create stac-asset items
             for key in assets:
                 assetItem = OpenEOStacAssetItem(
@@ -128,6 +136,9 @@ class OpenEOJobItem(QgsDataItem):
                     key=key,
                     parent=self,
                     plugin=self.plugin,
+                    # todo: Instead of providing None, we should provide the initial request URL
+                    # that the Python client used to request the job result
+                    stac_url=jobResultLink["href"] if jobResultLink else None,
                 )
                 self.assetItems.append(assetItem)
                 sip.transferto(assetItem, self)

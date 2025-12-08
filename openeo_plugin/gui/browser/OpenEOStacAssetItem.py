@@ -1,6 +1,7 @@
 import requests
 from pathlib import Path
 from urllib.parse import urlparse
+from urllib.parse import urljoin
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
@@ -21,7 +22,7 @@ from ...utils.downloadTask import DownloadAssetTask
 
 
 class OpenEOStacAssetItem(QgsDataItem):
-    def __init__(self, assetDict, key, parent, plugin):
+    def __init__(self, assetDict, key, parent, plugin, stac_url=None):
         """Constructor.
         :param assetDict: a dict representing a STAC asset according to stac specifications
         :type assetDict: dict
@@ -46,6 +47,7 @@ class OpenEOStacAssetItem(QgsDataItem):
         )
 
         self.asset = assetDict
+        self.baseurl = stac_url
         self.key = key
         self.plugin = plugin
         self.uris = None  # initialise
@@ -81,7 +83,7 @@ class OpenEOStacAssetItem(QgsDataItem):
 
             # create the uri string
             uriString = ""
-            href = self.asset.get("href", "")
+            href = self.resolveUrl()
             if href.startswith("http") or href.startswith("ftp"):
                 uriString = f"/vsicurl/{href}"
                 # if len(authcfg) > 0:
@@ -170,12 +172,20 @@ class OpenEOStacAssetItem(QgsDataItem):
             )
         return None
 
+    def resolveUrl(self):
+        href = self.asset.get("href")
+        if (
+            self.canonical and href and bool(urlparse(href).netloc)
+        ):  # if relative URL
+            return urljoin(href, self.baseurl)
+        return href
+
     def download(self):
         path = self.downloadFolder()
         self.queueDownloadTask(path)
 
     def downloadAsset(self, dir=None):
-        href = self.asset.get("href")
+        href = self.resolveUrl()
 
         if not href:
             raise ValueError(

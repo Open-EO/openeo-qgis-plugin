@@ -125,7 +125,7 @@ class OpenEOJobItem(QgsDataItem):
                 (
                     link
                     for link in self.results.get("links", [])
-                    if link.get("rel") == "canonical" and link.get("href")
+                    if link.get("rel") == "self" and link.get("href")
                 ),
                 None,
             )

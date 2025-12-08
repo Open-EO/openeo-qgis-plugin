@@ -12,6 +12,7 @@ from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtWidgets import QMessageBox
 
 from .ui.login_dialog_tab import Ui_DynamicLoginDialog
+from ..models.CredentialsModel import CredentialsModel
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 # use this if the pb_tool compiled version of the dialog doesn't work
@@ -120,10 +121,10 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                     self.username, self.password
                 )
                 # TODO: add checkmark to select whether to save login
-                self.credentials = (
-                    auth_provider["type"],
-                    self.username,
-                    self.password,
+                self.credentials = CredentialsModel(
+                    loginType=auth_provider["type"],
+                    loginName=self.username,
+                    password=self.password,
                 )
                 return True
             except openeo.rest.OpenEoApiError:
@@ -174,7 +175,9 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                     pass
 
                 auth_thread.join()
-                self.credentials = (auth_provider["type"],)
+                self.credentials = CredentialsModel(
+                    loginType=auth_provider["type"]
+                )
                 self.accept()  # Close the dialog
                 return True
             except AttributeError:

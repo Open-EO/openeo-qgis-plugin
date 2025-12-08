@@ -114,7 +114,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         if result:
             credentials = self.dlg.getCredentials()
             if credentials is not None:
-                self.saveLogin(*credentials)
+                self.saveLogin(credentials)
 
         self.refresh()
 
@@ -160,26 +160,21 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             self.connection = self.model.connect()
         return self.connection
 
-    def saveLogin(self, loginType, name=None, password=None):
+    def saveLogin(self, credentials):
         settings = QgsSettings()
-        loginInfo = {
-            "id": str(self.model.id),
-            "loginName": name,
-            "password": password,
-            "loginType": loginType,
-        }
+        credentials.setId(self.model.id)
         logins = settings.value(SettingsPath.SAVED_LOGINS.value)
-        logins.append(loginInfo)
+        logins.append(credentials.toDict())
         settings.setValue(SettingsPath.SAVED_LOGINS.value, logins)
 
     def getSavedLogin(self):
         settings = QgsSettings()
-        loginInfo = None  # return None if no login has been saved
+        credentials = None  # return None if no login has been saved
         logins = settings.value(SettingsPath.SAVED_LOGINS.value)
         for login in logins:
             if login["id"] == str(self.model.id):
-                loginInfo = login
-        return loginInfo
+                credentials = login
+        return credentials
 
     def deleteLogin(self):
         settings = QgsSettings()

@@ -20,19 +20,25 @@ class PluginRefreshTokenStore(RefreshTokenStore):
             if login["id"] == str(self.id):
                 credentials = CredentialsModel.fromDict(login)
                 return credentials
-            if credentials is None:
-                if empty_on_not_found:
-                    return CredentialsModel(loginType="oidc", id=self.id)
-                # this error was adapted from the original implementation
-                # might require raising a different error because strictly
-                # these are not files
-                raise FileNotFoundError(self._path)
+        if credentials is None:
+            if empty_on_not_found:
+                credentials = CredentialsModel(loginType="oidc", id=self.id)
+                return credentials
+            # this error was adapted from the original implementation
+            # might require raising a different error because strictly
+            # these are not files
+            raise FileNotFoundError(self._path)
 
     def load(self, empty_on_not_found=True) -> dict:
         credentials = self._getCredentials(empty_on_not_found)
         try:
-            if type(credentials.tokenStore) is str:
-                return json.loads(credentials.tokenStore)
+            if credentials is not None:
+                if (type(credentials.tokenStore) is str) and (
+                    credentials.tokenStore is not None
+                ):
+                    return json.loads(credentials.tokenStore)
+                else:
+                    return {}
             else:
                 return {}
         except Exception as e:
@@ -42,6 +48,7 @@ class PluginRefreshTokenStore(RefreshTokenStore):
 
     def _write(self, data: dict):
         credentials = self._getCredentials()
+        print(credentials)
         credentials.setTokenStore(json.dumps(data, indent=2))
 
         # get saved credentials

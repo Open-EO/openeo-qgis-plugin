@@ -48,7 +48,6 @@ class PluginRefreshTokenStore(RefreshTokenStore):
 
     def _write(self, data: dict):
         credentials = self._getCredentials()
-        print(credentials)
         credentials.setTokenStore(json.dumps(data, indent=2))
 
         # get saved credentials

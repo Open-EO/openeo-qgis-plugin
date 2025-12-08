@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import sip
 import openeo
-from openeo.rest.auth.config import RefreshTokenStore
 import webbrowser
 import json
 import pathlib
@@ -179,39 +178,12 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
     def deleteLogin(self):
         settings = QgsSettings()
 
-        # for deleting basic login
+        # for deleting login
         logins = settings.value(SettingsPath.SAVED_LOGINS.value)
-        for i, login in enumerate(logins):
-            if login["id"] == str(self.model.id):
-                logins.pop(i)
+        logins = [
+            login for login in logins if login["id"] != str(self.model.id)
+        ]
         settings.setValue(SettingsPath.SAVED_LOGINS.value, logins)
-
-        # for deleting oidc refresh tokens
-        try:
-            # determine the key for the refresh token storage
-            _g = openeo.rest.auth.oidc.DefaultOidcClientGrant
-            provider_id, client_info = (
-                self.getConnection()._get_oidc_provider_and_client_info(
-                    provider_id=None,
-                    client_id=None,
-                    client_secret=None,
-                    default_client_grant_check=lambda grants: (
-                        _g.REFRESH_TOKEN in grants
-                        and (
-                            _g.DEVICE_CODE in grants
-                            or _g.DEVICE_CODE_PKCE in grants
-                        )
-                    ),
-                )
-            )
-            # overwrite refresh tokens
-            RefreshTokenStore().set(client_info.provider.issuer, value={})
-        except openeo.rest.OpenEoClientException as e:
-            self.plugin.logging.debug(
-                "Can't delete stored OpenID Connect refresh token. Connection may not support OpenID Connect.",
-                error=e,
-            )
-            return
 
     def logout(self):
         self.deleteLogin()

@@ -191,3 +191,20 @@ class OpenEO:
 
         if not saved_logins_exist or not saved_logins_value:
             settings.setValue(SettingsPath.SAVED_LOGINS.value, [])
+
+        # check if saved logins from prior to #160 exist, and fix
+        if len(saved_logins_value) > 0:
+            formattingChanged = False
+            for login in saved_connections_value:
+                # logins prior to #160 do not have a tokenStore
+                if not hasattr(login, "tokenStore"):
+                    formattingChanged = True
+                    login["tokenstore"] = None
+
+            if formattingChanged:
+                settings.setValue(
+                    SettingsPath.SAVED_LOGINS.value, saved_logins_value
+                )
+                self.logging.info(
+                    "Saved logins have been updated to support token storage"
+                )

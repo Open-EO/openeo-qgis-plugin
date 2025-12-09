@@ -20,9 +20,15 @@ class CredentialsModel:
     def fromDict(cls, data):
         id = data["id"]
         loginType = data["loginType"]
-        loginName = data["loginName"]
-        password = data["password"]
-        tokenStore = data["tokenStore"]
+        loginName = None
+        password = None
+        tokenStore = None
+        if loginType == "oidc":
+            tokenStore = data["credentials"]
+
+        if loginType == "basic":
+            loginName = data["credentials"]["username"]
+            password = data["credentials"]["password"]
 
         return cls(loginType, id, loginName, password, tokenStore)
 
@@ -38,11 +44,18 @@ class CredentialsModel:
         return json.dumps(dict)
 
     def toDict(self):
+        credentials = {}
+        if self.loginType == "oidc":
+            credentials = self.tokenStore
+        elif self.loginType == "basic":
+            credentials = {
+                "username": self.loginName,
+                "password": self.password,
+            }
+
         dict = {
             "loginType": self.loginType,
             "id": str(self.id),
-            "loginName": self.loginName,
-            "password": self.password,
-            "tokenStore": self.tokenStore,
+            "credentials": credentials,
         }
         return dict

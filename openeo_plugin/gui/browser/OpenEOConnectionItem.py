@@ -122,7 +122,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         if login:
             if login.get("loginType") == "basic":
                 self.getConnection().authenticate_basic(
-                    login["loginName"], login["password"]
+                    login["credentials"]["username"],
+                    login["credentials"]["password"],
                 )
                 return True
             elif login.get("loginType") == "oidc":
@@ -160,6 +161,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         return self.connection
 
     def saveLogin(self, credentials):
+        print("saving logn")
         settings = QgsSettings()
         credentials.setId(self.model.id)
         logins = settings.value(SettingsPath.SAVED_LOGINS.value)

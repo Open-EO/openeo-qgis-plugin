@@ -1,4 +1,3 @@
-import json
 from openeo.rest.auth.config import RefreshTokenStore
 
 from qgis.core import QgsSettings
@@ -33,10 +32,8 @@ class PluginRefreshTokenStore(RefreshTokenStore):
         credentials = self._getCredentials(empty_on_not_found)
         try:
             if credentials is not None:
-                if (type(credentials.tokenStore) is str) and (
-                    credentials.tokenStore is not None
-                ):
-                    return json.loads(credentials.tokenStore)
+                if credentials.tokenStore is not None:
+                    return credentials.tokenStore
                 else:
                     return {}
             else:
@@ -48,19 +45,14 @@ class PluginRefreshTokenStore(RefreshTokenStore):
 
     def _write(self, data: dict):
         credentials = self._getCredentials()
-        credentials.setTokenStore(json.dumps(data, indent=2))
+        credentials.setTokenStore(data)
 
         # get saved credentials
         settings = QgsSettings()
         logins = settings.value(SettingsPath.SAVED_LOGINS.value)
         # update if exists,
-        idExists = False
         for i, login in enumerate(logins):
             if login.get("id") == self.id:
-                idExists = True
                 logins[i] = credentials.toDict()
-        # else append
-        if not idExists:
-            logins.append(credentials.toDict())
         # finally save the logins
         settings.setValue(SettingsPath.SAVED_LOGINS.value, logins)

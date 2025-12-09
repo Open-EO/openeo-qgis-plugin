@@ -9,6 +9,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from .gui.browser import OpenEOItemProvider
 from .utils.settings import SettingsPath
 from .utils.logging import Logging
+from .models.CredentialsModel import CredentialsModel
 
 
 # noinspection PyPep8Naming
@@ -44,6 +45,10 @@ class OpenEO:
             self.plugin_dir, "i18n", "OpenEO_{}.qm".format(locale)
         )
 
+        # Set up logging and messaging
+        logger = QgsApplication.messageLog()
+        self.logging = Logging(self.iface, logger)
+
         # initialize settings
         self.initSettings()
 
@@ -58,10 +63,6 @@ class OpenEO:
 
         self.PLUGIN_NAME = "openEO"
         self.PLUGIN_ENTRY_NAME = "openEO"
-
-        # Set up logging and messaging
-        logger = QgsApplication.messageLog()
-        self.logging = Logging(self.iface, logger)
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
@@ -203,17 +204,29 @@ class OpenEO:
             settings.setValue(SettingsPath.SAVED_LOGINS.value, [])
 
         # check if saved logins from prior to #160 exist, and fix
-        if len(saved_logins_value) > 0:
+        if saved_logins_value is not None and len(saved_logins_value) > 0:
             formattingChanged = False
-            for login in saved_connections_value:
+            formatted_saved_logins = []
+            for login in saved_logins_value:
                 # logins prior to #160 do not have a tokenStore
-                if not hasattr(login, "tokenStore"):
+                if "credentials" not in login:
+                    print(login)
                     formattingChanged = True
-                    login["tokenstore"] = None
+                    newCredentials = None
+                    newCredentials = CredentialsModel(
+                        login.get("loginType"),
+                        login.get("id", None),
+                        login.get("loginName", None),
+                        login.get("password", None),
+                        login.get("tokenStore", None),
+                    )
+                    formatted_saved_logins.append(newCredentials.toDict())
+                else:
+                    formatted_saved_logins.append(login)
 
             if formattingChanged:
                 settings.setValue(
-                    SettingsPath.SAVED_LOGINS.value, saved_logins_value
+                    SettingsPath.SAVED_LOGINS.value, formatted_saved_logins
                 )
                 self.logging.info(
                     "Saved logins have been updated to support token storage"

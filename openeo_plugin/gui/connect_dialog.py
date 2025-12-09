@@ -102,7 +102,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         if self.connection:
             if not name:
                 capabilities = self.connection.capabilities()
-                self.model.name = capabilities.get("title")
+                self.model.name = capabilities.get("title") or url
             self.accept()  # Close the dialog on success
 
     def serverSelectorUpdated(self, index):

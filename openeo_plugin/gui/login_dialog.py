@@ -128,11 +128,11 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                 return True
             except openeo.rest.OpenEoApiError:
                 msg = QMessageBox()
-                msg.setIcon(QMessageBox.Critical)
+                msg.setIcon(QMessageBox.Icon.Critical)
                 msg.setText("Login Failed")
                 msg.setInformativeText("Account name or password incorrect")
                 msg.setWindowTitle("Login Failed")
-                msg.exec_()
+                msg.exec()
                 return False
             except Exception as e:
                 self.plugin.logging.error(

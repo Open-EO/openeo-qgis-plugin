@@ -97,7 +97,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             self.refresh()
             return
 
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         try:
             self.dlg = LoginDialog(
                 self.plugin, self.getConnection(), model=self.model

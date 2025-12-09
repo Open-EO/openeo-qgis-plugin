@@ -144,7 +144,7 @@ class OpenEOJobItem(QgsDataItem):
                 sip.transferto(assetItem, self)
 
     def viewProperties(self):
-        QApplication.setOverrideCursor(Qt.BusyCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
         try:
             self.getJob(force=self.getStatus() in isActiveStates)
             jobJson = json.dumps(self.job)
@@ -189,7 +189,7 @@ class OpenEOJobItem(QgsDataItem):
         return self.job.get("title") or self.job.get("id")
 
     def addResultsToProject(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         allValid = True
         try:
             self.populateAssetItems()

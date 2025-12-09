@@ -145,7 +145,7 @@ class OpenEOServiceItem(QgsDataItem):
             )
             return mimeUris
 
-        QApplication.setOverrideCursor(Qt.BusyCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
 
         # TODO: what if operation takes way too long?
         try:

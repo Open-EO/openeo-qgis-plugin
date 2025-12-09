@@ -135,7 +135,7 @@ class OpenEOCollectionItem(QgsDataItem):
             )
             return mimeUris
 
-        QApplication.setOverrideCursor(Qt.BusyCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
 
         # TODO: what if operation takes way too long?
         for link in webMapLinks:

@@ -92,9 +92,12 @@ ln -s openeo_plugin /home/{USER}/.local/share/QGIS/QGIS3/profiles/default
 
 To build the plugin GUI files you will need the [pb_tool](http://g-sherman.github.io/plugin_build_tool/) CLI tool.
 
-To compile the plugin run the following command in the `./openeo_plugin` directory of this repository:
- 
-    pb_tool compile
+To compile the ui of the plugin, run the `compile_ui.sh`-script in the root directory of this repository:
+(note, this requires `pyqt6-tools` to be installed `pip install pyqt6-tools`)
+
+```
+./compile_ui.sh
+```
      
 Compiling is needed any time the resources.py file needs to be rebuilt and the .ui files are modified.
 

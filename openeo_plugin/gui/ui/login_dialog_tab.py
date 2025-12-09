@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
+from qgis.PyQt import QtWidgets
+from qgis.PyQt import QtCore
 
 from .login_dialog import Ui_LoginDialog
 
@@ -15,7 +15,8 @@ class Ui_DynamicLoginDialog(Ui_LoginDialog):
 
         self.internal = QtWidgets.QWidget()
         sizePolicy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Expanding,
         )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -68,8 +69,8 @@ class Ui_DynamicLoginDialog(Ui_LoginDialog):
             tab["spacerItem"] = QtWidgets.QSpacerItem(
                 20,
                 40,
-                QtWidgets.QSizePolicy.Minimum,
-                QtWidgets.QSizePolicy.Expanding,
+                QtWidgets.QSizePolicy.Policy.Minimum,
+                QtWidgets.QSizePolicy.Policy.Expanding,
             )
             tab["verticalLayout"].addItem(tab["spacerItem"])
 

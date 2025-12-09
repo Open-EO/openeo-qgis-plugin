@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import pathlib
 
 from qgis.core import QgsApplication, QgsSettings
 
@@ -172,6 +173,15 @@ class OpenEO:
             # substitute with your code.
             pass
 
+    def getPluginVersion(self):
+        filePath = pathlib.Path(__file__).parent.resolve()
+        with open(os.path.join(filePath, "metadata.txt"), "r") as file:
+            for line in file:
+                line = line.strip()
+                if line.startswith("version="):
+                    return line[len("version=") :]
+        return None  # In case no version line is found
+
     def initSettings(self):
         """Checks for existing plugin settings or sets them up if they don't exist"""
         settings = QgsSettings()
@@ -208,3 +218,7 @@ class OpenEO:
                 self.logging.info(
                     "Saved logins have been updated to support token storage"
                 )
+
+        # set plugin version
+        version = self.getPluginVersion()
+        settings.setValue(SettingsPath.PLUGIN_VERSION.value, version)

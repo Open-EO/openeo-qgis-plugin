@@ -175,7 +175,7 @@ class OpenEOStacAssetItem(QgsDataItem):
     def resolveUrl(self):
         href = self.asset.get("href")
         if (
-            self.canonical and href and bool(urlparse(href).netloc)
+            self.baseurl and href and bool(urlparse(href).netloc)
         ):  # if relative URL
             return urljoin(href, self.baseurl)
         return href

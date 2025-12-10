@@ -32,8 +32,8 @@ class PluginRefreshTokenStore(RefreshTokenStore):
         credentials = self._getCredentials(empty_on_not_found)
         try:
             if credentials is not None:
-                if credentials.tokenStore is not None:
-                    return credentials.tokenStore
+                if credentials.getTokenStore() is not None:
+                    return credentials.getCredentials()
                 else:
                     return {}
             else:

@@ -49,6 +49,11 @@ class CredentialsModel:
         else:
             return False
 
+    def getTokenStore(self):
+        if self.loginType == "oidc":
+            return self.getCredentials()
+        return None
+
     def setCredentials(self, creds):
         self.credentials = creds
 

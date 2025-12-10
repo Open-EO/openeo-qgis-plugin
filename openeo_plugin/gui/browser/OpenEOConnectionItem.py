@@ -121,7 +121,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         login = self.getSavedLogin()
         if login:
             if login.get("loginType") == "basic":
-                creds = login.getCredentials()
+                creds = login["credentials"]
                 self.getConnection().authenticate_basic(
                     creds["username"],
                     creds["password"],

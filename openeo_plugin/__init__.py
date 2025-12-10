@@ -192,6 +192,9 @@ class OpenEO:
         saved_connections_value = settings.value(
             SettingsPath.SAVED_CONNECTIONS.value
         )
+        logged_version_value = settings.value(
+            SettingsPath.PLUGIN_VERSION.value
+        )
 
         if not saved_connections_exist or not saved_connections_value:
             # create the settings key
@@ -204,33 +207,37 @@ class OpenEO:
             settings.setValue(SettingsPath.SAVED_LOGINS.value, [])
 
         # check if saved logins from prior to #160 exist, and fix
-        if saved_logins_value is not None and len(saved_logins_value) > 0:
-            formattingChanged = False
-            formatted_saved_logins = []
-            for login in saved_logins_value:
-                # logins prior to #160 do not have a tokenStore
-                if "credentials" not in login:
-                    formattingChanged = True
-                    newCredentials = None
-                    newCredentials = CredentialsModel(
-                        login.get("loginType"),
-                        login.get("id", None),
-                        login.get("username", None),
-                        login.get("password", None),
-                        login.get("tokenStore", None),
-                    )
-                    formatted_saved_logins.append(newCredentials.toDict())
-                else:
-                    formatted_saved_logins.append(login)
+        if (
+            logged_version_value is not self.getPluginVersion()
+        ):  # later versions might have to do closer version checks
+            if saved_logins_value is not None and len(saved_logins_value) > 0:
+                formattingChanged = False
+                formatted_saved_logins = []
+                for login in saved_logins_value:
+                    # logins prior to #160 do not have a tokenStore
+                    if "credentials" not in login:
+                        formattingChanged = True
+                        newCredentials = None
+                        newCredentials = CredentialsModel(
+                            login.get("loginType"),
+                            login.get("id", None),
+                            login.get("username", None),
+                            login.get("password", None),
+                            login.get("tokenStore", None),
+                        )
+                        formatted_saved_logins.append(newCredentials.toDict())
+                    else:
+                        formatted_saved_logins.append(login)
 
-            if formattingChanged:
-                settings.setValue(
-                    SettingsPath.SAVED_LOGINS.value, formatted_saved_logins
-                )
-                self.logging.info(
-                    "Saved logins have been updated to support token storage"
-                )
+                if formattingChanged:
+                    settings.setValue(
+                        SettingsPath.SAVED_LOGINS.value, formatted_saved_logins
+                    )
+                    self.logging.info(
+                        "Saved logins have been updated to support token storage"
+                    )
 
         # set plugin version
-        version = self.getPluginVersion()
-        settings.setValue(SettingsPath.PLUGIN_VERSION.value, version)
+        settings.setValue(
+            SettingsPath.PLUGIN_VERSION.value, self.getPluginVersion()
+        )

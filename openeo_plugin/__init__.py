@@ -210,7 +210,6 @@ class OpenEO:
             for login in saved_logins_value:
                 # logins prior to #160 do not have a tokenStore
                 if "credentials" not in login:
-                    print(login)
                     formattingChanged = True
                     newCredentials = None
                     newCredentials = CredentialsModel(

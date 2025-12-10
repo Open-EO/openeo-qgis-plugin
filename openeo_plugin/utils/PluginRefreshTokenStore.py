@@ -10,16 +10,22 @@ class PluginRefreshTokenStore(RefreshTokenStore):
         self.manager = Credentials()
 
     def get_refresh_token(self, issuer: str, client_id: str):
-        key = issuer + "|" + client_id
         model = self.manager.get(self.id)
-        if model:
-            return model.credentials.get(key, None)
+        creds = model.credentials if model else {}
+        if (
+            creds.get("issuer") == issuer
+            and creds.get("client_id") == client_id
+        ):
+            return creds.get("refresh_token", None)
         else:
             return None
 
     def set_refresh_token(
         self, issuer: str, client_id: str, refresh_token: str
     ):
-        key = issuer + "|" + client_id
-        credentials = {key: refresh_token}
+        credentials = {
+            "issuer": issuer,
+            "client_id": client_id,
+            "refresh_token": refresh_token,
+        }
         self.manager.add(CredentialsModel.fromOIDC(self.id, credentials))

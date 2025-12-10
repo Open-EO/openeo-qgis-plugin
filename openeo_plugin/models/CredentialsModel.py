@@ -1,3 +1,7 @@
+import base64
+import json
+import time
+
 from qgis.core import QgsSettings
 
 from ..utils.settings import SettingsPath
@@ -36,8 +40,26 @@ class CredentialsModel:
         else:
             return cls(id, loginType, data.get("credentials"))
 
+    def _parseJWT(self, token):
+        if not isinstance(token, str):
+            return None
+        try:
+            payload_part = token.split(".")[1]
+            padding = "=" * (4 - len(payload_part) % 4)
+            payload_part += padding
+            decoded_bytes = base64.urlsafe_b64decode(payload_part)
+            payload = json.loads(decoded_bytes)
+            return payload
+        except Exception:
+            return None
+
     def isExpired(self):
-        # todo: for OIDC check expiry of JWT
+        if self.loginType == "oidc":
+            token = self.credentials.get("refresh_token")
+            payload = self._parseJWT(token)
+            current_time = int(time.time())
+            if payload and current_time > payload.get("exp", current_time):
+                return True
         return False
 
     def __str__(self):

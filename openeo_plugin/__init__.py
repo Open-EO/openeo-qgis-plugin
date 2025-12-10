@@ -9,7 +9,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from .gui.browser import OpenEOItemProvider
 from .utils.settings import SettingsPath
 from .utils.logging import Logging
-from .models.CredentialsModel import CredentialsModel
+from .models.CredentialsModel import Credentials
 
 
 # noinspection PyPep8Naming
@@ -183,6 +183,9 @@ class OpenEO:
                     return line[len("version=") :]
         return None  # In case no version line is found
 
+    def clearLogins(self):
+        Credentials().clear()
+
     def clearSettings(self):
         settings = QgsSettings()
         settings.remove(SettingsPath.SAVED_CONNECTIONS.value)
@@ -192,58 +195,16 @@ class OpenEO:
     def initSettings(self):
         """Checks for existing plugin settings or sets them up if they don't exist"""
         settings = QgsSettings()
-        saved_connections_exist = settings.contains(
-            SettingsPath.SAVED_CONNECTIONS.value
-        )
         saved_connections_value = settings.value(
             SettingsPath.SAVED_CONNECTIONS.value
         )
-        logged_version_value = settings.value(
-            SettingsPath.PLUGIN_VERSION.value
-        )
-
-        if not saved_connections_exist or not saved_connections_value:
-            # create the settings key
+        if not saved_connections_value:
             settings.setValue(SettingsPath.SAVED_CONNECTIONS.value, [])
 
-        saved_logins_exist = settings.contains(SettingsPath.SAVED_LOGINS.value)
-        saved_logins_value = settings.value(SettingsPath.SAVED_LOGINS.value)
-
-        if not saved_logins_exist or not saved_logins_value:
-            settings.setValue(SettingsPath.SAVED_LOGINS.value, [])
-
-        # check if saved logins from prior to #160 exist, and fix
-        if (
-            logged_version_value is not self.getPluginVersion()
-        ):  # later versions might have to do closer version checks
-            if saved_logins_value is not None and len(saved_logins_value) > 0:
-                formattingChanged = False
-                formatted_saved_logins = []
-                for login in saved_logins_value:
-                    # logins prior to #160 do not have a tokenStore
-                    if "credentials" not in login:
-                        formattingChanged = True
-                        newCredentials = None
-                        newCredentials = CredentialsModel(
-                            login.get("loginType"),
-                            login.get("id", None),
-                            login.get("username", None),
-                            login.get("password", None),
-                            login.get("tokenStore", None),
-                        )
-                        formatted_saved_logins.append(newCredentials.toDict())
-                    else:
-                        formatted_saved_logins.append(login)
-
-                if formattingChanged:
-                    settings.setValue(
-                        SettingsPath.SAVED_LOGINS.value, formatted_saved_logins
-                    )
-                    self.logging.info(
-                        "Saved logins have been updated to support token storage"
-                    )
-
-        # set plugin version
+        old_version = (
+            settings.value(SettingsPath.PLUGIN_VERSION.value) or "2.0-beta.2"
+        )
+        Credentials().update(old_version)
         settings.setValue(
             SettingsPath.PLUGIN_VERSION.value, self.getPluginVersion()
         )

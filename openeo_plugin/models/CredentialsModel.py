@@ -1,73 +1,96 @@
-import json
+from qgis.core import QgsSettings
+
+from ..utils.settings import SettingsPath
 
 
 class CredentialsModel:
-    def __init__(
-        self,
-        loginType,
-        id=None,
-        username=None,
-        password=None,
-        tokens={},
-    ):
+    def __init__(self, id, loginType, credentials={}):
+        if loginType not in ["basic", "oidc"]:
+            raise ValueError(f"Unsupported login type: {loginType}")
+
         self.id = id
         self.loginType = loginType
-        self.credentials = {}
-
-        if self.loginType == "oidc":
-            self.credentials = tokens
-        elif self.loginType == "basic":
-            self.credentials = {
-                "username": username,
-                "password": password,
-            }
+        self.credentials = credentials
 
     @classmethod
-    def fromDict(cls, data):
-        id = data["id"]
-        loginType = data["loginType"]
-        username = None
-        password = None
-        tokens = None
-        if loginType == "oidc":
-            tokens = data["credentials"]
+    def fromBasic(cls, id, username, password):
+        return cls(id, "basic", {"username": username, "password": password})
 
-        if loginType == "basic":
-            username = data["credentials"]["username"]
-            password = data["credentials"]["password"]
+    @classmethod
+    def fromOIDC(cls, id, tokens):
+        return cls(id, "oidc", tokens)
 
-        return cls(loginType, id, username, password, tokens)
-
-    def setId(self, id):
-        id = str(id)
-        self.id = id
-
-    def setTokenStore(self, tokens):
-        if self.loginType == "oidc":
-            self.setCredentials(tokens)
-            return True
+    @classmethod
+    def fromStore(cls, data, version=None):
+        loginType = data.get("loginType")
+        id = data.get("id")
+        if version == "2.0-beta.2":
+            match loginType:
+                case "basic":
+                    return cls.fromBasic(
+                        id, data.get("username"), data.get("password")
+                    )
+                case _:
+                    # Nothing stored, potentially came from openeo-python-client
+                    return None
         else:
-            return False
+            return cls(id, loginType, data.get("credentials"))
 
-    def getTokenStore(self):
-        if self.loginType == "oidc":
-            return self.getCredentials()
-        return None
-
-    def setCredentials(self, creds):
-        self.credentials = creds
-
-    def getCredentials(self):
-        return self.credentials
+    def isExpired(self):
+        # todo: for OIDC check expiry of JWT
+        return False
 
     def __str__(self):
-        dict = self.toDict()
-        return json.dumps(dict)
+        return f"<CredentialsModel type={self.loginType} id={self.id}>"
 
     def toDict(self):
-        dict = {
+        return {
             "loginType": self.loginType,
             "id": str(self.id),
             "credentials": self.credentials,
         }
-        return dict
+
+
+class Credentials:
+    def __init__(self):
+        self.settings = QgsSettings()
+        self.key = SettingsPath.SAVED_LOGINS.value
+
+    def get(self, id: str) -> CredentialsModel | None:
+        logins = self.settings.value(self.key)
+        for login in logins:
+            if login["id"] == str(id):
+                return CredentialsModel.fromStore(login)
+        return None
+
+    def _load(self) -> list[dict]:
+        return self.settings.value(self.key) or []
+
+    def update(self, version):
+        logins = self._load()
+        new_logins = []
+        for login in logins:
+            credentials = CredentialsModel.fromStore(login, version)
+            if credentials and not credentials.isExpired():
+                new_logins.append(login)
+
+        self.settings.setValue(self.key, new_logins)
+
+    def remove(self, id):
+        logins = self._load()
+        new_logins = []
+        for login in logins:
+            if login["id"] != str(id):
+                new_logins.append(login)
+
+        self.settings.setValue(self.key, new_logins)
+
+    def add(self, credential: CredentialsModel):
+        self.remove(credential.id)
+
+        logins = self._load()
+        logins.append(credential.toDict())
+        self.settings.setValue(self.key, logins)
+
+    def clear(self):
+        self.settings.setValue(self.key, [])

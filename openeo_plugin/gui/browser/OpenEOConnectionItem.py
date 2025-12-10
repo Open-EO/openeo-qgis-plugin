@@ -14,14 +14,13 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication
 
 from qgis.core import QgsApplication
-from qgis.core import QgsSettings
 from qgis.core import QgsDataCollectionItem
 
 from . import OpenEOJobsGroupItem
 from . import OpenEOServicesGroupItem
 from . import OpenEOCollectionsGroupItem
 from ..login_dialog import LoginDialog
-from ...utils.settings import SettingsPath
+from ...models.CredentialsModel import Credentials
 
 
 class OpenEOConnectionItem(QgsDataCollectionItem):
@@ -113,21 +112,21 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         if result:
             credentials = self.dlg.getCredentials()
             if credentials is not None:
-                self.saveLogin(credentials)
+                Credentials().add(credentials)
 
         self.refresh()
 
     def authenticateStored(self):
-        login = self.getSavedLogin()
+        login = Credentials().get(self.model.id)
         if login:
-            if login.get("loginType") == "basic":
-                creds = login["credentials"]
+            if login.loginType == "basic":
+                creds = login.credentials
                 self.getConnection().authenticate_basic(
                     creds["username"],
                     creds["password"],
                 )
                 return True
-            elif login.get("loginType") == "oidc":
+            elif login.loginType == "oidc":
                 try:
                     self.getConnection().authenticate_oidc_refresh_token()  # try logging in with refresh token
                     return True
@@ -161,31 +160,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             self.connection = self.model.connect()
         return self.connection
 
-    def saveLogin(self, credentials):
-        settings = QgsSettings()
-        credentials.setId(self.model.id)
-        logins = settings.value(SettingsPath.SAVED_LOGINS.value)
-        logins.append(credentials.toDict())
-        settings.setValue(SettingsPath.SAVED_LOGINS.value, logins)
-
-    def getSavedLogin(self):
-        settings = QgsSettings()
-        credentials = None  # return None if no login has been saved
-        logins = settings.value(SettingsPath.SAVED_LOGINS.value)
-        for login in logins:
-            if login["id"] == str(self.model.id):
-                credentials = login
-        return credentials
-
     def deleteLogin(self):
-        settings = QgsSettings()
-
-        # for deleting login
-        logins = settings.value(SettingsPath.SAVED_LOGINS.value)
-        logins = [
-            login for login in logins if login["id"] != str(self.model.id)
-        ]
-        settings.setValue(SettingsPath.SAVED_LOGINS.value, logins)
+        Credentials().remove(self.model.id)
 
     def logout(self):
         self.deleteLogin()

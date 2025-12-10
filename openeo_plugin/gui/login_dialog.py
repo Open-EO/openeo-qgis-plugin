@@ -123,7 +123,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                 # TODO: add checkmark to select whether to save login
                 self.credentials = CredentialsModel(
                     loginType=auth_provider["type"],
-                    loginName=self.username,
+                    username=self.username,
                     password=self.password,
                 )
                 return True

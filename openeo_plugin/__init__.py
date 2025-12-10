@@ -215,7 +215,7 @@ class OpenEO:
                     newCredentials = CredentialsModel(
                         login.get("loginType"),
                         login.get("id", None),
-                        login.get("loginName", None),
+                        login.get("username", None),
                         login.get("password", None),
                         login.get("tokenStore", None),
                     )

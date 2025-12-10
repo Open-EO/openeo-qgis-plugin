@@ -98,10 +98,32 @@ class OpenEORootItem(QgsDataCollectionItem):
 
         self.deleteChildItem(data_item)
 
+    def removeSavedConnections(self):
+        self.plugin.clearSettings()
+        self.plugin.initSettings()
+        self.plugin.logging.info(
+            "All saved connections and logins have been removed"
+        )
+        self.saved_connections = list()
+        self.depopulate()
+
     def actions(self, parent):
+        actions = []
+
         action_new_connection = QAction(
             QIcon(), "New openEO Connection", parent
         )
         action_new_connection.triggered.connect(self.addConnection)
+        actions.append(action_new_connection)
 
-        return [action_new_connection]
+        separator = QAction(parent)
+        separator.setSeparator(True)
+        actions.append(separator)
+
+        actions_clear_settings = QAction(
+            QIcon(), "Remove saved Logins", parent
+        )
+        actions_clear_settings.triggered.connect(self.removeSavedConnections)
+        actions.append(actions_clear_settings)
+
+        return actions

@@ -183,6 +183,12 @@ class OpenEO:
                     return line[len("version=") :]
         return None  # In case no version line is found
 
+    def clearSettings(self):
+        settings = QgsSettings()
+        settings.remove(SettingsPath.SAVED_CONNECTIONS.value)
+        settings.remove(SettingsPath.SAVED_LOGINS.value)
+        settings.remove(SettingsPath.PLUGIN_VERSION.value)
+
     def initSettings(self):
         """Checks for existing plugin settings or sets them up if they don't exist"""
         settings = QgsSettings()

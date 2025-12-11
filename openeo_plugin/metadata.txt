@@ -6,13 +6,13 @@
 name=openEO
 qgisMinimumVersion=3.40
 qgisMaximumVersion=4.00
-description=Plugin to access openEO compliant backends.
+description=Simplified access to openEO services.
 version=2.0-beta.3
 author=moreGeo GmbH
 email=mail@moregeo.it
 supportsQt6=True
 
-about=A plugin to access openEO compliant services. It integrates into the QGIS Browser and can inspect and visualize Collections, Batch Jobs and Web Services.
+about=A plugin to access openEO compliant services such as CDSE. It integrates into the QGIS Browser and can inspect and visualize Collections, Batch Jobs and Web Services.
 
 tracker=https://github.com/Open-EO/openeo-qgis-plugin/issues
 repository=https://github.com/Open-EO/openeo-qgis-plugin
@@ -25,14 +25,14 @@ hasProcessingProvider=no
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=openEO
+tags=openEO,batch jobs,web services,collections,CDSE,STAC
 
 homepage=https://openeo.org
 category=Plugins
 icon=images/logo.png
 
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False

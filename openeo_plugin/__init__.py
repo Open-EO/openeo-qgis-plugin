@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import pathlib
 
 from qgis.core import QgsApplication, QgsSettings
 
@@ -8,6 +9,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from .gui.browser import OpenEOItemProvider
 from .utils.settings import SettingsPath
 from .utils.logging import Logging
+from .models.CredentialsModel import Credentials
 
 
 # noinspection PyPep8Naming
@@ -43,6 +45,10 @@ class OpenEO:
             self.plugin_dir, "i18n", "OpenEO_{}.qm".format(locale)
         )
 
+        # Set up logging and messaging
+        logger = QgsApplication.messageLog()
+        self.logging = Logging(self.iface, logger)
+
         # initialize settings
         self.initSettings()
 
@@ -57,10 +63,6 @@ class OpenEO:
 
         self.PLUGIN_NAME = "openEO"
         self.PLUGIN_ENTRY_NAME = "openEO"
-
-        # Set up logging and messaging
-        logger = QgsApplication.messageLog()
-        self.logging = Logging(self.iface, logger)
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
@@ -172,22 +174,37 @@ class OpenEO:
             # substitute with your code.
             pass
 
+    def getPluginVersion(self):
+        filePath = pathlib.Path(__file__).parent.resolve()
+        with open(os.path.join(filePath, "metadata.txt"), "r") as file:
+            for line in file:
+                line = line.strip()
+                if line.startswith("version="):
+                    return line[len("version=") :]
+        return None  # In case no version line is found
+
+    def clearLogins(self):
+        Credentials().clear()
+
+    def clearSettings(self):
+        settings = QgsSettings()
+        settings.remove(SettingsPath.SAVED_CONNECTIONS.value)
+        settings.remove(SettingsPath.SAVED_LOGINS.value)
+        settings.remove(SettingsPath.PLUGIN_VERSION.value)
+
     def initSettings(self):
         """Checks for existing plugin settings or sets them up if they don't exist"""
         settings = QgsSettings()
-        saved_connections_exist = settings.contains(
-            SettingsPath.SAVED_CONNECTIONS.value
-        )
         saved_connections_value = settings.value(
             SettingsPath.SAVED_CONNECTIONS.value
         )
-
-        if not saved_connections_exist or not saved_connections_value:
-            # create the settings key
+        if not saved_connections_value:
             settings.setValue(SettingsPath.SAVED_CONNECTIONS.value, [])
 
-        saved_logins_exist = settings.contains(SettingsPath.SAVED_LOGINS.value)
-        saved_logins_value = settings.value(SettingsPath.SAVED_LOGINS.value)
-
-        if not saved_logins_exist or not saved_logins_value:
-            settings.setValue(SettingsPath.SAVED_LOGINS.value, [])
+        old_version = (
+            settings.value(SettingsPath.PLUGIN_VERSION.value) or "2.0-beta.2"
+        )
+        Credentials().update(old_version)
+        settings.setValue(
+            SettingsPath.PLUGIN_VERSION.value, self.getPluginVersion()
+        )

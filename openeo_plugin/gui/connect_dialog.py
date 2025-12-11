@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import openeo
 import requests
 
 from qgis.PyQt import uic
@@ -84,9 +83,13 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         QApplication.processEvents()
 
         self.connection = None
-        self.model = None
+        if not name:
+            # Fallback to default naming if no title is provided
+            name = url or None
+        self.model = ConnectionModel(name, url)
+
         try:
-            self.connection = openeo.connect(url)
+            self.connection = self.model.connect()
         except Exception as e:
             self.plugin.logging.warning(
                 "Connection could not be established. Please check the URL and your internet connection.",
@@ -99,9 +102,7 @@ class ConnectDialog(QtWidgets.QDialog, FORM_CLASS):
         if self.connection:
             if not name:
                 capabilities = self.connection.capabilities()
-                # Fallback to default naming if no title is provided
-                name = capabilities.get("title") or url
-            self.model = ConnectionModel(name, url)
+                self.model.name = capabilities.get("title") or url
             self.accept()  # Close the dialog on success
 
     def serverSelectorUpdated(self, index):

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import sip
 import openeo
-from openeo.rest.auth.config import RefreshTokenStore
 import webbrowser
 import json
 import pathlib
@@ -15,14 +14,13 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication
 
 from qgis.core import QgsApplication
-from qgis.core import QgsSettings
 from qgis.core import QgsDataCollectionItem
 
 from . import OpenEOJobsGroupItem
 from . import OpenEOServicesGroupItem
 from . import OpenEOCollectionsGroupItem
 from ..login_dialog import LoginDialog
-from ...utils.settings import SettingsPath
+from ...models.CredentialsModel import Credentials
 
 
 class OpenEOConnectionItem(QgsDataCollectionItem):
@@ -114,19 +112,21 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         if result:
             credentials = self.dlg.getCredentials()
             if credentials is not None:
-                self.saveLogin(*credentials)
+                Credentials().add(credentials)
 
         self.refresh()
 
     def authenticateStored(self):
-        login = self.getSavedLogin()
+        login = Credentials().get(self.model.id)
         if login:
-            if login.get("loginType") == "basic":
+            if login.loginType == "basic":
+                creds = login.credentials
                 self.getConnection().authenticate_basic(
-                    login["loginName"], login["password"]
+                    creds["username"],
+                    creds["password"],
                 )
                 return True
-            elif login.get("loginType") == "oidc":
+            elif login.loginType == "oidc":
                 try:
                     self.getConnection().authenticate_oidc_refresh_token()  # try logging in with refresh token
                     return True
@@ -160,63 +160,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             self.connection = self.model.connect()
         return self.connection
 
-    def saveLogin(self, loginType, name=None, password=None):
-        settings = QgsSettings()
-        loginInfo = {
-            "id": str(self.model.id),
-            "loginName": name,
-            "password": password,
-            "loginType": loginType,
-        }
-        logins = settings.value(SettingsPath.SAVED_LOGINS.value)
-        logins.append(loginInfo)
-        settings.setValue(SettingsPath.SAVED_LOGINS.value, logins)
-
-    def getSavedLogin(self):
-        settings = QgsSettings()
-        loginInfo = None  # return None if no login has been saved
-        logins = settings.value(SettingsPath.SAVED_LOGINS.value)
-        for login in logins:
-            if login["id"] == str(self.model.id):
-                loginInfo = login
-        return loginInfo
-
     def deleteLogin(self):
-        settings = QgsSettings()
-
-        # for deleting basic login
-        logins = settings.value(SettingsPath.SAVED_LOGINS.value)
-        for i, login in enumerate(logins):
-            if login["id"] == str(self.model.id):
-                logins.pop(i)
-        settings.setValue(SettingsPath.SAVED_LOGINS.value, logins)
-
-        # for deleting oidc refresh tokens
-        try:
-            # determine the key for the refresh token storage
-            _g = openeo.rest.auth.oidc.DefaultOidcClientGrant
-            provider_id, client_info = (
-                self.getConnection()._get_oidc_provider_and_client_info(
-                    provider_id=None,
-                    client_id=None,
-                    client_secret=None,
-                    default_client_grant_check=lambda grants: (
-                        _g.REFRESH_TOKEN in grants
-                        and (
-                            _g.DEVICE_CODE in grants
-                            or _g.DEVICE_CODE_PKCE in grants
-                        )
-                    ),
-                )
-            )
-            # overwrite refresh tokens
-            RefreshTokenStore().set(client_info.provider.issuer, value={})
-        except openeo.rest.OpenEoClientException as e:
-            self.plugin.logging.debug(
-                "Can't delete stored OpenID Connect refresh token. Connection may not support OpenID Connect.",
-                error=e,
-            )
-            return
+        Credentials().remove(self.model.id)
 
     def logout(self):
         self.deleteLogin()

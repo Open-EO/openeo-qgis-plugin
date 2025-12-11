@@ -12,6 +12,7 @@ from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtWidgets import QMessageBox
 
 from .ui.login_dialog_tab import Ui_DynamicLoginDialog
+from ..models.CredentialsModel import CredentialsModel
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 # use this if the pb_tool compiled version of the dialog doesn't work
@@ -23,7 +24,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
     This class is responsible for showing the provider-authentication window to set up authentication with the backend.
     """
 
-    def __init__(self, plugin, connection, model=None):
+    def __init__(self, plugin, connection, model):
         super(LoginDialog, self).__init__()
         QApplication.setStyle("cleanlooks")
 
@@ -31,6 +32,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
         self.connection = connection
         self.activeAuthProvider = None
         self.credentials = None
+        self.model = model
 
         if hasattr(self.connection, "list_auth_providers"):
             self.auth_provider_list = self.connection.list_auth_providers()
@@ -120,10 +122,8 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                     self.username, self.password
                 )
                 # TODO: add checkmark to select whether to save login
-                self.credentials = (
-                    auth_provider["type"],
-                    self.username,
-                    self.password,
+                self.credentials = CredentialsModel.fromBasic(
+                    self.model.id, self.username, self.password
                 )
                 return True
             except openeo.rest.OpenEoApiError:
@@ -174,7 +174,8 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                     pass
 
                 auth_thread.join()
-                self.credentials = (auth_provider["type"],)
+                # We need to wait for the refresh token store to be called
+                self.credentials = None
                 self.accept()  # Close the dialog
                 return True
             except AttributeError:
@@ -203,6 +204,10 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
         sys.stdout = capture_buffer
         try:
             self.connection.authenticate_oidc()
+        except Exception as e:
+            self.plugin.logging.error(
+                "OpenID Connect authentication failed.", error=e
+            )
         finally:
             sys.stdout = old_stdout
 

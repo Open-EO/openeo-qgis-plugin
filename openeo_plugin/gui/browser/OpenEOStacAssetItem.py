@@ -177,7 +177,7 @@ class OpenEOStacAssetItem(QgsDataItem):
         if (
             self.baseurl and href and bool(urlparse(href).netloc)
         ):  # if relative URL
-            return urljoin(href, self.baseurl)
+            return urljoin(self.baseurl, href)
         return href
 
     def download(self):

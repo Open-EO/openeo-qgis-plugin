@@ -94,8 +94,22 @@ class OpenEOStacAssetItem(QgsDataItem):
                 uriString = href
             uri.uri = uriString
 
-        # QGIS' STAC implementation also has more cases for pointclouds here.
-        # I am not sure if these are needed
+        if ("application/x+netcdf" in self.asset.get("type", "")) or (
+            "application/x-netcdf" in self.asset.get("type", "")) or (
+            "application/netcdf" in self.asset.get("type", "")
+        ):
+            # confirm whether raster is known
+            if ("raster:bands" in self.asset) or ("eo:bands" in self.asset) or ("bands" in self.asset):
+                uri.layerType = QgsMapLayerFactory.typeToString(
+                    Qgis.LayerType.Raster
+                )
+                #uri.providerKey = "gdal"
+                uri.supportedFormats = self.supportedFormats()
+                uri.supportedCrs = self.supportedCrs()
+            else:
+               uri.layerType = QgsMapLayerFactory.typeToString(
+                   Qgis.LayerType.Vector
+               )
 
         return [uri]
 
@@ -128,6 +142,7 @@ class OpenEOStacAssetItem(QgsDataItem):
             "application/geo+json": Qgis.LayerType.Vector,
             "application/netcdf": Qgis.LayerType.Raster,
             "application/x+netcdf": Qgis.LayerType.Raster,
+            "application/x-netcdf": Qgis.LayerType.Raster,
         }
         if mediaType in mediaTypes:
             return mediaTypes[mediaType]
@@ -271,6 +286,9 @@ class OpenEOStacAssetItem(QgsDataItem):
         taskManager.addTask(downloadTask)
         plugin.logging.info(f"Downloading: {assetName}")
 
+    def debug(self):
+        breakpoint()
+
     def actions(self, parent):
         actions = []
 
@@ -288,5 +306,9 @@ class OpenEOStacAssetItem(QgsDataItem):
         action_downloadTo = QAction(QIcon(), "Download to...", parent)
         action_downloadTo.triggered.connect(self.downloadTo)
         actions.append(action_downloadTo)
+
+        debug = QAction(QIcon(), "debug", parent)
+        debug.triggered.connect(self.debug)
+        actions.append(debug)
 
         return actions

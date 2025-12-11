@@ -3,6 +3,7 @@ import sip
 import openeo
 
 from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtCore import pyqtSignal
 
 from qgis.core import QgsDataCollectionItem
 from qgis.core import QgsApplication
@@ -16,6 +17,8 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
     openEO provider to the logged in account. Requires Authentication.
     Direct parent to:
     """
+
+    authenticationRequired = pyqtSignal()
 
     def __init__(self, plugin, parent):
         """Constructor.
@@ -31,14 +34,23 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             self, parent, "Batch Jobs", plugin.PLUGIN_ENTRY_NAME
         )
         self.plugin = plugin
+        self.loginRequested = False
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
+        
+        # Connect authentication signal to parent's authenticate method
+        self.authenticationRequired.connect(parent.authenticate)
 
     def refresh(self):
         self.depopulate()
         super().refresh()
 
     def createChildren(self):
+        if not self.isAuthenticated() and not self.loginRequested and not self.parent().forcedLogout:
+            self.loginRequested = True
+            self.authenticationRequired.emit()
+            return []
+
         items = []
         jobs = self.getJobs()
         for job in jobs:

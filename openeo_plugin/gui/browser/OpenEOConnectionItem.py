@@ -16,9 +16,9 @@ from qgis.PyQt.QtWidgets import QApplication
 from qgis.core import QgsApplication
 from qgis.core import QgsDataCollectionItem
 
-from . import OpenEOJobsGroupItem
-from . import OpenEOServicesGroupItem
-from . import OpenEOCollectionsGroupItem
+from .OpenEOJobsGroupItem import OpenEOJobsGroupItem
+from .OpenEOServicesGroupItem import OpenEOServicesGroupItem
+from .OpenEOCollectionsGroupItem import OpenEOCollectionsGroupItem
 from ..login_dialog import LoginDialog
 from ...models.CredentialsModel import Credentials
 

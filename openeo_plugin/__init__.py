@@ -6,7 +6,7 @@ from qgis.core import QgsApplication, QgsSettings
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
-from .gui.browser import OpenEOItemProvider
+from .gui.browser.OpenEOItemProvider import OpenEOItemProvider
 from .utils.settings import SettingsPath
 from .utils.logging import Logging
 from .models.CredentialsModel import Credentials

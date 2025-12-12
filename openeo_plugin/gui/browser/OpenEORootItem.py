@@ -8,7 +8,7 @@ from qgis.PyQt.QtWidgets import QAction
 from qgis.core import QgsSettings
 from qgis.core import QgsDataCollectionItem
 
-from . import OpenEOConnectionItem
+from .OpenEOConnectionItem import OpenEOConnectionItem
 from ..connect_dialog import ConnectDialog
 from ...utils.settings import SettingsPath
 from ...models.ConnectionModel import ConnectionModel

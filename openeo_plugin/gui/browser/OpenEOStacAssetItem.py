@@ -68,8 +68,8 @@ class OpenEOStacAssetItem(QgsDataItem):
             return self.uris
 
         uri = QgsMimeDataUtils.Uri()
+        uriString = ""
 
-        # TODO: support for other types needed? like jpeg?
         if (
             "image/tiff; application=geotiff" in self.asset.get("type", "")
         ) or ("image/vnd.stac.geotiff" in self.asset.get("type", "")):
@@ -82,7 +82,6 @@ class OpenEOStacAssetItem(QgsDataItem):
             uri.supportedCrs = self.supportedCrs()
 
             # create the uri string
-            uriString = ""
             href = self.resolveUrl()
             if href.startswith("http") or href.startswith("ftp"):
                 uriString = f"/vsicurl/{href}"
@@ -94,22 +93,23 @@ class OpenEOStacAssetItem(QgsDataItem):
                 uriString = href
             uri.uri = uriString
 
-        if ("application/x+netcdf" in self.asset.get("type", "")) or (
-            "application/x-netcdf" in self.asset.get("type", "")) or (
-            "application/netcdf" in self.asset.get("type", "")
+        if (
+            ("application/x+netcdf" in self.asset.get("type", ""))
+            or ("application/x-netcdf" in self.asset.get("type", ""))
+            or ("application/netcdf" in self.asset.get("type", ""))
         ):
-            # confirm whether raster is known
-            if ("raster:bands" in self.asset) or ("eo:bands" in self.asset) or ("bands" in self.asset):
-                uri.layerType = QgsMapLayerFactory.typeToString(
-                    Qgis.LayerType.Raster
-                )
-                #uri.providerKey = "gdal"
-                uri.supportedFormats = self.supportedFormats()
-                uri.supportedCrs = self.supportedCrs()
+            # this assumes Raster layer
+            uri.providerKey = "gdal"
+            uri.supportedFormats = self.supportedFormats()
+            uri.supportedCrs = self.supportedCrs()
+            href = self.resolveUrl()
+            if href.startswith("http") or href.startswith("ftp"):
+                uriString = f"/vsicurl/{href}"
+            elif href.startswith("s3://"):
+                uriString = f"/vsis3/{href[5:]}"
             else:
-               uri.layerType = QgsMapLayerFactory.typeToString(
-                   Qgis.LayerType.Vector
-               )
+                uriString = href
+            uri.uri = uriString
 
         return [uri]
 

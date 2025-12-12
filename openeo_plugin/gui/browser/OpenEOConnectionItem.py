@@ -55,6 +55,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.model = model
         self.lastAuthCheck = datetime.datetime.min
         self.authenticated = False
+        self.forcedLogout = False
+        self.loginStarted = False
 
         self.authenticateStored()
 
@@ -92,29 +94,42 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.parent().removeConnection(self)
 
     def authenticate(self):
+        if self.loginStarted:
+            return
+
         if self.authenticateStored():
             self.refresh()
             return
 
-        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         try:
-            self.dlg = LoginDialog(
-                self.plugin, self.getConnection(), model=self.model
-            )
+            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+            self.loginStarted = True
+            try:
+                self.dlg = LoginDialog(
+                    self.plugin, self.getConnection(), model=self.model
+                )
+            except Exception as e:
+                self.plugin.logging.error("Can't open login dialog.", error=e)
+                return
+            finally:
+                QApplication.restoreOverrideCursor()
+                self.loginStarted = False
+
+            result = self.dlg.exec()
+
+            if result:
+                credentials = self.dlg.getCredentials()
+                if credentials is not None:
+                    Credentials().add(credentials)
+                    self.forcedLogout = False
+                self.refresh()
         except Exception as e:
-            self.plugin.logging.error("Can't open login dialog.", error=e)
+            self.plugin.logging.error(
+                "Login failed. Something went wrong", error=e
+            )
             return
         finally:
-            QApplication.restoreOverrideCursor()
-
-        result = self.dlg.exec()
-
-        if result:
-            credentials = self.dlg.getCredentials()
-            if credentials is not None:
-                Credentials().add(credentials)
-
-        self.refresh()
+            self.loginStarted = False
 
     def authenticateStored(self):
         login = Credentials().get(self.model.id)
@@ -164,6 +179,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         Credentials().remove(self.model.id)
 
     def logout(self):
+        self.forcedLogout = True
+        self.loginStarted = False
         self.deleteLogin()
         # refresh connection
         self.connection = None

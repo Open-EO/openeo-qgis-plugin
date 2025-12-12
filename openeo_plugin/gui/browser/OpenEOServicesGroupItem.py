@@ -3,6 +3,7 @@ import sip
 import openeo
 
 from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtCore import pyqtSignal
 
 from qgis.core import QgsDataCollectionItem
 from qgis.core import QgsApplication
@@ -16,6 +17,8 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
     openEO provider to the logged in account. Requires Authentication.
     Direct parent to:
     """
+
+    authenticationRequired = pyqtSignal()
 
     def __init__(self, plugin, parent):
         """Constructor.
@@ -34,11 +37,22 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
+        # Connect authentication signal to parent's authenticate method
+        self.authenticationRequired.connect(parent.authenticate)
+
     def refresh(self):
         self.depopulate()
         super().refresh()
 
     def createChildren(self):
+        if (
+            not self.isAuthenticated()
+            and not self.parent().loginStarted
+            and not self.parent().forcedLogout
+        ):
+            self.authenticationRequired.emit()
+            return []
+
         items = []
         services = self.getServices()
         for service in services:
@@ -58,10 +72,11 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         return self.parent().isAuthenticated()
 
     def handleDoubleClick(self):
-        if not self.isAuthenticated():
+        if not self.parent().loginStarted and not self.isAuthenticated():
             self.parent().authenticate()
-
-        return super().handleDoubleClick()
+        else:
+            return super().handleDoubleClick()
+        return True
 
     def getServices(self):
         try:

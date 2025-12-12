@@ -34,10 +34,9 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             self, parent, "Batch Jobs", plugin.PLUGIN_ENTRY_NAME
         )
         self.plugin = plugin
-        self.loginRequested = False
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
-        
+
         # Connect authentication signal to parent's authenticate method
         self.authenticationRequired.connect(parent.authenticate)
 
@@ -46,8 +45,12 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         super().refresh()
 
     def createChildren(self):
-        if not self.isAuthenticated() and not self.loginRequested and not self.parent().forcedLogout:
-            self.loginRequested = True
+        if (
+            not self.isAuthenticated()
+            and not self.parent().loginRequested
+            and not self.parent().forcedLogout
+        ):
+            self.parent().loginRequested = True
             self.authenticationRequired.emit()
             return []
 
@@ -75,7 +78,9 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         return self.parent().isAuthenticated()
 
     def handleDoubleClick(self):
-        if not self.isAuthenticated():
+        if (
+            self.parent().loginRequested or self.parent().forcedLogout
+        ) and not self.isAuthenticated():
             self.parent().authenticate()
             self.refresh()
         return super().handleDoubleClick()

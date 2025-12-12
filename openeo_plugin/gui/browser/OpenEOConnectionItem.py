@@ -56,6 +56,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.lastAuthCheck = datetime.datetime.min
         self.authenticated = False
         self.forcedLogout = False
+        self.loginRequested = False
 
         self.authenticateStored()
 
@@ -93,7 +94,6 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.parent().removeConnection(self)
 
     def authenticate(self):
-        self.forcedLogout = False
         if self.authenticateStored():
             self.refresh()
             return
@@ -115,6 +115,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             credentials = self.dlg.getCredentials()
             if credentials is not None:
                 Credentials().add(credentials)
+                self.forcedLogout = False
 
         self.refresh()
 
@@ -167,6 +168,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
 
     def logout(self):
         self.forcedLogout = True
+        self.loginRequested = False
         self.deleteLogin()
         # refresh connection
         self.connection = None

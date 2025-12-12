@@ -47,10 +47,9 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
     def createChildren(self):
         if (
             not self.isAuthenticated()
-            and not self.parent().loginRequested
+            and not self.parent().loginStarted
             and not self.parent().forcedLogout
         ):
-            self.parent().loginRequested = True
             self.authenticationRequired.emit()
             return []
 
@@ -73,12 +72,11 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         return self.parent().isAuthenticated()
 
     def handleDoubleClick(self):
-        if (
-            self.parent().loginRequested or self.parent().forcedLogout
-        ) and not self.isAuthenticated():
+        if not self.parent().loginStarted and not self.isAuthenticated():
             self.parent().authenticate()
-            self.refresh()
-        return super().handleDoubleClick()
+        else:
+            return super().handleDoubleClick()
+        return True
 
     def getServices(self):
         try:

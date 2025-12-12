@@ -19,7 +19,7 @@ from qgis.core import QgsDataItem
 from qgis.core import QgsApplication
 from qgis.core import QgsProject
 
-from . import OpenEOStacAssetItem
+from .OpenEOStacAssetItem import OpenEOStacAssetItem
 from ..directory_dialog import DirectoryDialog
 from ...utils.downloadTask import DownloadJobAssetsTask
 

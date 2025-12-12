@@ -46,6 +46,33 @@ class OpenEOStacAssetItem(QgsDataItem):
             providerKey=plugin.PLUGIN_ENTRY_NAME,
         )
 
+        self.mimeDict = {
+            "image/tiff; application=geotiff": {
+                "type": Qgis.LayerType.Raster,
+                "format": "geotiff",
+            },
+            "image/tiff; application=geotiff; profile=cloud-optimized": {
+                "type": Qgis.LayerType.Raster,
+                "format": "geotiff",
+            },
+            "application/geo+json": {
+                "type": Qgis.LayerType.Vector,
+                "format": "geojson",
+            },
+            "application/netcdf": {
+                "type": Qgis.LayerType.Raster,
+                "format": "netcdf",
+            },
+            "application/x+netcdf": {
+                "type": Qgis.LayerType.Raster,
+                "format": "netcdf",
+            },
+            "application/x-netcdf": {
+                "type": Qgis.LayerType.Raster,
+                "format": "netcdf",
+            },
+        }
+
         self.asset = assetDict
         self.baseurl = stac_url
         self.key = key
@@ -68,8 +95,8 @@ class OpenEOStacAssetItem(QgsDataItem):
             return self.uris
 
         uri = QgsMimeDataUtils.Uri()
+        uriString = ""
 
-        # TODO: support for other types needed? like jpeg?
         if (
             "image/tiff; application=geotiff" in self.asset.get("type", "")
         ) or ("image/vnd.stac.geotiff" in self.asset.get("type", "")):
@@ -82,7 +109,6 @@ class OpenEOStacAssetItem(QgsDataItem):
             uri.supportedCrs = self.supportedCrs()
 
             # create the uri string
-            uriString = ""
             href = self.resolveUrl()
             if href.startswith("http") or href.startswith("ftp"):
                 uriString = f"/vsicurl/{href}"
@@ -94,8 +120,23 @@ class OpenEOStacAssetItem(QgsDataItem):
                 uriString = href
             uri.uri = uriString
 
-        # QGIS' STAC implementation also has more cases for pointclouds here.
-        # I am not sure if these are needed
+        if (
+            ("application/x+netcdf" in self.asset.get("type", ""))
+            or ("application/x-netcdf" in self.asset.get("type", ""))
+            or ("application/netcdf" in self.asset.get("type", ""))
+        ):
+            # this assumes Raster layer
+            uri.providerKey = "gdal"
+            uri.supportedFormats = self.supportedFormats()
+            uri.supportedCrs = self.supportedCrs()
+            href = self.resolveUrl()
+            if href.startswith("http") or href.startswith("ftp"):
+                uriString = f"/vsicurl/{href}"
+            elif href.startswith("s3://"):
+                uriString = f"/vsis3/{href[5:]}"
+            else:
+                uriString = href
+            uri.uri = uriString
 
         return [uri]
 
@@ -119,18 +160,18 @@ class OpenEOStacAssetItem(QgsDataItem):
             supportedCrs = f"EPSG:{supportedCrs}"
         return [supportedCrs]  # TODO: not fully reliable
 
+    def getFileFormat(self):
+        mediaType = self.asset.get("type", "")
+        mediaType = mediaType.lower()
+        if mediaType in self.mimeDict:
+            return self.mimeDict[mediaType]["format"]
+        return None
+
     def getLayerType(self):
         mediaType = self.asset.get("type", "")
         mediaType = mediaType.lower()
-        mediaTypes = {
-            "image/tiff; application=geotiff": Qgis.LayerType.Raster,
-            "image/tiff; application=geotiff; profile=cloud-optimized": Qgis.LayerType.Raster,
-            "application/geo+json": Qgis.LayerType.Vector,
-            "application/netcdf": Qgis.LayerType.Raster,
-            "application/x+netcdf": Qgis.LayerType.Raster,
-        }
-        if mediaType in mediaTypes:
-            return mediaTypes[mediaType]
+        if mediaType in self.mimeDict:
+            return self.mimeDict[mediaType]["type"]
         return None
 
     def producesValidLayer(self):

@@ -20,6 +20,44 @@ from qgis.core import QgsApplication
 from ..directory_dialog import DirectoryDialog
 from ...utils.downloadTask import DownloadAssetTask
 
+FILETYPES = {
+    "geotiff": {
+        "type": Qgis.LayerType.Raster,
+        "format": "geotiff",
+        "engine": "gdal",
+    },
+    "geojson": {
+        "type": Qgis.LayerType.Vector,
+        "format": "geojson",
+        "engine": "ogr",
+        "crs": "EPSG:4326",
+    },
+    "netcdf": {
+        "type": Qgis.LayerType.Raster,
+        "format": "netcdf",
+        "engine": "gdal",
+    },
+    "geoparquet": {
+        "type": Qgis.LayerType.Vector,
+        "format": "geoparquet",
+        "engine": "ogr",
+    },
+}
+
+MEDIATYPES = {
+    "image/tiff; application=geotiff": FILETYPES["geotiff"],
+    "image/tiff; application=geotiff; profile=cloud-optimized": FILETYPES[
+        "geotiff"
+    ],
+    "application/vnd.geo+json": FILETYPES["geojson"],
+    "application/geo+json": FILETYPES["geojson"],
+    "application/netcdf": FILETYPES["netcdf"],
+    "application/x-netcdf": FILETYPES["netcdf"],
+    "application/parquet; profile=geo": FILETYPES["geoparquet"],
+    # https://geoparquet.org/releases/v1.1.0/
+    "application/vnd.apache.parquet": FILETYPES["geoparquet"],
+}
+
 
 class OpenEOStacAssetItem(QgsDataItem):
     def __init__(self, assetDict, key, parent, plugin, stac_url=None):
@@ -50,90 +88,44 @@ class OpenEOStacAssetItem(QgsDataItem):
         self.baseurl = stac_url
         self.key = key
         self.plugin = plugin
-        self.uris = None  # initialise
-        self.uris = self.mimeUris()
+        self.uris = None
 
-        layerType = self.getLayerType()
-        if layerType is not None:
-            icon = QgsIconUtils.iconForLayerType(layerType)
+        mediaType = self.asset.get("type", "").lower()
+        self.fileType = (
+            MEDIATYPES[mediaType] if mediaType in MEDIATYPES else None
+        )
+        self.layerType = self.fileType["type"] if self.fileType else None
+
+        if self.layerType is not None:
+            icon = QgsIconUtils.iconForLayerType(self.layerType)
             self.setIcon(icon)
         else:
             self.setIcon(QgsApplication.getThemeIcon("mIconFile.svg"))
 
+        # Must be called after self.fileType is set
+        self.uris = self.mimeUris()
+
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
-
-    mimeDict = {
-        "image/tiff; application=geotiff": {
-            "type": Qgis.LayerType.Raster,
-            "format": "geotiff",
-        },
-        "image/tiff; application=geotiff; profile=cloud-optimized": {
-            "type": Qgis.LayerType.Raster,
-            "format": "geotiff",
-        },
-        "application/vnd.geo+json": {
-            "type": Qgis.LayerType.Vector,
-            "format": "geojson",
-        },
-        "application/geo+json": {
-            "type": Qgis.LayerType.Vector,
-            "format": "geojson",
-        },
-        "application/netcdf": {
-            "type": Qgis.LayerType.Raster,
-            "format": "netcdf",
-        },
-        "application/x-netcdf": {
-            "type": Qgis.LayerType.Raster,
-            "format": "netcdf",
-        },
-        "application/parquet; profile=geo": {
-            "type": Qgis.LayerType.Vector,
-            "format": "geoparquet",
-        },
-        # https://geoparquet.org/releases/v1.1.0/
-        "application/vnd.apache.parquet": {
-            "type": Qgis.LayerType.Vector,
-            "format": "geoparquet",
-        },
-    }
 
     def mimeUris(self):
         if self.uris is not None:
             return self.uris
 
-        uri = None
+        if self.fileType is None:
+            return [None]
 
-        if self.getFileFormat == "geotiff":
-            uri = self._makeUri(
-                Qgis.LayerType.Raster,
-                "gdal",
-                supportedFormats=self.supportedFormats(),
-                supportedCrs=self.supportedCrs(),
-            )
-        elif self.getFileFormat() == "netcdf":
-            # this assumes Raster layer
-            uri = self._makeUri(
-                Qgis.LayerType.Raster,
-                "gdal",
-                supportedFormats=self.supportedFormats(),
-                supportedCrs=self.supportedCrs(),
-            )
-        elif self.getFileFormat() == "geojson":
-            uri = self._makeUri(
-                Qgis.LayerType.Vector,
-                "ogr",
-                supportedFormats=self.supportedFormats(),
-            )
-        elif self.getFileFormat() == "geoparquet":
-            uri = self._makeUri(
-                Qgis.LayerType.Vector,
-                "ogr",
-                supportedFormats=self.supportedFormats(),
-                supportedCrs=self.supportedCrs(),
-            )
+        kwargs = {
+            "supportedFormats": self.supportedFormats(),
+        }
+        if self.fileType.get("crs", True):
+            kwargs["supportedCrs"] = self.supportedCrs()
 
+        uri = self._makeUri(
+            self.fileType["type"],
+            self.fileType["engine"],
+            **kwargs,
+        )
         return [uri]
 
     def _makeUri(
@@ -158,13 +150,11 @@ class OpenEOStacAssetItem(QgsDataItem):
         return uri
 
     def _handleMimeUriScheme(self, url):
-        parsedUrl = urlparse(url)
-        scheme = parsedUrl.scheme
-        urlWithoutScheme = f"{parsedUrl.netloc}{parsedUrl.path}{parsedUrl.query}{parsedUrl.fragment}"
+        scheme = urlparse(url).scheme
         if scheme == "http" or scheme == "https" or scheme == "ftp":
             return f"/vsicurl/{url}"
         elif scheme == "s3":
-            return f"/vsis3/{urlWithoutScheme}"
+            return f"/vsis3/{url[5:]}"  # remove 's3://'
         else:
             return url
 
@@ -177,43 +167,34 @@ class OpenEOStacAssetItem(QgsDataItem):
     def supportedFormats(self):
         return []  # TODO:
 
+    def getStac(self):
+        return self.parent().results or None
+
     def supportedCrs(self):
-        supportedCrs = (
-            self.asset.get("proj:epsg")
-            or self.asset.get("epsg")
-            or self.asset.get("crs")
-            or "3857"
+        stac = self.getStac()
+        candidates = [
+            self.asset.get("proj:code"),
+            self.asset.get("proj:epsg"),
+            self.fileType.get("crs"),
+        ]
+        if stac:
+            properties = stac.get("properties", {})
+            candidates.append(properties.get("proj:code"))
+            candidates.append(properties.get("proj:epsg"))
+
+        supportedCrs = next(
+            (crs for crs in candidates if crs is not None), None
         )
         if type(supportedCrs) is int:
             supportedCrs = f"EPSG:{supportedCrs}"
         return [supportedCrs]  # TODO: not fully reliable
 
-    def getFileFormat(self):
-        mediaType = self.asset.get("type", "")
-        mediaType = mediaType.lower()
-        if mediaType in self.mimeDict:
-            return self.mimeDict[mediaType]["format"]
-        return None
-
-    def getLayerType(self):
-        mediaType = self.asset.get("type", "")
-        mediaType = mediaType.lower()
-        if mediaType in self.mimeDict:
-            return self.mimeDict[mediaType]["type"]
-        return None
-
     def producesValidLayer(self):
-        validLayer = False
-        layerType = self.getLayerType()
         validLayerTypes = {
-            QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster),
-            QgsMapLayerFactory.typeToString(Qgis.LayerType.Vector),
+            Qgis.LayerType.Raster,
+            Qgis.LayerType.Vector,
         }
-        if layerType is not None:
-            validLayer = (
-                QgsMapLayerFactory.typeToString(layerType) in validLayerTypes
-            )
-        return validLayer
+        return self.layerType in validLayerTypes
 
     def createLayer(self, addToProject=True):
         if addToProject is None:

@@ -84,10 +84,6 @@ class OpenEOStacAssetItem(QgsDataItem):
             "type": Qgis.LayerType.Raster,
             "format": "netcdf",
         },
-        "application/x+netcdf": {
-            "type": Qgis.LayerType.Raster,
-            "format": "netcdf",
-        },
         "application/x-netcdf": {
             "type": Qgis.LayerType.Raster,
             "format": "netcdf",

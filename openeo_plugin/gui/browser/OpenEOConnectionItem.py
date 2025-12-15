@@ -8,6 +8,7 @@ import os
 import tempfile
 import datetime
 
+from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtWidgets import QApplication
@@ -102,6 +103,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             return
 
         try:
+            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
             if hasattr(self.connection, "list_auth_providers"):
                 auth_provider_list = self.connection.list_auth_providers()
             else:
@@ -113,6 +115,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                 error=e,
             )
             return
+        finally:
+            QApplication.restoreOverrideCursor()
 
         try:
             self.loginStarted = True
@@ -122,7 +126,6 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                 model=self.model,
                 auth_providers=auth_provider_list,
             )
-            QApplication.restoreOverrideCursor()
             result = self.dlg.exec()
 
             if result:

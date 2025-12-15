@@ -145,7 +145,7 @@ class OpenEOStacAssetItem(QgsDataItem):
         return [uri]
 
     def _handleMimeUriScheme(self, url):
-        parsedUrl = urlparse(url).scheme
+        parsedUrl = urlparse(url)
         scheme = parsedUrl.scheme
         urlWithoutScheme = f"{parsedUrl.netloc}{parsedUrl.path}{parsedUrl.query}{parsedUrl.fragment}"
         if scheme == "http" or scheme == "https" or scheme == "ftp":

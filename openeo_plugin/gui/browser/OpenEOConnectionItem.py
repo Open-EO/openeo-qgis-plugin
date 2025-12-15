@@ -96,12 +96,11 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
     def authenticate(self):
         if self.loginStarted:
             return
+        self.forcedLogout = False
 
         if self.authenticateStored():
             self.refresh()
             return
-
-        self.forcedLogout = False
 
         try:
             QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)

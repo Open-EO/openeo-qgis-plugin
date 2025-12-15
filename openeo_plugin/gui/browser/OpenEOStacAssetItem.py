@@ -92,6 +92,15 @@ class OpenEOStacAssetItem(QgsDataItem):
             "type": Qgis.LayerType.Raster,
             "format": "netcdf",
         },
+        "application/parquet; profile=geo": {
+            "type": Qgis.LayerType.Vector,
+            "format": "geoparquet",
+        },
+        # https://geoparquet.org/releases/v1.1.0/
+        "application/vnd.apache.parquet": {
+            "type": Qgis.LayerType.Vector,
+            "format": "geoparquet",
+        },
     }
 
     def mimeUris(self):
@@ -126,6 +135,15 @@ class OpenEOStacAssetItem(QgsDataItem):
             uri.providerKey = "ogr"
             uri.name = self.layerName()
             uri.supportedFormats = self.supportedFormats()
+            uri.uri = self._handleMimeUriProtocols(self.resolveUrl())
+        elif self.getFileFormat() == "geoparquet":
+            uri.layerType = QgsMapLayerFactory.typeToString(
+                Qgis.LayerType.Vector
+            )
+            uri.providerKey = "ogr"
+            uri.name = self.layerName()
+            uri.supportedFormats = self.supportedFormats()
+            uri.supportedCrs = self.supportedCrs()
             uri.uri = self._handleMimeUriProtocols(self.resolveUrl())
 
         return [uri]

@@ -185,8 +185,8 @@ class OpenEOStacAssetItem(QgsDataItem):
         return validLayer
 
     def createLayer(self, addToProject=True):
-        if not addToProject:
-            addToProject = True  # This is necessary for when the method is given as a callable
+        if addToProject is None:
+            addToProject = True  # when the method is passed as a callable
         if self.producesValidLayer():
             uris = self.mimeUris()
             uri = uris[0]

@@ -111,7 +111,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                 auth_provider_list = self.list_auth_providers()
         except Exception as e:
             self.plugin.logging.error(
-                "Can't open login dialog. Unable to fetch auth providers.",
+                "Can't get the identity providers from the server. Please try again later.",
                 error=e,
             )
             return

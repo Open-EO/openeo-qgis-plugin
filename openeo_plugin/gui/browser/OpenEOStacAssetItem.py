@@ -54,7 +54,7 @@ class OpenEOStacAssetItem(QgsDataItem):
         self.uris = self.mimeUris()
 
         layerType = self.getLayerType()
-        if layerType:
+        if layerType is not None:
             icon = QgsIconUtils.iconForLayerType(layerType)
             self.setIcon(icon)
         else:

@@ -103,46 +103,59 @@ class OpenEOStacAssetItem(QgsDataItem):
         if self.uris is not None:
             return self.uris
 
-        uri = QgsMimeDataUtils.Uri()
+        uri = None
 
         if self.getFileFormat == "geotiff":
-            uri.layerType = QgsMapLayerFactory.typeToString(
-                Qgis.LayerType.Raster
+            uri = self._makeUri(
+                Qgis.LayerType.Raster,
+                "gdal",
+                supportedFormats=self.supportedFormats(),
+                supportedCrs=self.supportedCrs(),
             )
-            uri.providerKey = "gdal"
-            uri.name = self.layerName()
-            uri.supportedFormats = self.supportedFormats()
-            uri.supportedCrs = self.supportedCrs()
-            uri.uri = self._handleMimeUriScheme(self.resolveUrl())
         elif self.getFileFormat() == "netcdf":
             # this assumes Raster layer
-            uri.layerType = QgsMapLayerFactory.typeToString(
-                Qgis.LayerType.Raster
+            uri = self._makeUri(
+                Qgis.LayerType.Raster,
+                "gdal",
+                supportedFormats=self.supportedFormats(),
+                supportedCrs=self.supportedCrs(),
             )
-            uri.providerKey = "gdal"
-            uri.name = self.layerName()
-            uri.supportedFormats = self.supportedFormats()
-            uri.supportedCrs = self.supportedCrs()
-            uri.uri = self._handleMimeUriScheme(self.resolveUrl())
         elif self.getFileFormat() == "geojson":
-            uri.layerType = QgsMapLayerFactory.typeToString(
-                Qgis.LayerType.Vector
+            uri = self._makeUri(
+                Qgis.LayerType.Vector,
+                "ogr",
+                supportedFormats=self.supportedFormats(),
             )
-            uri.providerKey = "ogr"
-            uri.name = self.layerName()
-            uri.supportedFormats = self.supportedFormats()
-            uri.uri = self._handleMimeUriScheme(self.resolveUrl())
         elif self.getFileFormat() == "geoparquet":
-            uri.layerType = QgsMapLayerFactory.typeToString(
-                Qgis.LayerType.Vector
+            uri = self._makeUri(
+                Qgis.LayerType.Vector,
+                "ogr",
+                supportedFormats=self.supportedFormats(),
+                supportedCrs=self.supportedCrs(),
             )
-            uri.providerKey = "ogr"
-            uri.name = self.layerName()
-            uri.supportedFormats = self.supportedFormats()
-            uri.supportedCrs = self.supportedCrs()
-            uri.uri = self._handleMimeUriScheme(self.resolveUrl())
 
         return [uri]
+
+    def _makeUri(
+        self,
+        layerType,
+        providerkey,
+        name=None,
+        supportedFormats=None,
+        supportedCrs=None,
+        uri=None,
+    ):
+        uri = QgsMimeDataUtils.Uri()
+        uri.layerType = QgsMapLayerFactory.typeToString(layerType)
+        uri.providerKey = providerkey
+        uri.name = name or self.layerName()
+        if supportedFormats:
+            uri.supportedFormats = supportedFormats
+        if supportedCrs:
+            uri.supportedCrs = supportedCrs
+        url = self.resolveUrl()
+        uri.uri = self._handleMimeUriScheme(url)
+        return uri
 
     def _handleMimeUriScheme(self, url):
         parsedUrl = urlparse(url)

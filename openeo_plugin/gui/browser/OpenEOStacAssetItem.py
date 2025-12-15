@@ -55,6 +55,10 @@ class OpenEOStacAssetItem(QgsDataItem):
                 "type": Qgis.LayerType.Raster,
                 "format": "geotiff",
             },
+            "application/vnd.geo+json": {
+                "type": Qgis.LayerType.Vector,
+                "format": "geojson",
+            },
             "application/geo+json": {
                 "type": Qgis.LayerType.Vector,
                 "format": "geojson",
@@ -95,7 +99,6 @@ class OpenEOStacAssetItem(QgsDataItem):
             return self.uris
 
         uri = QgsMimeDataUtils.Uri()
-        uriString = ""
 
         if (
             "image/tiff; application=geotiff" in self.asset.get("type", "")
@@ -107,18 +110,7 @@ class OpenEOStacAssetItem(QgsDataItem):
             uri.name = self.layerName()
             uri.supportedFormats = self.supportedFormats()
             uri.supportedCrs = self.supportedCrs()
-
-            # create the uri string
-            href = self.resolveUrl()
-            if href.startswith("http") or href.startswith("ftp"):
-                uriString = f"/vsicurl/{href}"
-                # if len(authcfg) > 0:
-                #    uriString += f" authcfg='{authcfg}'"
-            elif href.startswith("s3://"):
-                uriString = f"/vsis3/{href[5:]}"
-            else:
-                uriString = href
-            uri.uri = uriString
+            uri.uri = self._handleMimeUriProtocols(self.resolveUrl())
 
         if (
             ("application/x+netcdf" in self.asset.get("type", ""))
@@ -126,19 +118,24 @@ class OpenEOStacAssetItem(QgsDataItem):
             or ("application/netcdf" in self.asset.get("type", ""))
         ):
             # this assumes Raster layer
+            uri.layerType = QgsMapLayerFactory.typeToString(
+                Qgis.LayerType.Raster
+            )
             uri.providerKey = "gdal"
+            uri.name = self.layerName()
             uri.supportedFormats = self.supportedFormats()
             uri.supportedCrs = self.supportedCrs()
-            href = self.resolveUrl()
-            if href.startswith("http") or href.startswith("ftp"):
-                uriString = f"/vsicurl/{href}"
-            elif href.startswith("s3://"):
-                uriString = f"/vsis3/{href[5:]}"
-            else:
-                uriString = href
-            uri.uri = uriString
+            uri.uri = self._handleMimeUriProtocols(self.resolveUrl())
 
         return [uri]
+
+    def _handleMimeUriProtocols(self, url):
+        if url.startswith("http") or url.startswith("ftp"):
+            return f"/vsicurl/{url}"
+        elif url.startswith("s3://"):
+            return f"/vsis3/{url[5:]}"
+        else:
+            return url
 
     def hasDragEnabled(self):
         return self.producesValidLayer()

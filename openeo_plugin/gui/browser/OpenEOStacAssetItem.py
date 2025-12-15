@@ -46,33 +46,6 @@ class OpenEOStacAssetItem(QgsDataItem):
             providerKey=plugin.PLUGIN_ENTRY_NAME,
         )
 
-        self.mimeDict = {
-            "image/tiff; application=geotiff": {
-                "type": Qgis.LayerType.Raster,
-                "format": "geotiff",
-            },
-            "image/tiff; application=geotiff; profile=cloud-optimized": {
-                "type": Qgis.LayerType.Raster,
-                "format": "geotiff",
-            },
-            "application/geo+json": {
-                "type": Qgis.LayerType.Vector,
-                "format": "geojson",
-            },
-            "application/netcdf": {
-                "type": Qgis.LayerType.Raster,
-                "format": "netcdf",
-            },
-            "application/x+netcdf": {
-                "type": Qgis.LayerType.Raster,
-                "format": "netcdf",
-            },
-            "application/x-netcdf": {
-                "type": Qgis.LayerType.Raster,
-                "format": "netcdf",
-            },
-        }
-
         self.asset = assetDict
         self.baseurl = stac_url
         self.key = key
@@ -81,7 +54,7 @@ class OpenEOStacAssetItem(QgsDataItem):
         self.uris = self.mimeUris()
 
         layerType = self.getLayerType()
-        if layerType:
+        if layerType is not None:
             icon = QgsIconUtils.iconForLayerType(layerType)
             self.setIcon(icon)
         else:
@@ -90,16 +63,49 @@ class OpenEOStacAssetItem(QgsDataItem):
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
 
+    mimeDict = {
+        "image/tiff; application=geotiff": {
+            "type": Qgis.LayerType.Raster,
+            "format": "geotiff",
+        },
+        "image/tiff; application=geotiff; profile=cloud-optimized": {
+            "type": Qgis.LayerType.Raster,
+            "format": "geotiff",
+        },
+        "application/vnd.geo+json": {
+            "type": Qgis.LayerType.Vector,
+            "format": "geojson",
+        },
+        "application/geo+json": {
+            "type": Qgis.LayerType.Vector,
+            "format": "geojson",
+        },
+        "application/netcdf": {
+            "type": Qgis.LayerType.Raster,
+            "format": "netcdf",
+        },
+        "application/x-netcdf": {
+            "type": Qgis.LayerType.Raster,
+            "format": "netcdf",
+        },
+        "application/parquet; profile=geo": {
+            "type": Qgis.LayerType.Vector,
+            "format": "geoparquet",
+        },
+        # https://geoparquet.org/releases/v1.1.0/
+        "application/vnd.apache.parquet": {
+            "type": Qgis.LayerType.Vector,
+            "format": "geoparquet",
+        },
+    }
+
     def mimeUris(self):
         if self.uris is not None:
             return self.uris
 
         uri = QgsMimeDataUtils.Uri()
-        uriString = ""
 
-        if (
-            "image/tiff; application=geotiff" in self.asset.get("type", "")
-        ) or ("image/vnd.stac.geotiff" in self.asset.get("type", "")):
+        if self.getFileFormat == "geotiff":
             uri.layerType = QgsMapLayerFactory.typeToString(
                 Qgis.LayerType.Raster
             )
@@ -107,38 +113,47 @@ class OpenEOStacAssetItem(QgsDataItem):
             uri.name = self.layerName()
             uri.supportedFormats = self.supportedFormats()
             uri.supportedCrs = self.supportedCrs()
-
-            # create the uri string
-            href = self.resolveUrl()
-            if href.startswith("http") or href.startswith("ftp"):
-                uriString = f"/vsicurl/{href}"
-                # if len(authcfg) > 0:
-                #    uriString += f" authcfg='{authcfg}'"
-            elif href.startswith("s3://"):
-                uriString = f"/vsis3/{href[5:]}"
-            else:
-                uriString = href
-            uri.uri = uriString
-
-        if (
-            ("application/x+netcdf" in self.asset.get("type", ""))
-            or ("application/x-netcdf" in self.asset.get("type", ""))
-            or ("application/netcdf" in self.asset.get("type", ""))
-        ):
+            uri.uri = self._handleMimeUriScheme(self.resolveUrl())
+        elif self.getFileFormat() == "netcdf":
             # this assumes Raster layer
+            uri.layerType = QgsMapLayerFactory.typeToString(
+                Qgis.LayerType.Raster
+            )
             uri.providerKey = "gdal"
+            uri.name = self.layerName()
             uri.supportedFormats = self.supportedFormats()
             uri.supportedCrs = self.supportedCrs()
-            href = self.resolveUrl()
-            if href.startswith("http") or href.startswith("ftp"):
-                uriString = f"/vsicurl/{href}"
-            elif href.startswith("s3://"):
-                uriString = f"/vsis3/{href[5:]}"
-            else:
-                uriString = href
-            uri.uri = uriString
+            uri.uri = self._handleMimeUriScheme(self.resolveUrl())
+        elif self.getFileFormat() == "geojson":
+            uri.layerType = QgsMapLayerFactory.typeToString(
+                Qgis.LayerType.Vector
+            )
+            uri.providerKey = "ogr"
+            uri.name = self.layerName()
+            uri.supportedFormats = self.supportedFormats()
+            uri.uri = self._handleMimeUriScheme(self.resolveUrl())
+        elif self.getFileFormat() == "geoparquet":
+            uri.layerType = QgsMapLayerFactory.typeToString(
+                Qgis.LayerType.Vector
+            )
+            uri.providerKey = "ogr"
+            uri.name = self.layerName()
+            uri.supportedFormats = self.supportedFormats()
+            uri.supportedCrs = self.supportedCrs()
+            uri.uri = self._handleMimeUriScheme(self.resolveUrl())
 
         return [uri]
+
+    def _handleMimeUriScheme(self, url):
+        parsedUrl = urlparse(url).scheme
+        scheme = parsedUrl.scheme
+        urlWithoutScheme = f"{parsedUrl.netloc}{parsedUrl.path}{parsedUrl.query}{parsedUrl.fragment}"
+        if scheme == "http" or scheme == "https" or scheme == "ftp":
+            return f"/vsicurl/{url}"
+        elif scheme == "s3":
+            return f"/vsis3/{urlWithoutScheme}"
+        else:
+            return url
 
     def hasDragEnabled(self):
         return self.producesValidLayer()
@@ -147,7 +162,7 @@ class OpenEOStacAssetItem(QgsDataItem):
         return self.name()
 
     def supportedFormats(self):
-        return []  # TODO: determine more closely from capabilities
+        return []  # TODO:
 
     def supportedCrs(self):
         supportedCrs = (
@@ -188,8 +203,8 @@ class OpenEOStacAssetItem(QgsDataItem):
         return validLayer
 
     def createLayer(self, addToProject=True):
-        if not addToProject:
-            addToProject = True  # This is necessary for when the method is given as a callable
+        if addToProject is None:
+            addToProject = True  # when the method is passed as a callable
         if self.producesValidLayer():
             uris = self.mimeUris()
             uri = uris[0]

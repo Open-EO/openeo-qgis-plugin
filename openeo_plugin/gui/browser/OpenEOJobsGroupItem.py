@@ -7,7 +7,7 @@ from qgis.PyQt.QtWidgets import QAction
 from qgis.core import QgsDataCollectionItem
 from qgis.core import QgsApplication
 
-from . import OpenEOJobItem
+from .OpenEOJobItem import OpenEOJobItem
 
 
 class OpenEOJobsGroupItem(QgsDataCollectionItem):

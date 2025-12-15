@@ -117,7 +117,7 @@ class OpenEOStacAssetItem(QgsDataItem):
             uri.name = self.layerName()
             uri.supportedFormats = self.supportedFormats()
             uri.supportedCrs = self.supportedCrs()
-            uri.uri = self._handleMimeUriProtocols(self.resolveUrl())
+            uri.uri = self._handleMimeUriScheme(self.resolveUrl())
         elif self.getFileFormat() == "netcdf":
             # this assumes Raster layer
             uri.layerType = QgsMapLayerFactory.typeToString(
@@ -127,7 +127,7 @@ class OpenEOStacAssetItem(QgsDataItem):
             uri.name = self.layerName()
             uri.supportedFormats = self.supportedFormats()
             uri.supportedCrs = self.supportedCrs()
-            uri.uri = self._handleMimeUriProtocols(self.resolveUrl())
+            uri.uri = self._handleMimeUriScheme(self.resolveUrl())
         elif self.getFileFormat() == "geojson":
             uri.layerType = QgsMapLayerFactory.typeToString(
                 Qgis.LayerType.Vector
@@ -135,7 +135,7 @@ class OpenEOStacAssetItem(QgsDataItem):
             uri.providerKey = "ogr"
             uri.name = self.layerName()
             uri.supportedFormats = self.supportedFormats()
-            uri.uri = self._handleMimeUriProtocols(self.resolveUrl())
+            uri.uri = self._handleMimeUriScheme(self.resolveUrl())
         elif self.getFileFormat() == "geoparquet":
             uri.layerType = QgsMapLayerFactory.typeToString(
                 Qgis.LayerType.Vector
@@ -144,15 +144,18 @@ class OpenEOStacAssetItem(QgsDataItem):
             uri.name = self.layerName()
             uri.supportedFormats = self.supportedFormats()
             uri.supportedCrs = self.supportedCrs()
-            uri.uri = self._handleMimeUriProtocols(self.resolveUrl())
+            uri.uri = self._handleMimeUriScheme(self.resolveUrl())
 
         return [uri]
 
-    def _handleMimeUriProtocols(self, url):
-        if url.startswith("http") or url.startswith("ftp"):
+    def _handleMimeUriScheme(self, url):
+        parsedUrl = urlparse(url).scheme
+        scheme = parsedUrl.scheme
+        urlWithoutScheme = f"{parsedUrl.netloc}{parsedUrl.path}{parsedUrl.query}{parsedUrl.fragment}"
+        if scheme == "http" or scheme == "https" or scheme == "ftp":
             return f"/vsicurl/{url}"
-        elif url.startswith("s3://"):
-            return f"/vsis3/{url[5:]}"
+        elif scheme == "s3":
+            return f"/vsis3/{urlWithoutScheme}"
         else:
             return url
 

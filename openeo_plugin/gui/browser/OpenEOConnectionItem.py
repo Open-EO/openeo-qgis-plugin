@@ -101,6 +101,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             self.refresh()
             return
 
+        self.forcedLogout = False
+
         try:
             QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
             self.loginStarted = True
@@ -121,7 +123,6 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                 credentials = self.dlg.getCredentials()
                 if credentials is not None:
                     Credentials().add(credentials)
-                    self.forcedLogout = False
                 self.refresh()
         except Exception as e:
             self.plugin.logging.error(

@@ -131,9 +131,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                     Credentials().add(credentials)
                 self.refresh()
         except Exception as e:
-            self.plugin.logging.error(
-                "Login failed.", error=e
-            )
+            self.plugin.logging.error("Login failed.", error=e)
             return
         finally:
             self.loginStarted = False

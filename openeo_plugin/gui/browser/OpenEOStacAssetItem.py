@@ -46,37 +46,6 @@ class OpenEOStacAssetItem(QgsDataItem):
             providerKey=plugin.PLUGIN_ENTRY_NAME,
         )
 
-        self.mimeDict = {
-            "image/tiff; application=geotiff": {
-                "type": Qgis.LayerType.Raster,
-                "format": "geotiff",
-            },
-            "image/tiff; application=geotiff; profile=cloud-optimized": {
-                "type": Qgis.LayerType.Raster,
-                "format": "geotiff",
-            },
-            "application/vnd.geo+json": {
-                "type": Qgis.LayerType.Vector,
-                "format": "geojson",
-            },
-            "application/geo+json": {
-                "type": Qgis.LayerType.Vector,
-                "format": "geojson",
-            },
-            "application/netcdf": {
-                "type": Qgis.LayerType.Raster,
-                "format": "netcdf",
-            },
-            "application/x+netcdf": {
-                "type": Qgis.LayerType.Raster,
-                "format": "netcdf",
-            },
-            "application/x-netcdf": {
-                "type": Qgis.LayerType.Raster,
-                "format": "netcdf",
-            },
-        }
-
         self.asset = assetDict
         self.baseurl = stac_url
         self.key = key
@@ -94,15 +63,44 @@ class OpenEOStacAssetItem(QgsDataItem):
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
 
+    mimeDict = {
+        "image/tiff; application=geotiff": {
+            "type": Qgis.LayerType.Raster,
+            "format": "geotiff",
+        },
+        "image/tiff; application=geotiff; profile=cloud-optimized": {
+            "type": Qgis.LayerType.Raster,
+            "format": "geotiff",
+        },
+        "application/vnd.geo+json": {
+            "type": Qgis.LayerType.Vector,
+            "format": "geojson",
+        },
+        "application/geo+json": {
+            "type": Qgis.LayerType.Vector,
+            "format": "geojson",
+        },
+        "application/netcdf": {
+            "type": Qgis.LayerType.Raster,
+            "format": "netcdf",
+        },
+        "application/x+netcdf": {
+            "type": Qgis.LayerType.Raster,
+            "format": "netcdf",
+        },
+        "application/x-netcdf": {
+            "type": Qgis.LayerType.Raster,
+            "format": "netcdf",
+        },
+    }
+
     def mimeUris(self):
         if self.uris is not None:
             return self.uris
 
         uri = QgsMimeDataUtils.Uri()
 
-        if (
-            "image/tiff; application=geotiff" in self.asset.get("type", "")
-        ) or ("image/vnd.stac.geotiff" in self.asset.get("type", "")):
+        if self.getFileFormat == "geotiff":
             uri.layerType = QgsMapLayerFactory.typeToString(
                 Qgis.LayerType.Raster
             )
@@ -111,12 +109,7 @@ class OpenEOStacAssetItem(QgsDataItem):
             uri.supportedFormats = self.supportedFormats()
             uri.supportedCrs = self.supportedCrs()
             uri.uri = self._handleMimeUriProtocols(self.resolveUrl())
-
-        if (
-            ("application/x+netcdf" in self.asset.get("type", ""))
-            or ("application/x-netcdf" in self.asset.get("type", ""))
-            or ("application/netcdf" in self.asset.get("type", ""))
-        ):
+        elif self.getFileFormat() == "netcdf":
             # this assumes Raster layer
             uri.layerType = QgsMapLayerFactory.typeToString(
                 Qgis.LayerType.Raster
@@ -125,6 +118,14 @@ class OpenEOStacAssetItem(QgsDataItem):
             uri.name = self.layerName()
             uri.supportedFormats = self.supportedFormats()
             uri.supportedCrs = self.supportedCrs()
+            uri.uri = self._handleMimeUriProtocols(self.resolveUrl())
+        elif self.getFileFormat() == "geojson":
+            uri.layerType = QgsMapLayerFactory.typeToString(
+                Qgis.LayerType.Vector
+            )
+            uri.providerKey = "ogr"
+            uri.name = self.layerName()
+            uri.supportedFormats = self.supportedFormats()
             uri.uri = self._handleMimeUriProtocols(self.resolveUrl())
 
         return [uri]
@@ -144,7 +145,7 @@ class OpenEOStacAssetItem(QgsDataItem):
         return self.name()
 
     def supportedFormats(self):
-        return []  # TODO: determine more closely from capabilities
+        return []  # TODO:
 
     def supportedCrs(self):
         supportedCrs = (

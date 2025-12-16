@@ -121,13 +121,8 @@ class OpenEOJobItem(QgsDataItem):
         if self.results is not None:
             # get the stac item
             assets = self.results.get("assets", [])
-            jobResultLink = next(
-                (
-                    link
-                    for link in self.results.get("links", [])
-                    if link.get("rel") == "self" and link.get("href")
-                ),
-                None,
+            jobResultLink = (
+                self.getLink("self") or self.job.get_results_metadata_url()
             )
             # create stac-asset items
             for key in assets:
@@ -136,9 +131,7 @@ class OpenEOJobItem(QgsDataItem):
                     key=key,
                     parent=self,
                     plugin=self.plugin,
-                    # todo: Instead of providing None, we should provide the initial request URL
-                    # that the Python client used to request the job result
-                    stac_url=jobResultLink["href"] if jobResultLink else None,
+                    stac_url=jobResultLink,
                 )
                 self.assetItems.append(assetItem)
                 sip.transferto(assetItem, self)
@@ -305,4 +298,36 @@ class OpenEOJobItem(QgsDataItem):
         actions_saveResultsTo.triggered.connect(self.saveResultsTo)
         actions.append(actions_saveResultsTo)
 
+        action_copy_url = QAction(QIcon(), "Copy STAC metadata URL", parent)
+        action_copy_url.triggered.connect(self.copyUrlToClipboard)
+        actions.append(action_copy_url)
+
         return actions
+
+    def getLink(self, rel):
+        if not self.results:
+            return None
+
+        link = next(
+            (
+                link
+                for link in self.results.get("links", [])
+                if link.get("rel") == rel and link.get("href")
+            ),
+            None,
+        )
+        return link.get("href") if link else None
+
+    # Method to copy URL to clipboard
+    def copyUrlToClipboard(self):
+        self.getJob()
+
+        public = "public"
+        url = self.getLink("canonical")
+        if not url:
+            public = "NON-public"
+            url = self.job.get_results_metadata_url()
+
+        clipboard = QApplication.clipboard()
+        clipboard.setText(url)
+        self.plugin.logging.success(f"Copied {public} URL to clipboard")

@@ -77,6 +77,12 @@ class OpenEOJobItem(QgsDataItem):
         statusString = f"({status}) "
         self.setName(statusString + name)
 
+    def sortKey(self):
+        if self.parent().sortChildrenBy == "title":
+            return self.getTitle().lower()
+        else:
+            return self.get("created")
+
     def hasDragEnabled(self):
         return False
 

@@ -3,6 +3,7 @@ import sip
 import openeo
 
 from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import pyqtSignal
 
 from qgis.core import QgsDataCollectionItem
@@ -34,6 +35,7 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             self, parent, "Batch Jobs", plugin.PLUGIN_ENTRY_NAME
         )
         self.plugin = plugin
+        self.sortChildrenBy = "created"
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
@@ -102,4 +104,23 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             parent,
         )
         action_refresh.triggered.connect(self.refresh)
+
+        if self.sortChildrenBy == "created":
+            text = "Sort by title"
+        else:
+            text = "Sort by creation date"
+        action_refresh = QAction(
+            QIcon(),
+            text,
+            parent,
+        )
+        action_refresh.triggered.connect(self.sortByToggle)
+
         return [action_refresh]
+
+    def sortByToggle(self):
+        if self.sortChildrenBy == "created":
+            self.sortChildrenBy = "title"
+        else:
+            self.sortChildrenBy = "created"
+        self.refresh()

@@ -280,7 +280,9 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         actions.append(separator)
 
         action_properties = QAction(
-            QgsApplication.getThemeIcon("mIconInfo.svg"), "Details", parent
+            QgsApplication.getThemeIcon("propertyicons/metadata.svg"),
+            "Details",
+            parent,
         )
         action_properties.triggered.connect(self.viewProperties)
         actions.append(action_properties)

@@ -3,6 +3,7 @@ import sip
 import openeo
 
 from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import pyqtSignal
 
 from qgis.core import QgsDataCollectionItem, QgsApplication
@@ -83,8 +84,7 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
     def getJobs(self):
         try:
-            jobs = self.getConnection().list_jobs()
-            return jobs
+            return self.getConnection().list_jobs()
         except openeo.rest.OpenEoApiError:
             return []  # this happens when authentication is missing
         except Exception as e:
@@ -95,24 +95,17 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
     def getSortAction(self, title, key):
         if self.sortChildrenBy == key:
-            icon = "mIconSelected.svg"
+            icon = QgsApplication.getThemeIcon(
+                "algorithms/mAlgorithmCheckGeometry.svg"
+            )
         else:
-            icon = "mIconUnselected.svg"
-        action = QAction(QgsApplication.getThemeIcon(icon), title, self)
+            icon = QIcon()
+        action = QAction(icon, title, self)
         action.triggered.connect(lambda: self.sortBy(key))
         return action
 
     def actions(self, parent):
-        separator = QAction(parent)
-        separator.setSeparator(True)
-
-        actions = [
-            self.getSortAction("Sort by: Default", "default"),
-            self.getSortAction("Sort by: Newest first", "newest"),
-            self.getSortAction("Sort by: Oldest first", "oldest"),
-            self.getSortAction("Sort by: Title", "title"),
-            separator,
-        ]
+        actions = []
 
         action_refresh = QAction(
             QgsApplication.getThemeIcon("mActionRefresh.svg"),
@@ -121,6 +114,19 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         )
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
+
+        separator = QAction(parent)
+        separator.setSeparator(True)
+
+        actions.extend(
+            [
+                separator,
+                self.getSortAction("Sort by: Default", "default"),
+                self.getSortAction("Sort by: Newest first", "newest"),
+                self.getSortAction("Sort by: Oldest first", "oldest"),
+                self.getSortAction("Sort by: Title", "title"),
+            ]
+        )
 
         return actions
 

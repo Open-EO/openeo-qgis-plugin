@@ -66,9 +66,6 @@ class OpenEOStacAssetItem(QgsDataItem):
         else:
             self.setIcon(QgsApplication.getThemeIcon("mIconFile.svg"))
 
-        # Must be called after self.fileType is set
-        # self.uris = self.mimeUris()
-
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
 
@@ -314,6 +311,10 @@ class OpenEOStacAssetItem(QgsDataItem):
         )
         action_downloadTo.triggered.connect(self.downloadTo)
         actions.append(action_downloadTo)
+
+        separator = QAction(parent)
+        separator.setSeparator(True)
+        actions.append(separator)
 
         action_copy_url = QAction(
             QgsApplication.getThemeIcon("mActionEditCopy.svg"),

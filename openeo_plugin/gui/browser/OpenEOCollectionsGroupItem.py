@@ -2,6 +2,7 @@
 import sip
 
 from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtGui import QIcon
 
 from qgis.core import QgsDataCollectionItem
 from qgis.core import QgsApplication
@@ -31,6 +32,7 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
             self, parent, "Collections", plugin.PLUGIN_ENTRY_NAME
         )
         self.plugin = plugin
+        self.showTitles = True
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
     def getCollections(self):
@@ -91,10 +93,34 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
         return webMapLinks
 
     def actions(self, parent):
+        actions = []
+
         action_refresh = QAction(
             QgsApplication.getThemeIcon("mActionRefresh.svg"),
             "Refresh",
             parent,
         )
         action_refresh.triggered.connect(self.refresh)
-        return [action_refresh]
+        actions.append(action_refresh)
+
+        separator = QAction(parent)
+        separator.setSeparator(True)
+        actions.append(separator)
+
+        action_name = QAction(
+            QgsApplication.getThemeIcon(
+                "algorithms/mAlgorithmCheckGeometry.svg"
+            )
+            if self.showTitles
+            else QIcon(),
+            "Show titles",
+            parent,
+        )
+        action_name.triggered.connect(self.toggleShowTitles)
+        actions.append(action_name)
+
+        return actions
+
+    def toggleShowTitles(self):
+        self.showTitles = not self.showTitles
+        self.refresh()

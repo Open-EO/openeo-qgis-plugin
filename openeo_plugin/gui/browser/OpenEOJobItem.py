@@ -64,6 +64,9 @@ class OpenEOJobItem(QgsDataItem):
 
         self.updateFromData()
 
+    def getBatchJob(self):
+        return self.getConnection().job(self.job["id"])
+
     def refresh(self, children: Iterable[QgsDataItem] | bool = False):
         self.depopulate()
         if children is False:
@@ -101,10 +104,10 @@ class OpenEOJobItem(QgsDataItem):
         return self.parent().getConnection()
 
     def getJob(self, force=False):
-        job = self.getConnection().job(self.job["id"])
+        batchjob = self.getBatchJob()
         if force:
             try:
-                self.job = job.describe()
+                self.job = batchjob.describe()
                 self.updateFromData()
             except Exception as e:
                 self.plugin.logging.error(
@@ -116,7 +119,7 @@ class OpenEOJobItem(QgsDataItem):
             force or self.results is None
         ) and self.getStatus() in mayHaveResults:
             try:
-                results = job.get_results()
+                results = batchjob.get_results()
                 if results is not None:
                     self.results = results.get_metadata()
                 else:
@@ -139,7 +142,8 @@ class OpenEOJobItem(QgsDataItem):
             # get the stac item
             assets = self.results.get("assets", [])
             jobResultLink = (
-                self.getLink("self") or self.job.get_results_metadata_url()
+                self.getLink("self")
+                or self.getBatchJob().get_results_metadata_url()
             )
             # create stac-asset items
             for key in assets:
@@ -293,19 +297,6 @@ class OpenEOJobItem(QgsDataItem):
 
     def actions(self, parent):
         actions = []
-        job_properties = QAction(
-            QgsApplication.getThemeIcon("mIconInfo.svg"), "Details", parent
-        )
-        job_properties.triggered.connect(self.viewProperties)
-        actions.append(job_properties)
-
-        action_refresh = QAction(
-            QgsApplication.getThemeIcon("mActionRefresh.svg"),
-            "Refresh",
-            parent,
-        )
-        action_refresh.triggered.connect(self.refresh)
-        actions.append(action_refresh)
 
         action_addGroup = QAction(
             QgsApplication.getThemeIcon("mActionAddLayer.svg"),
@@ -323,6 +314,18 @@ class OpenEOJobItem(QgsDataItem):
         actions_saveResultsTo.triggered.connect(self.saveResultsTo)
         actions.append(actions_saveResultsTo)
 
+        separator = QAction(parent)
+        separator.setSeparator(True)
+        actions.append(separator)
+
+        job_properties = QAction(
+            QgsApplication.getThemeIcon("propertyicons/metadata.svg"),
+            "Details",
+            parent,
+        )
+        job_properties.triggered.connect(self.viewProperties)
+        actions.append(job_properties)
+
         action_copy_url = QAction(
             QgsApplication.getThemeIcon("mActionEditCopy.svg"),
             "Copy STAC metadata URL",
@@ -330,6 +333,14 @@ class OpenEOJobItem(QgsDataItem):
         )
         action_copy_url.triggered.connect(self.copyUrlToClipboard)
         actions.append(action_copy_url)
+
+        action_refresh = QAction(
+            QgsApplication.getThemeIcon("mActionRefresh.svg"),
+            "Refresh",
+            parent,
+        )
+        action_refresh.triggered.connect(self.refresh)
+        actions.append(action_refresh)
 
         return actions
 
@@ -355,7 +366,7 @@ class OpenEOJobItem(QgsDataItem):
         url = self.getLink("canonical")
         if not url:
             public = "NON-public"
-            url = self.job.get_results_metadata_url()
+            url = self.getBatchJob().get_results_metadata_url()
 
         clipboard = QApplication.clipboard()
         clipboard.setText(url)

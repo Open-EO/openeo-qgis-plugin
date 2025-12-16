@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from collections.abc import Iterable
+import dateutil.parser
 import webbrowser
 import os
 import tempfile
@@ -20,7 +21,7 @@ from ...utils.wmts import WebMapTileService
 
 
 class OpenEOServiceItem(QgsDataItem):
-    def __init__(self, parent, service, plugin):
+    def __init__(self, parent, service, plugin, index):
         """Constructor.
 
         :param parent: the parent DataItem. expected to be an OpenEOCollectionsGroupItem.
@@ -49,6 +50,7 @@ class OpenEOServiceItem(QgsDataItem):
         self.service = service
         self.serviceID = self.service["id"]
         self.plugin = plugin
+        self.index = index
 
         self.uris = []
 
@@ -65,11 +67,27 @@ class OpenEOServiceItem(QgsDataItem):
             return super().refresh(children)
 
     def updateFromData(self):
-        name = self.service.get("title") or self.service.get("id")
+        name = self.getTitle()
         status = "(enabled) "
         if not self.isEnabled():
             status = "(disabled) "
         self.setName(status + name)
+
+    def sortKey(self):
+        sortBy = self.parent().sortChildrenBy
+        if sortBy == "title":
+            return self.getTitle().lower()
+        elif sortBy == "oldest" or sortBy == "newest":
+            try:
+                created = self.service.get("created", "")
+                timestamp = dateutil.parser.isoparse(created).timestamp()
+                if sortBy == "newest":
+                    timestamp *= -1
+                return int(timestamp)
+            except Exception:
+                return 0
+        else:  # default, keep initial backend order
+            return self.index
 
     def hasDragEnabled(self):
         return True
@@ -87,15 +105,12 @@ class OpenEOServiceItem(QgsDataItem):
         return self.parent().getConnection()
 
     def createUri(self, link):
-        title = link.get("title") or ""
         mapType = link.get("type") or ""
 
         uri = QgsMimeDataUtils.Uri()
         uri.layerType = QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster)
         uri.providerKey = "wms"
-        uri.name = self.layerName()
-        if len(title) > 0 and title != uri.name:
-            uri.name += f" - {title}"
+        uri.name = self.getTitle()
         uri.supportedFormats = (
             self.supportedFormats()
         )  # todo: do we need to set this more specifically?
@@ -125,7 +140,7 @@ class OpenEOServiceItem(QgsDataItem):
             return uri
         elif mapType.lower() == "wms":
             # TODO
-            return
+            return None
         else:
             return None
 
@@ -162,6 +177,11 @@ class OpenEOServiceItem(QgsDataItem):
 
         return mimeUris
 
+    def getTitle(self):
+        if not self.service:
+            return "n/a"
+        return self.service.get("title") or self.service.get("id")
+
     def addToProject(self):
         uris = self.mimeUris()
         uri = uris[0]
@@ -197,8 +217,23 @@ class OpenEOServiceItem(QgsDataItem):
     def actions(self, parent):
         actions = []
 
+        if self.isEnabled():
+            action_add_to_project = QAction(
+                QgsApplication.getThemeIcon("mActionAddLayer.svg"),
+                "Add Layer to Project",
+                parent,
+            )
+            action_add_to_project.triggered.connect(self.addToProject)
+            actions.append(action_add_to_project)
+
+            separator = QAction(parent)
+            separator.setSeparator(True)
+            actions.append(separator)
+
         action_properties = QAction(
-            QgsApplication.getThemeIcon("mIconInfo.svg"), "Details", parent
+            QgsApplication.getThemeIcon("propertyicons/metadata.svg"),
+            "Details",
+            parent,
         )
         action_properties.triggered.connect(self.viewProperties)
         actions.append(action_properties)
@@ -210,18 +245,5 @@ class OpenEOServiceItem(QgsDataItem):
         )
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
-
-        if self.isEnabled():
-            separator = QAction(parent)
-            separator.setSeparator(True)
-            actions.append(separator)
-
-            action_add_to_project = QAction(
-                QgsApplication.getThemeIcon("mActionAddLayer.svg"),
-                "Add Layer to Project",
-                parent,
-            )
-            action_add_to_project.triggered.connect(self.addToProject)
-            actions.append(action_add_to_project)
 
         return actions

@@ -34,13 +34,11 @@ class OpenEOCollectionItem(QgsDataItem):
         :param collection: dict containing relevant infos about the collection.
         :type url: dict
         """
-
-        name = collection.get("title") or collection.get("id")
         QgsDataItem.__init__(
             self,
             type=Qgis.BrowserItemType.Custom,
+            name=None,
             parent=parent,
-            name=name,
             path=None,
             providerKey=plugin.PLUGIN_ENTRY_NAME,
         )
@@ -53,6 +51,8 @@ class OpenEOCollectionItem(QgsDataItem):
 
         self.uris = []
 
+        self.setName(self.name())
+
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
 
@@ -63,6 +63,12 @@ class OpenEOCollectionItem(QgsDataItem):
 
     def hasDragEnabled(self):
         return self.preview
+
+    def name(self):
+        if self.parent().showTitles:
+            return self.collection.get("title") or self.collection.get("id")
+        else:
+            return self.collection.get("id")
 
     def layerName(self):
         return self.name()
@@ -197,17 +203,7 @@ class OpenEOCollectionItem(QgsDataItem):
     def actions(self, parent):
         actions = []
 
-        action_properties = QAction(
-            QgsApplication.getThemeIcon("mIconInfo.svg"), "Details", parent
-        )
-        action_properties.triggered.connect(self.viewProperties)
-        actions.append(action_properties)
-
         if self.preview:
-            separator = QAction(parent)
-            separator.setSeparator(True)
-            actions.append(separator)
-
             action_add_to_project = QAction(
                 QgsApplication.getThemeIcon("mActionAddLayer.svg"),
                 "Add Layer to Project",
@@ -215,5 +211,17 @@ class OpenEOCollectionItem(QgsDataItem):
             )
             action_add_to_project.triggered.connect(self.addToProject)
             actions.append(action_add_to_project)
+
+            separator = QAction(parent)
+            separator.setSeparator(True)
+            actions.append(separator)
+
+        action_properties = QAction(
+            QgsApplication.getThemeIcon("propertyicons/metadata.svg"),
+            "Details",
+            parent,
+        )
+        action_properties.triggered.connect(self.viewProperties)
+        actions.append(action_properties)
 
         return actions

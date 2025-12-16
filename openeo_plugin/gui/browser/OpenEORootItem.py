@@ -5,8 +5,7 @@ import os
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
-from qgis.core import QgsSettings
-from qgis.core import QgsDataCollectionItem
+from qgis.core import QgsSettings, QgsDataCollectionItem, QgsApplication
 
 from .OpenEOConnectionItem import OpenEOConnectionItem
 from ..connect_dialog import ConnectDialog
@@ -115,7 +114,9 @@ class OpenEORootItem(QgsDataCollectionItem):
         actions = []
 
         action_new_connection = QAction(
-            QIcon(), "New openEO Connection", parent
+            QgsApplication.getThemeIcon("mActionAdd.svg"),
+            "New openEO Connection",
+            parent,
         )
         action_new_connection.triggered.connect(self.addConnection)
         actions.append(action_new_connection)
@@ -125,13 +126,17 @@ class OpenEORootItem(QgsDataCollectionItem):
         actions.append(separator)
 
         actions_logout_all = QAction(
-            QIcon(), "Logout from all connections", parent
+            QgsApplication.getThemeIcon("unlocked.svg"),
+            "Logout from all connections",
+            parent,
         )
         actions_logout_all.triggered.connect(self.removeSavedLogins)
         actions.append(actions_logout_all)
 
         actions_clear_settings = QAction(
-            QIcon(), "Remove all connections", parent
+            QgsApplication.getThemeIcon("mActionDeleteSelected.svg"),
+            "Remove all connections",
+            parent,
         )
         actions_clear_settings.triggered.connect(self.removeAllConnections)
         actions.append(actions_clear_settings)

@@ -10,11 +10,9 @@ import datetime
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
-from qgis.PyQt.QtWidgets import QApplication
+from qgis.PyQt.QtWidgets import QAction, QApplication
 
-from qgis.core import QgsApplication
-from qgis.core import QgsDataCollectionItem
+from qgis.core import QgsApplication, QgsDataCollectionItem
 
 from .OpenEOJobsGroupItem import OpenEOJobsGroupItem
 from .OpenEOServicesGroupItem import OpenEOServicesGroupItem
@@ -261,23 +259,29 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
 
     def actions(self, parent):
         actions = []
-        separator = QAction(parent)
-        separator.setSeparator(True)
 
         if not self.isAuthenticated():
             action_authenticate = QAction(
-                QIcon(), "Log In (Authenticate)", parent
+                QgsApplication.getThemeIcon("locked.svg"),
+                "Log In (Authenticate)",
+                parent,
             )
             action_authenticate.triggered.connect(self.authenticate)
             actions.append(action_authenticate)
-            actions.append(separator)
         else:
-            action_logout = QAction(QIcon(), "Log Out", parent)
+            action_logout = QAction(
+                QgsApplication.getThemeIcon("unlocked.svg"), "Log Out", parent
+            )
             action_logout.triggered.connect(self.logout)
             actions.append(action_logout)
-            actions.append(separator)
 
-        action_properties = QAction(QIcon(), "Details", parent)
+        separator = QAction(parent)
+        separator.setSeparator(True)
+        actions.append(separator)
+
+        action_properties = QAction(
+            QgsApplication.getThemeIcon("mIconInfo.svg"), "Details", parent
+        )
         action_properties.triggered.connect(self.viewProperties)
         actions.append(action_properties)
 
@@ -297,6 +301,8 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         action_delete.triggered.connect(self.remove)
         actions.append(action_delete)
 
+        separator = QAction(parent)
+        separator.setSeparator(True)
         actions.append(separator)
 
         action_webeditor = QAction(QIcon(), "Open in Web Editor", parent)

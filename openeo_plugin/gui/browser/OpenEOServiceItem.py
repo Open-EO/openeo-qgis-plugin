@@ -8,7 +8,6 @@ import pathlib
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication
-from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
 from qgis.core import Qgis
@@ -198,7 +197,9 @@ class OpenEOServiceItem(QgsDataItem):
     def actions(self, parent):
         actions = []
 
-        action_properties = QAction(QIcon(), "Details", parent)
+        action_properties = QAction(
+            QgsApplication.getThemeIcon("mIconInfo.svg"), "Details", parent
+        )
         action_properties.triggered.connect(self.viewProperties)
         actions.append(action_properties)
 
@@ -216,7 +217,9 @@ class OpenEOServiceItem(QgsDataItem):
             actions.append(separator)
 
             action_add_to_project = QAction(
-                QIcon(), "Add Layer to Project", parent
+                QgsApplication.getThemeIcon("mActionAddLayer.svg"),
+                "Add Layer to Project",
+                parent,
             )
             action_add_to_project.triggered.connect(self.addToProject)
             actions.append(action_add_to_project)

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from collections.abc import Iterable
-import datetime
 import dateutil.parser
 import sip
 import webbrowser
@@ -10,7 +9,6 @@ import json
 import pathlib
 
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtGui import QDesktopServices
@@ -295,7 +293,9 @@ class OpenEOJobItem(QgsDataItem):
 
     def actions(self, parent):
         actions = []
-        job_properties = QAction(QIcon(), "Details", parent)
+        job_properties = QAction(
+            QgsApplication.getThemeIcon("mIconInfo.svg"), "Details", parent
+        )
         job_properties.triggered.connect(self.viewProperties)
         actions.append(job_properties)
 
@@ -307,17 +307,27 @@ class OpenEOJobItem(QgsDataItem):
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
 
-        action_addGroup = QAction(QIcon(), "Add Results to Project", parent)
+        action_addGroup = QAction(
+            QgsApplication.getThemeIcon("mActionAddLayer.svg"),
+            "Add Results to Project",
+            parent,
+        )
         action_addGroup.triggered.connect(self.addResultsToProject)
         actions.append(action_addGroup)
 
         actions_saveResultsTo = QAction(
-            QIcon(), "Download Results to...", parent
+            QgsApplication.getThemeIcon("downloading_svg.svg"),
+            "Download Results to...",
+            parent,
         )
         actions_saveResultsTo.triggered.connect(self.saveResultsTo)
         actions.append(actions_saveResultsTo)
 
-        action_copy_url = QAction(QIcon(), "Copy STAC metadata URL", parent)
+        action_copy_url = QAction(
+            QgsApplication.getThemeIcon("mActionEditCopy.svg"),
+            "Copy STAC metadata URL",
+            parent,
+        )
         action_copy_url.triggered.connect(self.copyUrlToClipboard)
         actions.append(action_copy_url)
 

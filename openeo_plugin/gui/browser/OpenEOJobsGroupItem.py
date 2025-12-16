@@ -5,8 +5,7 @@ import openeo
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtCore import pyqtSignal
 
-from qgis.core import QgsDataCollectionItem
-from qgis.core import QgsApplication
+from qgis.core import QgsDataCollectionItem, QgsApplication
 
 from .OpenEOJobItem import OpenEOJobItem
 
@@ -94,7 +93,7 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             )
         return []
 
-    def getSortAction(self, title, key, desc=False):
+    def getSortAction(self, title, key):
         if self.sortChildrenBy == key:
             icon = "mIconSelected.svg"
         else:
@@ -125,7 +124,6 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
         return actions
 
-    def sortBy(self, criterion, desc=False):
+    def sortBy(self, criterion):
         self.sortChildrenBy = criterion
-        self.sortOrder = desc
         self.refresh()

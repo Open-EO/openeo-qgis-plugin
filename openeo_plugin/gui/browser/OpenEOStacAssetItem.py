@@ -2,7 +2,6 @@ import requests
 from pathlib import Path
 from urllib.parse import urlparse, urljoin
 
-from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QApplication
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtCore import QUrl
@@ -293,20 +292,34 @@ class OpenEOStacAssetItem(QgsDataItem):
 
         if self.producesValidLayer():
             action_add_to_project = QAction(
-                QIcon(), "Add Layer to Project", parent
+                QgsApplication.getThemeIcon("mActionAddLayer.svg"),
+                "Add Layer to Project",
+                parent,
             )
             action_add_to_project.triggered.connect(self.createLayer)
             actions.append(action_add_to_project)
 
-        action_download = QAction(QIcon(), "Download", parent)
+        action_download = QAction(
+            QgsApplication.getThemeIcon("downloading_svg.svg"),
+            "Download",
+            parent,
+        )
         action_download.triggered.connect(self.download)
         actions.append(action_download)
 
-        action_downloadTo = QAction(QIcon(), "Download to...", parent)
+        action_downloadTo = QAction(
+            QgsApplication.getThemeIcon("downloading_svg.svg"),
+            "Download to...",
+            parent,
+        )
         action_downloadTo.triggered.connect(self.downloadTo)
         actions.append(action_downloadTo)
 
-        action_copy_url = QAction(QIcon(), "Copy URL", parent)
+        action_copy_url = QAction(
+            QgsApplication.getThemeIcon("mActionEditCopy.svg"),
+            "Copy URL",
+            parent,
+        )
         action_copy_url.triggered.connect(self.copyUrlToClipboard)
         actions.append(action_copy_url)
 

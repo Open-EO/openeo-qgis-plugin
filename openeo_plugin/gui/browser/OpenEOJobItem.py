@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from collections.abc import Iterable
+import dateutil.parser
 import sip
 import webbrowser
 import os
@@ -8,7 +9,6 @@ import json
 import pathlib
 
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtGui import QDesktopServices
@@ -19,6 +19,7 @@ from qgis.core import QgsDataItem
 from qgis.core import QgsApplication
 from qgis.core import QgsProject
 
+from .util import getSeparator
 from .OpenEOStacAssetItem import OpenEOStacAssetItem
 from ..directory_dialog import DirectoryDialog
 from ...utils.downloadTask import DownloadJobAssetsTask
@@ -29,7 +30,7 @@ isActiveStates = ["queued", "running", "unknown"]
 
 
 class OpenEOJobItem(QgsDataItem):
-    def __init__(self, parent, job, plugin):
+    def __init__(self, parent, job, plugin, index):
         """Constructor.
 
         :param parent: the parent DataItem. expected to be an OpenEOCollectionsGroupItem.
@@ -56,12 +57,16 @@ class OpenEOJobItem(QgsDataItem):
         self.job = job
         self.results = None
         self.plugin = plugin
+        self.index = index
 
         self.assetItems = []
 
         self.setIcon(QgsApplication.getThemeIcon("mIconTiledScene.svg"))
 
         self.updateFromData()
+
+    def getBatchJob(self):
+        return self.getConnection().job(self.job["id"])
 
     def refresh(self, children: Iterable[QgsDataItem] | bool = False):
         self.depopulate()
@@ -77,6 +82,22 @@ class OpenEOJobItem(QgsDataItem):
         statusString = f"({status}) "
         self.setName(statusString + name)
 
+    def sortKey(self):
+        sortBy = self.parent().sortChildrenBy
+        if sortBy == "title":
+            return self.getTitle().lower()
+        elif sortBy == "oldest" or sortBy == "newest":
+            try:
+                created = self.job.get("created", "")
+                timestamp = dateutil.parser.isoparse(created).timestamp()
+                if sortBy == "newest":
+                    timestamp *= -1
+                return int(timestamp)
+            except Exception:
+                return 0
+        else:  # default, keep initial backend order
+            return self.index
+
     def hasDragEnabled(self):
         return False
 
@@ -84,10 +105,10 @@ class OpenEOJobItem(QgsDataItem):
         return self.parent().getConnection()
 
     def getJob(self, force=False):
-        job = self.getConnection().job(self.job["id"])
+        batchjob = self.getBatchJob()
         if force:
             try:
-                self.job = job.describe()
+                self.job = batchjob.describe()
                 self.updateFromData()
             except Exception as e:
                 self.plugin.logging.error(
@@ -99,7 +120,7 @@ class OpenEOJobItem(QgsDataItem):
             force or self.results is None
         ) and self.getStatus() in mayHaveResults:
             try:
-                results = job.get_results()
+                results = batchjob.get_results()
                 if results is not None:
                     self.results = results.get_metadata()
                 else:
@@ -122,7 +143,8 @@ class OpenEOJobItem(QgsDataItem):
             # get the stac item
             assets = self.results.get("assets", [])
             jobResultLink = (
-                self.getLink("self") or self.job.get_results_metadata_url()
+                self.getLink("self")
+                or self.getBatchJob().get_results_metadata_url()
             )
             # create stac-asset items
             for key in assets:
@@ -276,9 +298,40 @@ class OpenEOJobItem(QgsDataItem):
 
     def actions(self, parent):
         actions = []
-        job_properties = QAction(QIcon(), "Details", parent)
+
+        action_addGroup = QAction(
+            QgsApplication.getThemeIcon("mActionAddLayer.svg"),
+            "Add Results to Project",
+            parent,
+        )
+        action_addGroup.triggered.connect(self.addResultsToProject)
+        actions.append(action_addGroup)
+
+        actions_saveResultsTo = QAction(
+            QgsApplication.getThemeIcon("downloading_svg.svg"),
+            "Download Results to...",
+            parent,
+        )
+        actions_saveResultsTo.triggered.connect(self.saveResultsTo)
+        actions.append(actions_saveResultsTo)
+
+        actions.append(getSeparator(parent))
+
+        job_properties = QAction(
+            QgsApplication.getThemeIcon("propertyicons/metadata.svg"),
+            "Details",
+            parent,
+        )
         job_properties.triggered.connect(self.viewProperties)
         actions.append(job_properties)
+
+        action_copy_url = QAction(
+            QgsApplication.getThemeIcon("mActionEditCopy.svg"),
+            "Copy STAC metadata URL",
+            parent,
+        )
+        action_copy_url.triggered.connect(self.copyUrlToClipboard)
+        actions.append(action_copy_url)
 
         action_refresh = QAction(
             QgsApplication.getThemeIcon("mActionRefresh.svg"),
@@ -287,20 +340,6 @@ class OpenEOJobItem(QgsDataItem):
         )
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
-
-        action_addGroup = QAction(QIcon(), "Add Results to Project", parent)
-        action_addGroup.triggered.connect(self.addResultsToProject)
-        actions.append(action_addGroup)
-
-        actions_saveResultsTo = QAction(
-            QIcon(), "Download Results to...", parent
-        )
-        actions_saveResultsTo.triggered.connect(self.saveResultsTo)
-        actions.append(actions_saveResultsTo)
-
-        action_copy_url = QAction(QIcon(), "Copy STAC metadata URL", parent)
-        action_copy_url.triggered.connect(self.copyUrlToClipboard)
-        actions.append(action_copy_url)
 
         return actions
 
@@ -326,7 +365,7 @@ class OpenEOJobItem(QgsDataItem):
         url = self.getLink("canonical")
         if not url:
             public = "NON-public"
-            url = self.job.get_results_metadata_url()
+            url = self.getBatchJob().get_results_metadata_url()
 
         clipboard = QApplication.clipboard()
         clipboard.setText(url)

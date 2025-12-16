@@ -116,8 +116,26 @@ class OpenEOCollectionItem(QgsDataItem):
                     break
             layerID = link.get("wmts:layer", list(wmts.contents)[0])
 
-            # TODO: determine more URI parameters programmatically
-            uri.uri = f"crs=EPSG:3857&styles=default&tilePixelRatio=0&format=image/png&layers={layerID}&tileMatrixSet={tileMatrixSet}&url={link['href']}"
+            # Determine style and format from WMTS layer metadata
+            layer = wmts[layerID]
+            
+            # Get default style or first available style
+            style = "default"
+            if layer.styles:
+                for style_id, style_info in layer.styles.items():
+                    if style_info.get("isDefault", False):
+                        style = style_id
+                        break
+                else:
+                    # If no default style found, use the first one
+                    style = list(layer.styles.keys())[0]
+            
+            # Get first available format or fallback to image/png
+            format = "image/png"
+            if layer.formats:
+                format = layer.formats[0]
+
+            uri.uri = f"crs=EPSG:3857&styles={style}&tilePixelRatio=0&format={format}&layers={layerID}&tileMatrixSet={tileMatrixSet}&url={link['href']}"
             return uri
         else:
             return None

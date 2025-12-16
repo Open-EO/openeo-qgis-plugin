@@ -17,6 +17,7 @@ from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsApplication
 
+from .util import getSeparator
 from ...utils.wmts import WebMapTileService
 
 
@@ -225,10 +226,7 @@ class OpenEOServiceItem(QgsDataItem):
             )
             action_add_to_project.triggered.connect(self.addToProject)
             actions.append(action_add_to_project)
-
-            separator = QAction(parent)
-            separator.setSeparator(True)
-            actions.append(separator)
+            actions.append(getSeparator(parent))
 
         action_properties = QAction(
             QgsApplication.getThemeIcon("propertyicons/metadata.svg"),

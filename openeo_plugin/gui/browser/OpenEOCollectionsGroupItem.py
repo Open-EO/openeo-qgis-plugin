@@ -7,6 +7,7 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.core import QgsDataCollectionItem
 from qgis.core import QgsApplication
 
+from .util import getSeparator
 from .OpenEOCollectionItem import OpenEOCollectionItem
 
 
@@ -103,9 +104,7 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
 
-        separator = QAction(parent)
-        separator.setSeparator(True)
-        actions.append(separator)
+        actions.append(getSeparator(parent))
 
         action_name = QAction(
             QgsApplication.getThemeIcon(

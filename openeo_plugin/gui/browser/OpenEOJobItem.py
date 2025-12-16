@@ -19,6 +19,7 @@ from qgis.core import QgsDataItem
 from qgis.core import QgsApplication
 from qgis.core import QgsProject
 
+from .util import getSeparator
 from .OpenEOStacAssetItem import OpenEOStacAssetItem
 from ..directory_dialog import DirectoryDialog
 from ...utils.downloadTask import DownloadJobAssetsTask
@@ -314,9 +315,7 @@ class OpenEOJobItem(QgsDataItem):
         actions_saveResultsTo.triggered.connect(self.saveResultsTo)
         actions.append(actions_saveResultsTo)
 
-        separator = QAction(parent)
-        separator.setSeparator(True)
-        actions.append(separator)
+        actions.append(getSeparator(parent))
 
         job_properties = QAction(
             QgsApplication.getThemeIcon("propertyicons/metadata.svg"),

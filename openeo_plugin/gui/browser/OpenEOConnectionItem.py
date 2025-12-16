@@ -14,6 +14,7 @@ from qgis.PyQt.QtWidgets import QAction, QApplication
 
 from qgis.core import QgsApplication, QgsDataCollectionItem
 
+from .util import getSeparator
 from .OpenEOJobsGroupItem import OpenEOJobsGroupItem
 from .OpenEOServicesGroupItem import OpenEOServicesGroupItem
 from .OpenEOCollectionsGroupItem import OpenEOCollectionsGroupItem
@@ -275,9 +276,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             action_logout.triggered.connect(self.logout)
             actions.append(action_logout)
 
-        separator = QAction(parent)
-        separator.setSeparator(True)
-        actions.append(separator)
+        actions.append(getSeparator(parent))
 
         action_properties = QAction(
             QgsApplication.getThemeIcon("propertyicons/metadata.svg"),
@@ -303,9 +302,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         action_delete.triggered.connect(self.remove)
         actions.append(action_delete)
 
-        separator = QAction(parent)
-        separator.setSeparator(True)
-        actions.append(separator)
+        actions.append(getSeparator(parent))
 
         action_webeditor = QAction(QIcon(), "Open in Web Editor", parent)
         action_webeditor.triggered.connect(self.openInWebEditor)

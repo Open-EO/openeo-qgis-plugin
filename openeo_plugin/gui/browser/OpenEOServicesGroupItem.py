@@ -3,12 +3,12 @@ import sip
 import openeo
 
 from qgis.PyQt.QtWidgets import QAction
-from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import pyqtSignal
 
 from qgis.core import QgsDataCollectionItem
 from qgis.core import QgsApplication
 
+from .util import getSortAction, getSeparator
 from .OpenEOServiceItem import OpenEOServiceItem
 
 
@@ -89,15 +89,7 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         return []
 
     def getSortAction(self, title, key):
-        if self.sortChildrenBy == key:
-            icon = QgsApplication.getThemeIcon(
-                "algorithms/mAlgorithmCheckGeometry.svg"
-            )
-        else:
-            icon = QIcon()
-        action = QAction(icon, title, self)
-        action.triggered.connect(lambda: self.sortBy(key))
-        return action
+        return getSortAction(self, title, key, lambda: self.sortBy(key))
 
     def actions(self, parent):
         actions = []
@@ -110,12 +102,9 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         action_refresh.triggered.connect(self.refresh)
         actions.append(action_refresh)
 
-        separator = QAction(parent)
-        separator.setSeparator(True)
-
         actions.extend(
             [
-                separator,
+                getSeparator(parent),
                 self.getSortAction("Sort by: Default", "default"),
                 self.getSortAction("Sort by: Newest first", "newest"),
                 self.getSortAction("Sort by: Oldest first", "oldest"),

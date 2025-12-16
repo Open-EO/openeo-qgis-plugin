@@ -7,6 +7,7 @@ from qgis.PyQt.QtWidgets import QAction
 
 from qgis.core import QgsSettings, QgsDataCollectionItem, QgsApplication
 
+from .util import getSeparator
 from .OpenEOConnectionItem import OpenEOConnectionItem
 from ..connect_dialog import ConnectDialog
 from ...utils.settings import SettingsPath
@@ -121,9 +122,7 @@ class OpenEORootItem(QgsDataCollectionItem):
         action_new_connection.triggered.connect(self.addConnection)
         actions.append(action_new_connection)
 
-        separator = QAction(parent)
-        separator.setSeparator(True)
-        actions.append(separator)
+        actions.append(getSeparator(parent))
 
         actions_logout_all = QAction(
             QgsApplication.getThemeIcon("unlocked.svg"),

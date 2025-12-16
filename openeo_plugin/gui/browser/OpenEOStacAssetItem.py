@@ -15,6 +15,7 @@ from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsCoordinateTransformContext
 from qgis.core import QgsApplication
 
+from .util import getSeparator
 from ...utils.filetypes import MEDIATYPES, EXTENSIONS
 from ..directory_dialog import DirectoryDialog
 from ...utils.downloadTask import DownloadAssetTask
@@ -312,9 +313,7 @@ class OpenEOStacAssetItem(QgsDataItem):
         action_downloadTo.triggered.connect(self.downloadTo)
         actions.append(action_downloadTo)
 
-        separator = QAction(parent)
-        separator.setSeparator(True)
-        actions.append(separator)
+        actions.append(getSeparator(parent))
 
         action_copy_url = QAction(
             QgsApplication.getThemeIcon("mActionEditCopy.svg"),

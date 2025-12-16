@@ -108,8 +108,7 @@ class OpenEOCollectionItem(QgsDataItem):
                 if targetCRS in tms.crs:
                     tileMatrixSet = tms_id
                     break
-            layerID = None
-            layerID = list(wmts.contents)[0]
+            layerID = link.get("wmts:layer", list(wmts.contents)[0])
 
             # TODO: determine more URI parameters programmatically
             uri.uri = f"crs=EPSG:3857&styles=default&tilePixelRatio=0&format=image/png&layers={layerID}&tileMatrixSet={tileMatrixSet}&url={link['href']}"
@@ -162,11 +161,11 @@ class OpenEOCollectionItem(QgsDataItem):
         uri = uris[0]
         self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
 
-    def get_url(self):
+    def get_url(self, key):
         collection_link = None
         links = self.collection["links"]
         for link in links:
-            if link["rel"] == "self":
+            if link["rel"] == key:
                 collection_link = link["href"]
                 break
         if collection_link is None:
@@ -176,7 +175,7 @@ class OpenEOCollectionItem(QgsDataItem):
         return collection_link
 
     def viewProperties(self):
-        collection_link = self.get_url()
+        collection_link = self.get_url("key")
         collection_json = requests.get(collection_link).json()
         collection_json = json.dumps(collection_json)
 

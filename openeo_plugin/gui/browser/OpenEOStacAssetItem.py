@@ -1,10 +1,9 @@
 import requests
 from pathlib import Path
-from urllib.parse import urlparse
-from urllib.parse import urljoin
+from urllib.parse import urlparse, urljoin
 
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QApplication
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtCore import QUrl
 
@@ -17,6 +16,7 @@ from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsCoordinateTransformContext
 from qgis.core import QgsApplication
 
+from ...utils.filetypes import MEDIATYPES, EXTENSIONS
 from ..directory_dialog import DirectoryDialog
 from ...utils.downloadTask import DownloadAssetTask
 
@@ -50,52 +50,73 @@ class OpenEOStacAssetItem(QgsDataItem):
         self.baseurl = stac_url
         self.key = key
         self.plugin = plugin
-        self.uris = None  # initialise
-        self.uris = self.mimeUris()
+        self.uris = None
+        self.fileType = None
+        self.layerType = None
 
-        layerType = self.getLayerType()
-        if layerType:
-            icon = QgsIconUtils.iconForLayerType(layerType)
+        self._init()
+
+    def _init(self):
+        self.fileType = self.detectFileType()
+        if self.fileType:
+            self.layerType = self.fileType.get("layer")
+
+        if self.layerType is not None:
+            icon = QgsIconUtils.iconForLayerType(self.layerType)
             self.setIcon(icon)
         else:
             self.setIcon(QgsApplication.getThemeIcon("mIconFile.svg"))
 
+        # Must be called after self.fileType is set
+        # self.uris = self.mimeUris()
+
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
+
+    def detectFileType(self):
+        mediaType = self.asset.get("type", "").lower()
+        if mediaType in MEDIATYPES:
+            return MEDIATYPES[mediaType]
+
+        href = self.asset.get("href", "")
+        url = urlparse(href)
+        path = Path(url.path)
+        ext = path.suffix.lower().lstrip(".")
+        if ext in EXTENSIONS:
+            return EXTENSIONS[ext]
 
     def mimeUris(self):
         if self.uris is not None:
             return self.uris
 
-        uri = QgsMimeDataUtils.Uri()
+        if self.fileType is None:
+            return [None]
 
-        # TODO: support for other types needed? like jpeg?
-        if (
-            "image/tiff; application=geotiff" in self.asset.get("type", "")
-        ) or ("image/vnd.stac.geotiff" in self.asset.get("type", "")):
-            uri.layerType = QgsMapLayerFactory.typeToString(
-                Qgis.LayerType.Raster
-            )
-            uri.providerKey = "gdal"
-            uri.name = self.layerName()
-            uri.supportedFormats = self.supportedFormats()
+        uri = QgsMimeDataUtils.Uri()
+        layerType = self.fileType.get("layer")
+        uri.providerKey = self.fileType["engine"]
+        if layerType:
+            uri.layerType = QgsMapLayerFactory.typeToString(layerType)
+        uri.name = self.layerName()
+        uri.supportedFormats = self.supportedFormats()
+        if self.fileType.get("crs", True):
             uri.supportedCrs = self.supportedCrs()
 
-            # create the uri string
-            uriString = ""
-            href = self.resolveUrl()
-            if href.startswith("http") or href.startswith("ftp"):
-                uriString = f"/vsicurl/{href}"
-                # if len(authcfg) > 0:
-                #    uriString += f" authcfg='{authcfg}'"
-            elif href.startswith("s3://"):
-                uriString = f"/vsis3/{href[5:]}"
-            else:
-                uriString = href
-            uri.uri = uriString
+        if self.fileType.get("download", False):
+            url = self.downloadAsset().as_uri()
+            print(url)
+        else:
+            url = self.resolveUrl()
+            scheme = urlparse(url).scheme
+            if scheme == "http" or scheme == "https" or scheme == "ftp":
+                url = f"/vsicurl/{url}"
+            elif scheme == "s3":
+                url = f"/vsis3/{url[5:]}"  # remove 's3://'
 
-        # QGIS' STAC implementation also has more cases for pointclouds here.
-        # I am not sure if these are needed
+        if self.fileType.get("vsi"):
+            url = f"{self.fileType['vsi']}{url}"
+
+        uri.uri = url
 
         return [uri]
 
@@ -106,49 +127,45 @@ class OpenEOStacAssetItem(QgsDataItem):
         return self.name()
 
     def supportedFormats(self):
-        return []  # TODO: determine more closely from capabilities
+        if self.fileType:
+            format = self.fileType.get("format")
+            if format:
+                return [format]
+        return []
+
+    def getStac(self):
+        return self.parent().results or None
 
     def supportedCrs(self):
-        supportedCrs = (
-            self.asset.get("proj:epsg")
-            or self.asset.get("epsg")
-            or self.asset.get("crs")
-            or "3857"
+        stac = self.getStac()
+        candidates = [
+            self.asset.get("proj:code"),
+            self.asset.get("proj:epsg"),
+            self.fileType.get("crs"),
+        ]
+        if stac:
+            properties = stac.get("properties", {})
+            candidates.append(properties.get("proj:code"))
+            candidates.append(properties.get("proj:epsg"))
+
+        supportedCrs = next(
+            (crs for crs in candidates if crs is not None), None
         )
         if type(supportedCrs) is int:
             supportedCrs = f"EPSG:{supportedCrs}"
-        return [supportedCrs]  # TODO: not fully reliable
 
-    def getLayerType(self):
-        mediaType = self.asset.get("type", "")
-        mediaType = mediaType.lower()
-        mediaTypes = {
-            "image/tiff; application=geotiff": Qgis.LayerType.Raster,
-            "image/tiff; application=geotiff; profile=cloud-optimized": Qgis.LayerType.Raster,
-            "application/geo+json": Qgis.LayerType.Vector,
-            "application/netcdf": Qgis.LayerType.Raster,
-            "application/x+netcdf": Qgis.LayerType.Raster,
-        }
-        if mediaType in mediaTypes:
-            return mediaTypes[mediaType]
-        return None
+        return [supportedCrs]
 
     def producesValidLayer(self):
-        validLayer = False
-        layerType = self.getLayerType()
         validLayerTypes = {
-            QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster),
-            QgsMapLayerFactory.typeToString(Qgis.LayerType.Vector),
+            Qgis.LayerType.Raster,
+            Qgis.LayerType.Vector,
         }
-        if layerType is not None:
-            validLayer = (
-                QgsMapLayerFactory.typeToString(layerType) in validLayerTypes
-            )
-        return validLayer
+        return self.layerType in validLayerTypes
 
     def createLayer(self, addToProject=True):
-        if not addToProject:
-            addToProject = True  # This is necessary for when the method is given as a callable
+        if addToProject is None:
+            addToProject = True  # when the method is passed as a callable
         if self.producesValidLayer():
             uris = self.mimeUris()
             uri = uris[0]
@@ -289,4 +306,15 @@ class OpenEOStacAssetItem(QgsDataItem):
         action_downloadTo.triggered.connect(self.downloadTo)
         actions.append(action_downloadTo)
 
+        action_copy_url = QAction(QIcon(), "Copy URL", parent)
+        action_copy_url.triggered.connect(self.copyUrlToClipboard)
+        actions.append(action_copy_url)
+
         return actions
+
+    # Method to copy URL to clipboard
+    def copyUrlToClipboard(self):
+        url = self.resolveUrl()
+        clipboard = QApplication.clipboard()
+        clipboard.setText(url)
+        self.plugin.logging.success("Copied URL to clipboard")

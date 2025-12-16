@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections.abc import Iterable
+import datetime
+import dateutil.parser
 import sip
 import webbrowser
 import os
@@ -29,7 +31,7 @@ isActiveStates = ["queued", "running", "unknown"]
 
 
 class OpenEOJobItem(QgsDataItem):
-    def __init__(self, parent, job, plugin):
+    def __init__(self, parent, job, plugin, index):
         """Constructor.
 
         :param parent: the parent DataItem. expected to be an OpenEOCollectionsGroupItem.
@@ -56,6 +58,7 @@ class OpenEOJobItem(QgsDataItem):
         self.job = job
         self.results = None
         self.plugin = plugin
+        self.index = index
 
         self.assetItems = []
 
@@ -78,10 +81,20 @@ class OpenEOJobItem(QgsDataItem):
         self.setName(statusString + name)
 
     def sortKey(self):
-        if self.parent().sortChildrenBy == "title":
+        sortBy = self.parent().sortChildrenBy
+        if sortBy == "title":
             return self.getTitle().lower()
-        else:
-            return self.get("created")
+        elif sortBy == "oldest" or sortBy == "newest":
+            try:
+                created = self.job.get("created", "")
+                timestamp = dateutil.parser.isoparse(created).timestamp()
+                if sortBy == "newest":
+                    timestamp *= -1
+                return int(timestamp)
+            except Exception:
+                return 0
+        else:  # default, keep initial backend order
+            return self.index
 
     def hasDragEnabled(self):
         return False

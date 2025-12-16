@@ -297,8 +297,6 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         action_delete.triggered.connect(self.remove)
         actions.append(action_delete)
 
-        separator = QAction(parent)
-        separator.setSeparator(True)
         actions.append(separator)
 
         action_webeditor = QAction(QIcon(), "Open in Web Editor", parent)

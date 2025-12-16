@@ -3,7 +3,6 @@ import sip
 import openeo
 
 from qgis.PyQt.QtWidgets import QAction
-from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import pyqtSignal
 
 from qgis.core import QgsDataCollectionItem
@@ -35,7 +34,7 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             self, parent, "Batch Jobs", plugin.PLUGIN_ENTRY_NAME
         )
         self.plugin = plugin
-        self.sortChildrenBy = "created"
+        self.sortChildrenBy = "default"
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
@@ -57,11 +56,9 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
         items = []
         jobs = self.getJobs()
-        for job in jobs:
+        for i, job in enumerate(jobs):
             item = OpenEOJobItem(
-                parent=self,
-                job=job,
-                plugin=self.plugin,
+                parent=self, job=job, plugin=self.plugin, index=i
             )
             sip.transferto(item, self)
             items.append(item)
@@ -97,30 +94,38 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             )
         return []
 
+    def getSortAction(self, title, key, desc=False):
+        if self.sortChildrenBy == key:
+            icon = "mIconSelected.svg"
+        else:
+            icon = "mIconUnselected.svg"
+        action = QAction(QgsApplication.getThemeIcon(icon), title, self)
+        action.triggered.connect(lambda: self.sortBy(key))
+        return action
+
     def actions(self, parent):
+        separator = QAction(parent)
+        separator.setSeparator(True)
+
+        actions = [
+            self.getSortAction("Sort by: Default", "default"),
+            self.getSortAction("Sort by: Newest first", "newest"),
+            self.getSortAction("Sort by: Oldest first", "oldest"),
+            self.getSortAction("Sort by: Title", "title"),
+            separator,
+        ]
+
         action_refresh = QAction(
             QgsApplication.getThemeIcon("mActionRefresh.svg"),
             "Refresh",
             parent,
         )
         action_refresh.triggered.connect(self.refresh)
+        actions.append(action_refresh)
 
-        if self.sortChildrenBy == "created":
-            text = "Sort by title"
-        else:
-            text = "Sort by creation date"
-        action_refresh = QAction(
-            QIcon(),
-            text,
-            parent,
-        )
-        action_refresh.triggered.connect(self.sortByToggle)
+        return actions
 
-        return [action_refresh]
-
-    def sortByToggle(self):
-        if self.sortChildrenBy == "created":
-            self.sortChildrenBy = "title"
-        else:
-            self.sortChildrenBy = "created"
+    def sortBy(self, criterion, desc=False):
+        self.sortChildrenBy = criterion
+        self.sortOrder = desc
         self.refresh()

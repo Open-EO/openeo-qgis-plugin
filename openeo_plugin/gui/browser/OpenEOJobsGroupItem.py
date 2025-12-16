@@ -9,6 +9,7 @@ from qgis.core import QgsDataCollectionItem, QgsApplication
 
 from .OpenEOJobItem import OpenEOJobItem
 from .util import getSortAction, getSeparator
+from .OpenEOPaginationItem import OpenEOPaginationItem
 
 
 class OpenEOJobsGroupItem(QgsDataCollectionItem):
@@ -35,6 +36,9 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         )
         self.plugin = plugin
         self.sortChildrenBy = "default"
+        self.limit = 5
+        self.nextPage = 0
+        self.childJobs = None
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
@@ -55,19 +59,54 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             return []
 
         items = []
-        jobs = self.getJobs()
+
+        jobs = self.childJobs or self.getJobs()
+        if self.childJobs is None:
+            self.childJobs = jobs
+
         for i, job in enumerate(jobs):
             item = OpenEOJobItem(
                 parent=self, job=job, plugin=self.plugin, index=i
             )
             sip.transferto(item, self)
             items.append(item)
+        # create item to load more jobs
+        if self.limit:
+            loadMore = OpenEOPaginationItem(self.plugin, self)
+            sip.transferto(loadMore, self)
+            items.append(loadMore)
         return items
 
     def addChildren(self, children):
         for child in children:
             self.addChildItem(child)
+            sip.transferto(child, self)
         self.refresh()
+
+    def loadNextItems(self):
+        conn = self.getConnection()
+        res = conn.get(
+            "/jobs",
+            params={"limit": self.limit, "page": self.nextPage},
+            expected_status=200,
+        ).json()
+        newJobs = openeo.rest.models.general.JobListingResponse(
+            response_data=res, connection=conn
+        )
+        self.childJobs = self.childJobs + newJobs
+        self.nextPage += 1
+
+        jobItems = []
+        for job in newJobs:
+            item = OpenEOJobItem(
+                parent=self,
+                job=job,
+                plugin=self.plugin,
+            )
+            jobItems.append(item)
+
+        self.addChildren(jobItems)
+        return
 
     def getConnection(self):
         return self.parent().getConnection()
@@ -83,8 +122,11 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         return True
 
     def getJobs(self):
+
         try:
-            return self.getConnection().list_jobs()
+            jobs = self.getConnection().list_jobs(limit=self.limit)
+            return jobs
+
         except openeo.rest.OpenEoApiError:
             return []  # this happens when authentication is missing
         except Exception as e:

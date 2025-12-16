@@ -1,10 +1,9 @@
 import requests
 from pathlib import Path
-from urllib.parse import urlparse
-from urllib.parse import urljoin
+from urllib.parse import urlparse, urljoin
 
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QApplication
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtCore import QUrl
 
@@ -17,46 +16,9 @@ from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsCoordinateTransformContext
 from qgis.core import QgsApplication
 
+from ...utils.filetypes import MEDIATYPES, EXTENSIONS
 from ..directory_dialog import DirectoryDialog
 from ...utils.downloadTask import DownloadAssetTask
-
-FILETYPES = {
-    "geotiff": {
-        "type": Qgis.LayerType.Raster,
-        "format": "geotiff",
-        "engine": "gdal",
-    },
-    "geojson": {
-        "type": Qgis.LayerType.Vector,
-        "format": "geojson",
-        "engine": "ogr",
-        "crs": "EPSG:4326",
-    },
-    "netcdf": {
-        "type": Qgis.LayerType.Raster,
-        "format": "netcdf",
-        "engine": "gdal",
-    },
-    "geoparquet": {
-        "type": Qgis.LayerType.Vector,
-        "format": "geoparquet",
-        "engine": "ogr",
-    },
-}
-
-MEDIATYPES = {
-    "image/tiff; application=geotiff": FILETYPES["geotiff"],
-    "image/tiff; application=geotiff; profile=cloud-optimized": FILETYPES[
-        "geotiff"
-    ],
-    "application/vnd.geo+json": FILETYPES["geojson"],
-    "application/geo+json": FILETYPES["geojson"],
-    "application/netcdf": FILETYPES["netcdf"],
-    "application/x-netcdf": FILETYPES["netcdf"],
-    "application/parquet; profile=geo": FILETYPES["geoparquet"],
-    # https://geoparquet.org/releases/v1.1.0/
-    "application/vnd.apache.parquet": FILETYPES["geoparquet"],
-}
 
 
 class OpenEOStacAssetItem(QgsDataItem):
@@ -89,12 +51,15 @@ class OpenEOStacAssetItem(QgsDataItem):
         self.key = key
         self.plugin = plugin
         self.uris = None
+        self.fileType = None
+        self.layerType = None
 
-        mediaType = self.asset.get("type", "").lower()
-        self.fileType = (
-            MEDIATYPES[mediaType] if mediaType in MEDIATYPES else None
-        )
-        self.layerType = self.fileType["type"] if self.fileType else None
+        self._init()
+
+    def _init(self):
+        self.fileType = self.detectFileType()
+        if self.fileType:
+            self.layerType = self.fileType.get("layer")
 
         if self.layerType is not None:
             icon = QgsIconUtils.iconForLayerType(self.layerType)
@@ -103,10 +68,22 @@ class OpenEOStacAssetItem(QgsDataItem):
             self.setIcon(QgsApplication.getThemeIcon("mIconFile.svg"))
 
         # Must be called after self.fileType is set
-        self.uris = self.mimeUris()
+        # self.uris = self.mimeUris()
 
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
+
+    def detectFileType(self):
+        mediaType = self.asset.get("type", "").lower()
+        if mediaType in MEDIATYPES:
+            return MEDIATYPES[mediaType]
+
+        href = self.asset.get("href", "")
+        url = urlparse(href)
+        path = Path(url.path)
+        ext = path.suffix.lower().lstrip(".")
+        if ext in EXTENSIONS:
+            return EXTENSIONS[ext]
 
     def mimeUris(self):
         if self.uris is not None:
@@ -115,48 +92,33 @@ class OpenEOStacAssetItem(QgsDataItem):
         if self.fileType is None:
             return [None]
 
-        kwargs = {
-            "supportedFormats": self.supportedFormats(),
-        }
-        if self.fileType.get("crs", True):
-            kwargs["supportedCrs"] = self.supportedCrs()
-
-        uri = self._makeUri(
-            self.fileType["type"],
-            self.fileType["engine"],
-            **kwargs,
-        )
-        return [uri]
-
-    def _makeUri(
-        self,
-        layerType,
-        providerkey,
-        name=None,
-        supportedFormats=None,
-        supportedCrs=None,
-        uri=None,
-    ):
         uri = QgsMimeDataUtils.Uri()
-        uri.layerType = QgsMapLayerFactory.typeToString(layerType)
-        uri.providerKey = providerkey
-        uri.name = name or self.layerName()
-        if supportedFormats:
-            uri.supportedFormats = supportedFormats
-        if supportedCrs:
-            uri.supportedCrs = supportedCrs
-        url = self.resolveUrl()
-        uri.uri = self._handleMimeUriScheme(url)
-        return uri
+        layerType = self.fileType.get("layer")
+        uri.providerKey = self.fileType["engine"]
+        if layerType:
+            uri.layerType = QgsMapLayerFactory.typeToString(layerType)
+        uri.name = self.layerName()
+        uri.supportedFormats = self.supportedFormats()
+        if self.fileType.get("crs", True):
+            uri.supportedCrs = self.supportedCrs()
 
-    def _handleMimeUriScheme(self, url):
-        scheme = urlparse(url).scheme
-        if scheme == "http" or scheme == "https" or scheme == "ftp":
-            return f"/vsicurl/{url}"
-        elif scheme == "s3":
-            return f"/vsis3/{url[5:]}"  # remove 's3://'
+        if self.fileType.get("download", False):
+            url = self.downloadAsset().as_uri()
+            print(url)
         else:
-            return url
+            url = self.resolveUrl()
+            scheme = urlparse(url).scheme
+            if scheme == "http" or scheme == "https" or scheme == "ftp":
+                url = f"/vsicurl/{url}"
+            elif scheme == "s3":
+                url = f"/vsis3/{url[5:]}"  # remove 's3://'
+
+        if self.fileType.get("vsi"):
+            url = f"{self.fileType['vsi']}{url}"
+
+        uri.uri = url
+
+        return [uri]
 
     def hasDragEnabled(self):
         return self.producesValidLayer()
@@ -165,7 +127,11 @@ class OpenEOStacAssetItem(QgsDataItem):
         return self.name()
 
     def supportedFormats(self):
-        return []  # TODO:
+        if self.fileType:
+            format = self.fileType.get("format")
+            if format:
+                return [format]
+        return []
 
     def getStac(self):
         return self.parent().results or None
@@ -187,7 +153,8 @@ class OpenEOStacAssetItem(QgsDataItem):
         )
         if type(supportedCrs) is int:
             supportedCrs = f"EPSG:{supportedCrs}"
-        return [supportedCrs]  # TODO: not fully reliable
+
+        return [supportedCrs]
 
     def producesValidLayer(self):
         validLayerTypes = {
@@ -339,4 +306,15 @@ class OpenEOStacAssetItem(QgsDataItem):
         action_downloadTo.triggered.connect(self.downloadTo)
         actions.append(action_downloadTo)
 
+        action_copy_url = QAction(QIcon(), "Copy URL", parent)
+        action_copy_url.triggered.connect(self.copyUrlToClipboard)
+        actions.append(action_copy_url)
+
         return actions
+
+    # Method to copy URL to clipboard
+    def copyUrlToClipboard(self):
+        url = self.resolveUrl()
+        clipboard = QApplication.clipboard()
+        clipboard.setText(url)
+        self.plugin.logging.success("Copied URL to clipboard")

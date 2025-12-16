@@ -8,6 +8,7 @@ import webbrowser
 import openeo
 
 from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtWidgets import QMessageBox
 
@@ -23,6 +24,9 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
     """
     This class is responsible for showing the provider-authentication window to set up authentication with the backend.
     """
+
+    authenticationFinished = pyqtSignal(int)  # 1: success, 0: auth aborted
+    authenticationException = pyqtSignal(Exception)  # called upon exception
 
     def __init__(self, plugin, connection, model, auth_providers):
         super(LoginDialog, self).__init__()
@@ -76,6 +80,19 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
             self.authenticate(auth_provider, tab)
 
     def authenticate(self, auth_provider, tab=None):
+        def onAuthFinished(arg):
+            if type(arg) is Exception:
+                self.plugin.logging.error(
+                    "OpenID Connect authentication failed.", error=arg
+                )
+            if type(arg) is int:
+                # reset waiting indicator
+                tab["authButton"].setDisabled(False)
+                tab["authButton"].setText(btn_text)
+                self.plugin.logging.success("Login Successful")
+                if arg == 1:  # 1 means successful authentication
+                    self.accept()
+
         if auth_provider["type"] == "basic":
             try:
                 self.connection.authenticate_basic(
@@ -103,6 +120,9 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
         elif auth_provider["type"] == "oidc":
             capture_buffer = io.StringIO()
             try:
+                # connect to the signal to close the dialog upon finished auth
+                self.authenticationFinished.connect(onAuthFinished)
+                self.authenticationException.connect(onAuthFinished)
                 # open a browser window when prompted
                 auth_thread = threading.Thread(
                     target=self._run_auth, args=(capture_buffer,)
@@ -133,11 +153,9 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                 else:
                     pass
 
-                auth_thread.join()
                 # We need to wait for the refresh token store to be called
                 self.credentials = None
-                self.accept()  # Close the dialog
-                return True
+
             except AttributeError:
                 self.plugin.logging.error(
                     "Can't log in with OpenID Connect as the connection is missing."
@@ -149,11 +167,9 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                 self.plugin.logging.error(
                     "Can't log in with OpenID Connect.", error=e
                 )
-                return False
-            finally:
-                # reset waiting indicator
                 tab["authButton"].setDisabled(False)
                 tab["authButton"].setText(btn_text)
+                return False
 
     def getCredentials(self):
         return self.credentials
@@ -164,10 +180,9 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
         sys.stdout = capture_buffer
         try:
             self.connection.authenticate_oidc()
+            self.authenticationFinished.emit(1)
         except Exception as e:
-            self.plugin.logging.error(
-                "OpenID Connect authentication failed.", error=e
-            )
+            self.authenticationException.emit(e)
         finally:
             sys.stdout = old_stdout
 

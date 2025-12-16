@@ -3,6 +3,7 @@ from qgis.PyQt.QtGui import QIcon
 
 from qgis.core import QgsApplication
 
+
 def getSortAction(item, title, key, callback):
     if item.sortChildrenBy == key:
         icon = QgsApplication.getThemeIcon(
@@ -13,6 +14,7 @@ def getSortAction(item, title, key, callback):
     action = QAction(icon, title, item)
     action.triggered.connect(callback)
     return action
+
 
 def getSeparator(parent):
     separator = QAction(parent)

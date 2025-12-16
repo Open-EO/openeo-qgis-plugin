@@ -22,7 +22,7 @@ from ...utils.wmts import WebMapTileService
 
 
 class OpenEOCollectionItem(QgsDataItem):
-    def __init__(self, parent, collection, plugin, preview=False):
+    def __init__(self, parent, collection, plugin):
         """Constructor.
 
         :param parent: the parent DataItem. expected to be an OpenEOCollectionsGroupItem.
@@ -46,24 +46,53 @@ class OpenEOCollectionItem(QgsDataItem):
 
         self.collection = collection
         self.plugin = plugin
-        self.preview = (
-            preview  # whether the collection contains a wmts preview
-        )
-
         self.uris = []
-
-        self.setName(self.name())
 
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
 
-        if self.preview:
-            self.setIcon(QgsIconUtils.iconRaster())
-        else:
-            self.setIcon(QgsApplication.getThemeIcon("mIconTiledScene.svg"))
+        self._init()
+
+    def _init(self):
+        self.setName(self.name())
+
+        self.links = self.getWebMapLinks()
+
+        self.setIcon(
+            QgsIconUtils.iconRaster()
+            if self.hasPreview()
+            else QgsApplication.getThemeIcon("mIconTiledScene.svg")
+        )
+
+    def getWebMapLinks(self):
+        """
+        helper-function that determines whether or not a collection of this
+        connection contains a web-map-link
+        """
+        webMapLinks = []
+        links = self.collection["links"]
+        for link in links:
+            match link["rel"]:
+                case "wmts":
+                    webMapLinks.append(link)
+                case "xyz":
+                    webMapLinks.append(link)
+                # case "3d-tiles":
+                #     webMapLinks.append(link)
+                # case "wms":
+                #     webMapLinks.append(link)
+                # case "pmtiles":
+                #     webMapLinks.append(link)
+                # case "tilejson":
+                #     webMapLinks.append(link)
+
+        return webMapLinks
+
+    def hasPreview(self):
+        return len(self.links) > 0
 
     def hasDragEnabled(self):
-        return self.preview
+        return self.hasPreview()
 
     def name(self):
         if self.parent().showTitles:
@@ -75,79 +104,113 @@ class OpenEOCollectionItem(QgsDataItem):
         return self.name()
 
     def supportedFormats(self):
-        return []  # TODO: determine more closely from capabilities
+        return []
 
     def supportedCrs(self):
-        return ["EPSG:3857"]  # TODO: determine more closely from capabilities
+        return []
 
     def getConnection(self):
         return self.parent().getConnection()
 
-    def createUri(self, link):
-        title = link.get("title") or ""
-        rel = link.get("rel") or ""
-
+    def createBaseUri(self, link):
         uri = QgsMimeDataUtils.Uri()
         uri.layerType = QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster)
         uri.providerKey = "wms"
+        # todo: do we need to set this more specifically?
+        uri.supportedFormats = []
+        uri.supportedCrs = []
+
         uri.name = self.layerName()
+        title = link.get("title") or ""
         if len(title) > 0 and title != uri.name:
             uri.name += f" - {title}"
-        uri.supportedFormats = (
-            self.supportedFormats()
-        )  # todo: do we need to set this more specifically?
-        uri.supportedCrs = (
-            self.supportedCrs()
-        )  # todo: set more specific supportedCrs below
 
-        # different map service formats
-        if rel == "xyz":
-            uri.uri = f"type=xyz&url={link['href']}/" + quote("{z}/{y}/{x}")
-            return uri
-        elif rel == "wmts":
-            wmtsUrl = link["href"] + "?service=wmts&request=getCapabilities"
-            wmts = WebMapTileService(wmtsUrl)
-            targetCRS = "EPSG::3857"
+        return uri
 
-            tileMatrixSet = None
-            for tms_id, tms in list(wmts.tilematrixsets.items()):
-                if targetCRS in tms.crs:
-                    tileMatrixSet = tms_id
-                    break
-            layerID = None
-            layerID = list(wmts.contents)[0]
+    def createXYZ(self, link):
+        uri = self.createBaseUri(link)
+        uri.supportedCrs = ["EPSG:3857"]
+        uri.uri = f"type=xyz&url={link['href']}/" + quote("{z}/{y}/{x}")
+        return uri
 
-            # TODO: determine more URI parameters programmatically
-            uri.uri = f"crs=EPSG:3857&styles=default&tilePixelRatio=0&format=image/png&layers={layerID}&tileMatrixSet={tileMatrixSet}&url={link['href']}"
-            return uri
+    def createWMTS(self, link):
+        # todo: Currently only supports KVP encoding, not REST
+        # todo: does not support wmts:dimensions
+        wmtsUrl = link["href"] + "?service=wmts&request=getCapabilities"
+        wmts = WebMapTileService(wmtsUrl)
+
+        layers = link.get("wmts:layer")
+        if layers:
+            if isinstance(layers, str):
+                layers = [layers]
+            else:
+                layers = list(layers)
         else:
-            return None
+            layers = list(wmts.contents)
+
+        mediaType = link.get("type")
+        style = None
+        tileMatrixSet = None
+        crs = None
+
+        uris = []
+        for layer in layers:
+            uri = self.createBaseUri(link)
+
+            # Get layer info from WMTS capabilities
+            lyr = wmts.contents.get(layer)
+            if lyr:
+                if not mediaType and hasattr(lyr, "formats") and lyr.formats:
+                    mediaType = lyr.formats[0]
+
+                if hasattr(lyr, "styles") and lyr.styles:
+                    style = (
+                        list(lyr.styles.keys())[0]
+                        if isinstance(lyr.styles, dict)
+                        else lyr.styles[0]
+                    )
+
+                if hasattr(lyr, "tilematrixsets") and lyr.tilematrixsets:
+                    tileMatrixSet = list(lyr.tilematrixsets)[0]
+                    tms = wmts.tilematrixsets.get(tileMatrixSet)
+                    if tms and hasattr(tms, "crs"):
+                        crs = tms.crs
+
+            # Fallback if no tileMatrixSet found
+            if not tileMatrixSet:
+                tileMatrixSet = "EPSG:3857"
+            if not crs:
+                crs = "EPSG:3857"
+            if not mediaType:
+                mediaType = "image/png"
+            if not style:
+                style = "default"
+
+            uri.uri = f"crs={crs}&styles={style}&tilePixelRatio=0&format={mediaType}&layers={layer}&tileMatrixSet={tileMatrixSet}&url={link['href']}"
+            uris.append(uri)
+
+        return uris
+
+    def createUris(self, link):
+        uris = []
+        rel = link.get("rel") or ""
+        if rel == "xyz":
+            uris.append(self.createXYZ(link))
+        elif rel == "wmts":
+            uris.extend(self.createWMTS(link))
+
+        return uris
 
     def mimeUris(self):
-        if not self.preview:
-            return []
-
-        # see if uri has already been created
-        # TODO: in the current state this only supports single URIs, should not be an issue for the used types.
-        if len(self.uris) != 0:
+        if not self.hasPreview() or len(self.uris) > 0:
             return self.uris
-
-        mimeUris = []
-
-        webMapLinks = self.parent().getWebMapLinks(self.collection)
-        if len(webMapLinks) == 0:
-            self.plugin.logging.warning(
-                "The collection does not provide any web map services for preview."
-            )
-            return mimeUris
 
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
 
-        # TODO: what if operation takes way too long?
-        for link in webMapLinks:
+        for link in self.links:
             try:
-                mimeUri = self.createUri(link)
-                mimeUris.append(mimeUri)
+                uris = self.createUris(link)
+                self.uris.extend(uris)
             except Exception as e:
                 self.plugin.logging.error(
                     f"Can't visualize the mapping service {link['href']} for collection {self.collection['id']}.",
@@ -156,33 +219,28 @@ class OpenEOCollectionItem(QgsDataItem):
 
         QApplication.restoreOverrideCursor()
 
-        self.uris = mimeUris
-
-        return mimeUris
+        return self.uris
 
     def addToProject(self):
-        if not self.preview:
+        if not self.hasPreview():
             return
 
         uris = self.mimeUris()
         uri = uris[0]
         self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
 
-    def get_url(self):
-        collection_link = None
+    def get_url(self, key):
         links = self.collection["links"]
         for link in links:
-            if link["rel"] == "self":
-                collection_link = link["href"]
-                break
-        if collection_link is None:
-            collection_link = self.getConnection().build_url(
-                f"/collections/{self.collection['id']}"
-            )
-        return collection_link
+            if link["rel"] == key:
+                return link["href"]
+
+        return self.getConnection().build_url(
+            f"/collections/{self.collection['id']}"
+        )
 
     def viewProperties(self):
-        collection_link = self.get_url()
+        collection_link = self.get_url("self")
         collection_json = requests.get(collection_link).json()
         collection_json = json.dumps(collection_json)
 

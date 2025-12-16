@@ -55,12 +55,10 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
         collections = self.getCollections()
         for collection in collections:
             # determine whether collectionItem or LayerItem
-            preview = len(self.getWebMapLinks(collection)) > 0
             item = OpenEOCollectionItem(
                 parent=self,
                 collection=collection,
                 plugin=self.plugin,
-                preview=preview,
             )
             sip.transferto(item, self)
             items.append(item)
@@ -68,30 +66,6 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
 
     def getConnection(self):
         return self.parent().getConnection()
-
-    def getWebMapLinks(self, collection):
-        """
-        helper-function that determines whether or not a collection of this
-        connection contains a web-map-link
-        """
-        webMapLinks = []
-        links = collection["links"]
-        for link in links:
-            match link["rel"]:
-                case "wmts":
-                    webMapLinks.append(link)
-                case "xyz":
-                    webMapLinks.append(link)
-                # case "3d-tiles":
-                #     webMapLinks.append(link)
-                # case "wms":
-                #     webMapLinks.append(link)
-                # case "pmtiles":
-                #     webMapLinks.append(link)
-                # case "tilejson":
-                #     webMapLinks.append(link)
-
-        return webMapLinks
 
     def actions(self, parent):
         actions = []

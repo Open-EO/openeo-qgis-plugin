@@ -133,10 +133,8 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                 else:
                     pass
 
-                auth_thread.join()
                 # We need to wait for the refresh token store to be called
                 self.credentials = None
-                self.accept()  # Close the dialog
                 return True
             except AttributeError:
                 self.plugin.logging.error(
@@ -164,12 +162,14 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
         sys.stdout = capture_buffer
         try:
             self.connection.authenticate_oidc()
+            self.plugin.logging.success("Login successful")
         except Exception as e:
             self.plugin.logging.error(
                 "OpenID Connect authentication failed.", error=e
             )
         finally:
             sys.stdout = old_stdout
+            self.accept()  # Close the dialog
 
     def _supportsDeviceCodeFlow(self, auth_provider):
         # check if auth provider has a list of default clients that support device code flow

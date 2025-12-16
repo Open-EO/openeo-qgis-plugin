@@ -8,6 +8,7 @@ from qgis.PyQt.QtCore import pyqtSignal
 from qgis.core import QgsDataCollectionItem
 from qgis.core import QgsApplication
 
+from .util import getSortAction, getSeparator
 from .OpenEOServiceItem import OpenEOServiceItem
 
 
@@ -34,6 +35,7 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
             self, parent, "Web Services", plugin.PLUGIN_ENTRY_NAME
         )
         self.plugin = plugin
+        self.sortChildrenBy = "default"
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
@@ -55,11 +57,9 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
 
         items = []
         services = self.getServices()
-        for service in services:
+        for i, service in enumerate(services):
             item = OpenEOServiceItem(
-                parent=self,
-                service=service,
-                plugin=self.plugin,
+                parent=self, service=service, plugin=self.plugin, index=i
             )
             sip.transferto(item, self)
             items.append(item)
@@ -88,11 +88,32 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
             self.plugin.logging.error("Can't load list of services.", error=e)
         return []
 
+    def getSortAction(self, title, key):
+        return getSortAction(self, title, key, lambda: self.sortBy(key))
+
     def actions(self, parent):
+        actions = []
+
         action_refresh = QAction(
             QgsApplication.getThemeIcon("mActionRefresh.svg"),
             "Refresh",
             parent,
         )
         action_refresh.triggered.connect(self.refresh)
-        return [action_refresh]
+        actions.append(action_refresh)
+
+        actions.extend(
+            [
+                getSeparator(parent),
+                self.getSortAction("Sort by: Default", "default"),
+                self.getSortAction("Sort by: Newest first", "newest"),
+                self.getSortAction("Sort by: Oldest first", "oldest"),
+                self.getSortAction("Sort by: Title", "title"),
+            ]
+        )
+
+        return actions
+
+    def sortBy(self, criterion):
+        self.sortChildrenBy = criterion
+        self.refresh()

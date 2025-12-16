@@ -5,10 +5,10 @@ import openeo
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtCore import pyqtSignal
 
-from qgis.core import QgsDataCollectionItem
-from qgis.core import QgsApplication
+from qgis.core import QgsDataCollectionItem, QgsApplication
 
 from .OpenEOJobItem import OpenEOJobItem
+from .util import getSortAction, getSeparator
 
 
 class OpenEOJobsGroupItem(QgsDataCollectionItem):
@@ -34,6 +34,7 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             self, parent, "Batch Jobs", plugin.PLUGIN_ENTRY_NAME
         )
         self.plugin = plugin
+        self.sortChildrenBy = "default"
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
@@ -55,11 +56,9 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
         items = []
         jobs = self.getJobs()
-        for job in jobs:
+        for i, job in enumerate(jobs):
             item = OpenEOJobItem(
-                parent=self,
-                job=job,
-                plugin=self.plugin,
+                parent=self, job=job, plugin=self.plugin, index=i
             )
             sip.transferto(item, self)
             items.append(item)
@@ -85,8 +84,7 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
     def getJobs(self):
         try:
-            jobs = self.getConnection().list_jobs()
-            return jobs
+            return self.getConnection().list_jobs()
         except openeo.rest.OpenEoApiError:
             return []  # this happens when authentication is missing
         except Exception as e:
@@ -95,11 +93,32 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             )
         return []
 
+    def getSortAction(self, title, key):
+        return getSortAction(self, title, key, lambda: self.sortBy(key))
+
     def actions(self, parent):
+        actions = []
+
         action_refresh = QAction(
             QgsApplication.getThemeIcon("mActionRefresh.svg"),
             "Refresh",
             parent,
         )
         action_refresh.triggered.connect(self.refresh)
-        return [action_refresh]
+        actions.append(action_refresh)
+
+        actions.extend(
+            [
+                getSeparator(parent),
+                self.getSortAction("Sort by: Default", "default"),
+                self.getSortAction("Sort by: Newest first", "newest"),
+                self.getSortAction("Sort by: Oldest first", "oldest"),
+                self.getSortAction("Sort by: Title", "title"),
+            ]
+        )
+
+        return actions
+
+    def sortBy(self, criterion):
+        self.sortChildrenBy = criterion
+        self.refresh()

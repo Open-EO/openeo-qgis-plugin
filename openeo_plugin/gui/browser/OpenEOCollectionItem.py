@@ -8,7 +8,6 @@ import json
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication
-from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
 from qgis.core import QgsIconUtils
@@ -18,6 +17,7 @@ from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsApplication
 
+from .util import getSeparator
 from ...utils.wmts import WebMapTileService
 
 
@@ -35,13 +35,11 @@ class OpenEOCollectionItem(QgsDataItem):
         :param collection: dict containing relevant infos about the collection.
         :type url: dict
         """
-
-        name = collection.get("title") or collection.get("id")
         QgsDataItem.__init__(
             self,
             type=Qgis.BrowserItemType.Custom,
+            name=None,
             parent=parent,
-            name=name,
             path=None,
             providerKey=plugin.PLUGIN_ENTRY_NAME,
         )
@@ -54,6 +52,8 @@ class OpenEOCollectionItem(QgsDataItem):
 
         self.uris = []
 
+        self.setName(self.name())
+
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.Populated)
 
@@ -64,6 +64,12 @@ class OpenEOCollectionItem(QgsDataItem):
 
     def hasDragEnabled(self):
         return self.preview
+
+    def name(self):
+        if self.parent().showTitles:
+            return self.collection.get("title") or self.collection.get("id")
+        else:
+            return self.collection.get("id")
 
     def layerName(self):
         return self.name()
@@ -197,19 +203,23 @@ class OpenEOCollectionItem(QgsDataItem):
     def actions(self, parent):
         actions = []
 
-        action_properties = QAction(QIcon(), "Details", parent)
-        action_properties.triggered.connect(self.viewProperties)
-        actions.append(action_properties)
-
         if self.preview:
-            separator = QAction(parent)
-            separator.setSeparator(True)
-            actions.append(separator)
-
             action_add_to_project = QAction(
-                QIcon(), "Add Layer to Project", parent
+                QgsApplication.getThemeIcon("mActionAddLayer.svg"),
+                "Add Layer to Project",
+                parent,
             )
             action_add_to_project.triggered.connect(self.addToProject)
             actions.append(action_add_to_project)
+
+            actions.append(getSeparator(parent))
+
+        action_properties = QAction(
+            QgsApplication.getThemeIcon("propertyicons/metadata.svg"),
+            "Details",
+            parent,
+        )
+        action_properties.triggered.connect(self.viewProperties)
+        actions.append(action_properties)
 
         return actions

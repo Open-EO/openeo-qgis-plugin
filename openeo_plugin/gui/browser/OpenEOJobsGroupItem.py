@@ -36,9 +36,11 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         )
         self.plugin = plugin
         self.sortChildrenBy = "default"
+        self.childJobs = None
+
+        self.paginator = None
         self.limit = 5
         self.nextPage = 0
-        self.childJobs = None
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
@@ -72,9 +74,11 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             items.append(item)
         # create item to load more jobs
         if self.limit:
-            loadMore = OpenEOPaginationItem(self.plugin, self)
-            sip.transferto(loadMore, self)
-            items.append(loadMore)
+            self.paginatgor = OpenEOPaginationItem(
+                self.plugin, self, loadedItems=len(self.childJobs)
+            )
+            sip.transferto(self.paginatgor, self)
+            items.append(self.paginatgor)
         return items
 
     def addChildren(self, children):
@@ -93,18 +97,20 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         newJobs = openeo.rest.models.general.JobListingResponse(
             response_data=res, connection=conn
         )
+        currentAmount = len(self.childJobs)
         self.childJobs = self.childJobs + newJobs
         self.nextPage += 1
 
         jobItems = []
-        for job in newJobs:
+        for i, job in enumerate(newJobs):
             item = OpenEOJobItem(
                 parent=self,
                 job=job,
                 plugin=self.plugin,
+                index=currentAmount + i,
             )
             jobItems.append(item)
-
+        self.paginatgor.setLoadedItems(len(self.childJobs))
         self.addChildren(jobItems)
         return
 
@@ -122,7 +128,6 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         return True
 
     def getJobs(self):
-
         try:
             jobs = self.getConnection().list_jobs(limit=self.limit)
             return jobs

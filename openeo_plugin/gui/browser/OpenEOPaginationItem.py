@@ -9,7 +9,7 @@ class OpenEOPaginationItem(QgsDataItem):
     paginated endpoint. Clicking it will add more items.
     """
 
-    def __init__(self, plugin, parent):
+    def __init__(self, plugin, parent, loadedItems=None):
         """Constructor.
 
         :param plugin: Reference to the qgis plugin object.
@@ -24,7 +24,14 @@ class OpenEOPaginationItem(QgsDataItem):
             path=None,
             providerKey=plugin.PLUGIN_ENTRY_NAME,
         )
+        self.loadedItems = loadedItems
         self.populate()
+
+    def setLoadedItems(self, int):
+        self.loadedItems = int
+
+    def sortKey(self):
+        return self.loadedItems
 
     def handleDoubleClick(self):
         self.parent().loadNextItems()

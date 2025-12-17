@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>openEO Batch Job</title>
+  <title>openEO Job Logs</title>
   <style id="styles">
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Ubuntu, Cantarell, 'Open Sans', sans-serif;
@@ -27,10 +27,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@openeo/vue-components@2/assets/openeo.min.js"></script>
 </head>
 <body>
+  <h2>Log-snapshot: <!-- jobTitle --></h2>
+  <p>
+    Last updated: <!-- logTimestamp -->
+  </p>
   <openeo-logs id="component">
-    <script prop="logs" type="application/json">{{ json }}</script>
+    <script prop="logs" type="application/json"><!-- json --></script>
   </openeo-logs>
-  <!-- results -->
   <script>
     const css = document.getElementById("styles").cloneNode(true);
     document.getElementById("component").shadowRoot.appendChild(css);

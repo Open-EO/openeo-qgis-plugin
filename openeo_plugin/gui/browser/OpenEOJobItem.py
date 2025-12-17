@@ -7,6 +7,7 @@ import os
 import tempfile
 import json
 import pathlib
+import datetime
 
 from qgis.PyQt.QtCore import Qt, QUrl
 from qgis.PyQt.QtWidgets import QAction, QApplication
@@ -174,7 +175,7 @@ class OpenEOJobItem(QgsDataItem):
             ) as file:
                 jobInfoHTML = file.read()
             jobInfoHTML = jobInfoHTML.replace("<!-- results -->", resultHtml)
-            jobInfoHTML = jobInfoHTML.replace("{{ json }}", jobJson)
+            jobInfoHTML = jobInfoHTML.replace("<!-- json -->", jobJson)
 
             fh, path = tempfile.mkstemp(suffix=".html")
             url = "file://" + path
@@ -191,6 +192,7 @@ class OpenEOJobItem(QgsDataItem):
     def viewLogs(self):
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
         try:
+            timestamp = str(datetime.datetime.now())
             jobs = self.getBatchJob()
             logs = jobs.logs()
             logsJson = json.dumps(logs)
@@ -200,7 +202,9 @@ class OpenEOJobItem(QgsDataItem):
                 os.path.join(filePath, "..", "logFileView.html")
             ) as file:
                 logHTML = file.read()
-            logHTML = logHTML.replace("{{ json }}", logsJson)
+            logHTML = logHTML.replace("<!-- json -->", logsJson)
+            logHTML = logHTML.replace("<!-- logTimestamp -->", timestamp)
+            logHTML = logHTML.replace("<!-- jobTitle -->", self.getTitle())
 
             fh, path = tempfile.mkstemp(suffix=".html")
             url = "file://" + path

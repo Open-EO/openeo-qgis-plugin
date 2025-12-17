@@ -36,9 +36,8 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         )
         self.plugin = plugin
         self.sortChildrenBy = "default"
-        self.childJobs = None
-        self.paginator = None
-
+        self.jobs = None
+        self.nextPageDataItem = None
         self.nextLink = None
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
@@ -61,11 +60,11 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
         items = []
 
-        jobs = self.childJobs or self.getJobs()  # childJobs?
+        jobs = self.jobs or self.getJobs()
 
         self.nextLink = self.getLink(jobs.links, "next")
-        if self.childJobs is None:
-            self.childJobs = jobs
+        if self.jobs is None:
+            self.jobs = jobs
 
         for i, job in enumerate(jobs):
             item = OpenEOJobItem(
@@ -76,9 +75,9 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
         # create item to load more jobs
         if self.nextLink is not None:
-            self.paginator = OpenEOPaginationItem(self.plugin, self)
-            sip.transferto(self.paginator, self)
-            items.append(self.paginator)
+            self.nextPageDataItem = OpenEOPaginationItem(self.plugin, self)
+            sip.transferto(self.nextPageDataItem, self)
+            items.append(self.nextPageDataItem)
 
         return items
 
@@ -90,27 +89,29 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         return link.href if link else None
 
     def loadNextItems(self):
+        # todo: this should be done via the Python client, but it's not supported yet
+        # https://github.com/Open-EO/openeo-python-client/issues/677
         conn = self.getConnection()
         res = conn.get(
             self.nextLink,
             expected_status=200,
         ).json()
-        currentAmount = len(self.childJobs)
+        currentAmount = len(self.jobs)
         newJobs = openeo.rest.models.general.JobListingResponse(
             response_data=res, connection=conn
         )
 
         # JobListingResponse doesn't otherwise join properly
-        res["jobs"] = self.childJobs + res["jobs"]
-        self.childJobs = openeo.rest.models.general.JobListingResponse(
+        res["jobs"] = self.jobs + res["jobs"]
+        self.jobs = openeo.rest.models.general.JobListingResponse(
             response_data=res, connection=conn
         )
         self.nextLink = self.getLink(newJobs.links, "next")
 
-        # remove paginator
-        sip.transferback(self.paginator)
-        self.deleteChildItem(self.paginator)
-        self.paginator = None
+        # remove next page button
+        sip.transferback(self.nextPageDataItem)
+        self.deleteChildItem(self.nextPageDataItem)
+        self.nextPageDataItem = None
 
         # add new job items
         jobItems = []
@@ -125,11 +126,11 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             jobItems.append(item)
             self.addChildItem(item, refresh=True)
 
-        # re-add paginator if needed
+        # re-add next page button if needed
         if self.nextLink is not None:
-            self.paginator = OpenEOPaginationItem(self.plugin, self)
-            sip.transferto(self.paginator, self)
-            self.addChildItem(self.paginator, refresh=True)
+            self.nextPageDataItem = OpenEOPaginationItem(self.plugin, self)
+            sip.transferto(self.nextPageDataItem, self)
+            self.addChildItem(self.nextPageDataItem, refresh=True)
 
     def getConnection(self):
         return self.parent().getConnection()

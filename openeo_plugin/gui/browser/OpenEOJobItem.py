@@ -8,16 +8,11 @@ import tempfile
 import json
 import pathlib
 
-from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import QAction
-from qgis.PyQt.QtWidgets import QApplication
+from qgis.PyQt.QtCore import Qt, QUrl
+from qgis.PyQt.QtWidgets import QAction, QApplication
 from qgis.PyQt.QtGui import QDesktopServices
-from qgis.PyQt.QtCore import QUrl
 
-from qgis.core import Qgis
-from qgis.core import QgsDataItem
-from qgis.core import QgsApplication
-from qgis.core import QgsProject
+from qgis.core import Qgis, QgsDataItem, QgsApplication, QgsProject
 
 from .util import getSeparator
 from .OpenEOStacAssetItem import OpenEOStacAssetItem

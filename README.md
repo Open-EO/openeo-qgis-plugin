@@ -40,8 +40,8 @@ The Plugin supports the following file types of geodata for use within qgis
 **Web Services**:
 | Service type | Support |
 | -- | -- |
-| [wmts](https://www.ogc.org/standards/wmts/)| Experimental |
-| [xyz-tiles](https://xyzservices.readthedocs.io/en/stable/) | Experimental |
+| [wmts](https://www.ogc.org/standards/wmts/)| Full |
+| [xyz-tiles](https://xyzservices.readthedocs.io/en/stable/) | Full |
    
 **Batch-Job results**:
 | File type | Data Type | Support |

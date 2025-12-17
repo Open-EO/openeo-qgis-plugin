@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import sip
 import openeo
-from urllib.parse import urlparse
-from urllib.parse import parse_qs
 
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtCore import pyqtSignal
@@ -41,7 +39,7 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         self.childJobs = None
         self.paginator = None
 
-        self.limit = 5
+        self.limit = 2
         self.nextLink = None
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
@@ -64,7 +62,8 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
         items = []
 
-        jobs = self.getJobs() # childJobs?
+        jobs = self.childJobs or self.getJobs()  # childJobs?
+
         self.nextLink = self.getLink(jobs.links, "next")
         if self.childJobs is None:
             self.childJobs = jobs
@@ -75,38 +74,39 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             )
             sip.transferto(item, self)
             items.append(item)
-        
+
         # create item to load more jobs
         if self.nextLink is not None:
             self.paginator = OpenEOPaginationItem(self.plugin, self)
             sip.transferto(self.paginator, self)
             items.append(self.paginator)
-        
+
         return items
 
     def getLink(self, links, rel):
         link = next(
-            (
-                link
-                for link in links
-                if link.get("rel") == rel and link.get("href")
-            ),
+            (link for link in links if link.rel == rel and link.href),
             None,
         )
-        return link.get("href") if link else None
+        return link.href if link else None
 
     def loadNextItems(self):
         conn = self.getConnection()
         res = conn.get(
-            self.nextLink["href"],
+            self.nextLink,
             expected_status=200,
         ).json()
+        currentAmount = len(self.childJobs)
         newJobs = openeo.rest.models.general.JobListingResponse(
             response_data=res, connection=conn
         )
-        currentAmount = len(self.childJobs)
-        self.childJobs = self.childJobs + newJobs
-        self.nextLink = self.getLink(res["links"], "next")
+
+        # JobListingResponse doesn't otherwise join properly
+        res["jobs"] = self.childJobs + res["jobs"]
+        self.childJobs = openeo.rest.models.general.JobListingResponse(
+            response_data=res, connection=conn
+        )
+        self.nextLink = self.getLink(newJobs.links, "next")
 
         if self.nextLink is None:
             sip.transferback(self.paginator)
@@ -144,7 +144,8 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             return jobs
 
         except openeo.rest.OpenEoApiError:
-            return []  # this happens when authentication is missing
+            # when authentication is missing
+            return openeo.rest.models.general.JobListingResponse([])
         except Exception as e:
             self.plugin.logging.error(
                 "Can't load list of batch jobs.", error=e

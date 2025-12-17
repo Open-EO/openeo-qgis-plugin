@@ -27,9 +27,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@openeo/vue-components@2/assets/openeo.min.js"></script>
 </head>
 <body>
-  <openeo-job id="component">
-    <script prop="job" type="application/json"><!-- json --></script>
-  </openeo-job>
+  <openeo-logs id="component">
+    <script prop="logs" type="application/json">{{ json }}</script>
+  </openeo-logs>
   <!-- results -->
   <script>
     const css = document.getElementById("styles").cloneNode(true);

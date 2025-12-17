@@ -188,6 +188,32 @@ class OpenEOJobItem(QgsDataItem):
         finally:
             QApplication.restoreOverrideCursor()
 
+    def viewLogs(self):
+        QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
+        try:
+            jobs = self.getBatchJob()
+            logs = jobs.logs()
+            logsJson = json.dumps(logs)
+
+            filePath = pathlib.Path(__file__).parent.resolve()
+            with open(
+                os.path.join(filePath, "..", "logFileView.html")
+            ) as file:
+                logHTML = file.read()
+            logHTML = logHTML.replace("{{ json }}", logsJson)
+
+            fh, path = tempfile.mkstemp(suffix=".html")
+            url = "file://" + path
+            with open(path, "w") as fp:
+                fp.write(logHTML)
+            webbrowser.open_new(url)
+        except Exception as e:
+            self.plugin.logging.error(
+                f"Can't show logs for job {self.getTitle()}.", error=e
+            )
+        finally:
+            QApplication.restoreOverrideCursor()
+
     def getStatus(self):
         if not self.job:
             return "unknown"
@@ -319,6 +345,14 @@ class OpenEOJobItem(QgsDataItem):
         )
         job_properties.triggered.connect(self.viewProperties)
         actions.append(job_properties)
+
+        action_properties = QAction(
+            QgsApplication.getThemeIcon("propertyicons/metadata.svg"),
+            "View Logs",
+            parent,
+        )
+        action_properties.triggered.connect(self.viewLogs)
+        actions.append(action_properties)
 
         action_copy_url = QAction(
             QgsApplication.getThemeIcon("mActionEditCopy.svg"),

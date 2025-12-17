@@ -25,7 +25,35 @@ The openEO QGIS Plugin "OpenEO" allows connecting to openEO backends, list the u
     * Batch Jobs
     * Collections
     * Web Services
+* View Batch Job logs
 * Open the official openEO Web Editor in the systems system browser
+
+#### File-/Service-type support
+The Plugin supports the following file types of geodata for use within qgis
+
+**Collections**:
+| Service type | Support |
+| -- | -- |
+| [wmts](https://www.ogc.org/standards/wmts/)| Full |
+| [xyz-tiles](https://xyzservices.readthedocs.io/en/stable/) | Full |
+
+**Web Services**:
+| Service type | Support |
+| -- | -- |
+| [wmts](https://www.ogc.org/standards/wmts/)| Experimental |
+| [xyz-tiles](https://xyzservices.readthedocs.io/en/stable/) | Experimental |
+   
+**Batch-Job results**:
+| File type | Data Type | Support |
+| -- | -- | -- |
+| [Geotiff](https://www.ogc.org/standards/geotiff/) | Raster | Full |
+| [GeoJSON](https://geojson.org/) | Vector | Full |
+| [Netcdf](https://docs.unidata.ucar.edu/netcdf-c) | Vector & Raster | Raster Only |
+| [Geoparquet](https://geoparquet.org/releases/v1.1.0/) | Vector & Raster | Not yet supported |
+| [ZARR](https://zarr.readthedocs.io/en/stable/) | Vector & Raster | Not yet supported |
+| GIF/JPEG/PNG | Vector & Raster | Not yet supported |
+| CSV | Vector | Not yet supported |
+| JSON | Vector | Not supported by QGIS |
    
 Need some additional features? Leave an issue at this repository!
 

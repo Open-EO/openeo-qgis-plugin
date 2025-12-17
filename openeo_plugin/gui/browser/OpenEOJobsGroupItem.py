@@ -36,9 +36,9 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         )
         self.plugin = plugin
         self.sortChildrenBy = "default"
-        self.jobs = None
         self.nextPageDataItem = None
         self.nextLink = None
+        self.count = -1
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
@@ -60,15 +60,13 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
         items = []
 
-        jobs = self.jobs or self.getJobs()
-
+        jobs = self.getJobs()
         self.nextLink = self.getLink(jobs.links, "next")
-        if self.jobs is None:
-            self.jobs = jobs
 
-        for i, job in enumerate(jobs):
+        for job in jobs:
+            self.count += 1
             item = OpenEOJobItem(
-                parent=self, job=job, plugin=self.plugin, index=i
+                parent=self, job=job, plugin=self.plugin, index=self.count
             )
             sip.transferto(item, self)
             items.append(item)
@@ -96,16 +94,11 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             self.nextLink,
             expected_status=200,
         ).json()
-        currentAmount = len(self.jobs)
         newJobs = openeo.rest.models.general.JobListingResponse(
             response_data=res, connection=conn
         )
 
         # JobListingResponse doesn't otherwise join properly
-        res["jobs"] = self.jobs + res["jobs"]
-        self.jobs = openeo.rest.models.general.JobListingResponse(
-            response_data=res, connection=conn
-        )
         self.nextLink = self.getLink(newJobs.links, "next")
 
         # remove next page button
@@ -114,16 +107,15 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         self.nextPageDataItem = None
 
         # add new job items
-        jobItems = []
-        for i, job in enumerate(newJobs):
+        for job in newJobs:
+            self.count += 1
             item = OpenEOJobItem(
                 parent=self,
                 job=job,
                 plugin=self.plugin,
-                index=currentAmount + i,
+                index=self.count,
             )
             sip.transferto(item, self)
-            jobItems.append(item)
             self.addChildItem(item, refresh=True)
 
         # re-add next page button if needed
@@ -147,17 +139,16 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
     def getJobs(self):
         try:
-            jobs = self.getConnection().list_jobs()
-            return jobs
+            return self.getConnection().list_jobs()
 
         except openeo.rest.OpenEoApiError:
             # when authentication is missing
-            return openeo.rest.models.general.JobListingResponse([])
+            pass
         except Exception as e:
             self.plugin.logging.error(
                 "Can't load list of batch jobs.", error=e
             )
-        return []
+        return openeo.rest.models.general.JobListingResponse([])
 
     def getSortAction(self, title, key):
         return getSortAction(self, title, key, lambda: self.sortBy(key))

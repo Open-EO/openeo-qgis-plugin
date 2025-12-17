@@ -1,10 +1,5 @@
 from urllib.parse import quote
-import tempfile
-import webbrowser
-import pathlib
-import os
 import requests
-import json
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication
@@ -17,7 +12,7 @@ from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsApplication
 
-from .util import getSeparator
+from .util import getSeparator, showInBrowser
 from ...utils.wmts import WebMapTileService
 
 
@@ -241,28 +236,13 @@ class OpenEOCollectionItem(QgsDataItem):
 
     def viewProperties(self):
         collection_link = self.get_url("self")
-        collection_json = requests.get(collection_link).json()
-        collection_json = json.dumps(collection_json)
-
-        filePath = pathlib.Path(__file__).parent.resolve()
-        with open(
-            os.path.join(filePath, "..", "collectionProperties.html")
-        ) as file:
-            collectionInfoHTML = file.read()
-        collectionInfoHTML = collectionInfoHTML.replace(
-            "{{ json }}", collection_json
-        )
-
-        fh, path = tempfile.mkstemp(suffix=".html")
-        url = "file://" + path
-        with open(path, "w") as fp:
-            fp.write(collectionInfoHTML)
-        webbrowser.open_new(url)
+        collection = requests.get(collection_link).json()
+        showInBrowser("collectionProperties", {"collection": collection})
 
     def actions(self, parent):
         actions = []
 
-        if self.preview:
+        if self.hasPreview():
             action_add_to_project = QAction(
                 QgsApplication.getThemeIcon("mActionAddLayer.svg"),
                 "Add Layer to Project",

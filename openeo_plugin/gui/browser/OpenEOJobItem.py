@@ -2,9 +2,6 @@
 from collections.abc import Iterable
 import dateutil.parser
 import sip
-import webbrowser
-import os
-import tempfile
 import json
 import pathlib
 
@@ -14,7 +11,7 @@ from qgis.PyQt.QtGui import QDesktopServices
 
 from qgis.core import Qgis, QgsDataItem, QgsApplication, QgsProject
 
-from .util import getSeparator
+from .util import getSeparator, showLogs, showInBrowser
 from .OpenEOStacAssetItem import OpenEOStacAssetItem
 from ..directory_dialog import DirectoryDialog
 from ...utils.downloadTask import DownloadJobAssetsTask
@@ -60,7 +57,7 @@ class OpenEOJobItem(QgsDataItem):
 
         self.updateFromData()
 
-    def getBatchJob(self):
+    def getJobClass(self):
         return self.getConnection().job(self.job["id"])
 
     def refresh(self, children: Iterable[QgsDataItem] | bool = False):
@@ -100,7 +97,7 @@ class OpenEOJobItem(QgsDataItem):
         return self.parent().getConnection()
 
     def getJob(self, force=False):
-        batchjob = self.getBatchJob()
+        batchjob = self.getJobClass()
         if force:
             try:
                 self.job = batchjob.describe()
@@ -139,7 +136,7 @@ class OpenEOJobItem(QgsDataItem):
             assets = self.results.get("assets", [])
             jobResultLink = (
                 self.getLink("self")
-                or self.getBatchJob().get_results_metadata_url()
+                or self.getJobClass().get_results_metadata_url()
             )
             # create stac-asset items
             for key in assets:
@@ -157,33 +154,38 @@ class OpenEOJobItem(QgsDataItem):
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
         try:
             self.getJob(force=self.getStatus() in isActiveStates)
-            jobJson = json.dumps(self.job)
-            type = self.results["type"] if self.results else None
             resultJson = json.dumps(self.results)
-
             # Item or Collection?
-            resultHtml = ""
-            if type == "Collection":
+            stacType = self.results["type"] if self.results else None
+            if stacType == "Collection":
                 resultHtml = f'<openeo-collection id="component"><script prop="data" type="application/json">{resultJson}</script></openeo-collection>'
-            elif type == "Feature":
+            elif stacType == "Feature":
                 resultHtml = f'<openeo-item id="component"><script prop="data" type="application/json">{resultJson}</script></openeo-item>'
+            else:
+                resultHtml = ""
 
-            filePath = pathlib.Path(__file__).parent.resolve()
-            with open(
-                os.path.join(filePath, "..", "jobProperties.html")
-            ) as file:
-                jobInfoHTML = file.read()
-            jobInfoHTML = jobInfoHTML.replace("<!-- results -->", resultHtml)
-            jobInfoHTML = jobInfoHTML.replace("{{ json }}", jobJson)
-
-            fh, path = tempfile.mkstemp(suffix=".html")
-            url = "file://" + path
-            with open(path, "w") as fp:
-                fp.write(jobInfoHTML)
-            webbrowser.open_new(url)
+            showInBrowser(
+                "jobProperties",
+                {
+                    "job": self.job,
+                    "results": resultHtml,
+                },
+            )
         except Exception as e:
             self.plugin.logging.error(
                 f"Can't show job details for job {self.getTitle()}.", error=e
+            )
+        finally:
+            QApplication.restoreOverrideCursor()
+
+    def viewLogs(self):
+        QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
+        try:
+            logs = self.getJobClass().logs()
+            showLogs(logs, self.getTitle())
+        except Exception as e:
+            self.plugin.logging.error(
+                f"Can't show logs for job {self.getTitle()}.", error=e
             )
         finally:
             QApplication.restoreOverrideCursor()
@@ -312,13 +314,21 @@ class OpenEOJobItem(QgsDataItem):
 
         actions.append(getSeparator(parent))
 
-        job_properties = QAction(
+        action_properties = QAction(
             QgsApplication.getThemeIcon("propertyicons/metadata.svg"),
             "Details",
             parent,
         )
-        job_properties.triggered.connect(self.viewProperties)
-        actions.append(job_properties)
+        action_properties.triggered.connect(self.viewProperties)
+        actions.append(action_properties)
+
+        action_logs = QAction(
+            QgsApplication.getThemeIcon("mIconDataDefine.svg"),
+            "View Logs",
+            parent,
+        )
+        action_logs.triggered.connect(self.viewLogs)
+        actions.append(action_logs)
 
         action_copy_url = QAction(
             QgsApplication.getThemeIcon("mActionEditCopy.svg"),
@@ -360,7 +370,7 @@ class OpenEOJobItem(QgsDataItem):
         url = self.getLink("canonical")
         if not url:
             public = "NON-public"
-            url = self.getBatchJob().get_results_metadata_url()
+            url = self.getJobClass().get_results_metadata_url()
 
         clipboard = QApplication.clipboard()
         clipboard.setText(url)

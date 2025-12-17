@@ -1,3 +1,9 @@
+import datetime
+import json
+import tempfile
+import webbrowser
+from pathlib import Path
+
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtGui import QIcon
 
@@ -20,3 +26,32 @@ def getSeparator(parent):
     separator = QAction(parent)
     separator.setSeparator(True)
     return separator
+
+
+def showLogs(logs, title):
+    showInBrowser(
+        "logFileView",
+        {
+            "logs": logs,
+            "title": title,
+            "logTimestamp": str(datetime.datetime.now()),
+        },
+    )
+
+
+def showInBrowser(file, vars):
+    filePath = Path(__file__).parent.resolve()
+    with open(filePath / f"../{file}.html") as file:
+        logHTML = file.read()
+
+    for key, value in vars.items():
+        if isinstance(value, (dict, list)):
+            value = json.dumps(value)
+        logHTML = logHTML.replace(f"<!-- {key} -->", value)
+
+    fh, path = tempfile.mkstemp(suffix=".html")
+    url = "file://" + path
+    with open(path, "w") as fp:
+        fp.write(logHTML)
+
+    webbrowser.open_new(url)

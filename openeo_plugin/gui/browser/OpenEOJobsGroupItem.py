@@ -39,7 +39,6 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         self.childJobs = None
         self.paginator = None
 
-        self.limit = 2
         self.nextLink = None
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
@@ -147,7 +146,7 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
     def getJobs(self):
         try:
-            jobs = self.getConnection().list_jobs(limit=self.limit)
+            jobs = self.getConnection().list_jobs()
             return jobs
 
         except openeo.rest.OpenEoApiError:

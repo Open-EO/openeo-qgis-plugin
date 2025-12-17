@@ -108,11 +108,12 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         )
         self.nextLink = self.getLink(newJobs.links, "next")
 
-        if self.nextLink is None:
-            sip.transferback(self.paginator)
-            self.deleteChildItem(self.paginator)
-            self.paginator = None
+        # remove paginator
+        sip.transferback(self.paginator)
+        self.deleteChildItem(self.paginator)
+        self.paginator = None
 
+        # add new job items
         jobItems = []
         for i, job in enumerate(newJobs):
             item = OpenEOJobItem(
@@ -124,6 +125,12 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             sip.transferto(item, self)
             jobItems.append(item)
             self.addChildItem(item, refresh=True)
+
+        # re-add paginator if needed
+        if self.nextLink is not None:
+            self.paginator = OpenEOPaginationItem(self.plugin, self)
+            sip.transferto(self.paginator, self)
+            self.addChildItem(self.paginator, refresh=True)
 
     def getConnection(self):
         return self.parent().getConnection()

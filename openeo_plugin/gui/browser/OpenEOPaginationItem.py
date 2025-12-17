@@ -32,9 +32,9 @@ class OpenEOPaginationItem(QgsDataItem):
     def sortKey(self):
         sortBy = self.parent().sortChildrenBy
         if sortBy == "title":
-            return "ÿÿÿÿ" # asci 255
+            return "\U0010ffff\U0010ffff\U0010ffff\U0010ffff"  # unicode high-Value
         elif sortBy == "newest":
-            return -sys.maxsize
+            return sys.maxsize
         else:  # default or oldest
             return sys.maxsize
 

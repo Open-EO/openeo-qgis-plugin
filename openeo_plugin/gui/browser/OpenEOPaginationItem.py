@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import sys
+
 from qgis.core import QgsDataItem
 from qgis.core import Qgis
 
@@ -27,11 +29,14 @@ class OpenEOPaginationItem(QgsDataItem):
         self.loadedItems = loadedItems
         self.populate()
 
-    def setLoadedItems(self, int):
-        self.loadedItems = int
-
     def sortKey(self):
-        return self.loadedItems
+        sortBy = self.parent().sortChildrenBy
+        if sortBy == "title":
+            return "ÿÿÿÿ" # asci 255
+        elif sortBy == "newest":
+            return -sys.maxsize
+        else:  # default or oldest
+            return sys.maxsize
 
     def handleDoubleClick(self):
         self.parent().loadNextItems()

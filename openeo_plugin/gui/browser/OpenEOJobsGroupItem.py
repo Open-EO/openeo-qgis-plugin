@@ -42,7 +42,7 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         self.paginator = None
 
         self.limit = 5
-        self.nextPage = 0
+        self.nextLink = None
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
@@ -64,7 +64,8 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
         items = []
 
-        jobs = self.childJobs or self.getJobs()
+        jobs = self.getJobs() # childJobs?
+        self.nextLink = self.getLink(jobs.links, "next")
         if self.childJobs is None:
             self.childJobs = jobs
 
@@ -74,20 +75,14 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             )
             sip.transferto(item, self)
             items.append(item)
+        
         # create item to load more jobs
-        if (not self.paginator) and (self.nextPage is not None):
+        if self.nextLink is not None:
             self.paginator = OpenEOPaginationItem(self.plugin, self)
             sip.transferto(self.paginator, self)
-        if self.paginator:
-            self.paginator.setLoadedItems(len(jobs))
             items.append(self.paginator)
+        
         return items
-
-    def addChildren(self, children):
-        for child in children:
-            self.addChildItem(child)
-            sip.transferto(child, self)
-        self.refresh()
 
     def getLink(self, links, rel):
         link = next(
@@ -100,18 +95,10 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         )
         return link.get("href") if link else None
 
-    def getNextPageParameters(self, url):
-        parsed_url = urlparse(url)
-        query = parse_qs(parsed_url.query)
-        limit = query.get("limit", [None])[0]
-        page = query.get("page", [None])[0]
-        return limit, page
-
     def loadNextItems(self):
         conn = self.getConnection()
         res = conn.get(
-            "/jobs",
-            params={"limit": self.limit, "page": self.nextPage},
+            self.nextLink["href"],
             expected_status=200,
         ).json()
         newJobs = openeo.rest.models.general.JobListingResponse(
@@ -119,8 +106,12 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         )
         currentAmount = len(self.childJobs)
         self.childJobs = self.childJobs + newJobs
-        nextLink = self.getLink(res["links"], "next")
-        self.limit, self.nextPage = self.getNextPageParameters(nextLink)
+        self.nextLink = self.getLink(res["links"], "next")
+
+        if self.nextLink is None:
+            sip.transferback(self.paginator)
+            self.deleteChildItem(self.paginator)
+            self.paginator = None
 
         jobItems = []
         for i, job in enumerate(newJobs):
@@ -130,13 +121,9 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
                 plugin=self.plugin,
                 index=currentAmount + i,
             )
+            sip.transferto(item, self)
             jobItems.append(item)
-
-        if self.nextPage is None:
-            self.paginator = None
-
-        self.addChildren(jobItems)
-        return
+            self.addChildItem(item, refresh=True)
 
     def getConnection(self):
         return self.parent().getConnection()

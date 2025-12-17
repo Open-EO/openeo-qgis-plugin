@@ -101,45 +101,92 @@ class OpenEOServiceItem(QgsDataItem):
     def getConnection(self):
         return self.parent().getConnection()
 
-    def createUri(self, link):
-        mapType = link.get("type") or ""
-
+    def createBaseUri(self, link):
         uri = QgsMimeDataUtils.Uri()
         uri.layerType = QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster)
         uri.providerKey = "wms"
-        uri.name = self.getTitle()
-        uri.supportedFormats = (
-            self.supportedFormats()
-        )  # todo: do we need to set this more specifically?
-        uri.supportedCrs = (
-            self.supportedCrs()
-        )  # todo: set more specific supportedCrs below
+        # todo: do we need to set this more specifically?
+        uri.supportedFormats = []
+        uri.supportedCrs = []
 
-        # different map service formats
-        if mapType.lower() == "xyz":
-            uri.uri = f"type=xyz&url={link['url']}"
-            return uri
-        elif mapType.lower() == "wmts":
-            wmtsUrl = link["url"] + "?service=wmts&request=getCapabilities"
-            wmts = WebMapTileService(wmtsUrl)
-            targetCRS = "EPSG::3857"
+        uri.name = self.layerName()
+        title = link.get("title") or ""
+        if len(title) > 0 and title != uri.name:
+            uri.name += f" - {title}"
 
-            tileMatrixSet = None
-            for tms_id, tms in list(wmts.tilematrixsets.items()):
-                if targetCRS in tms.crs:
-                    tileMatrixSet = tms_id
-                    break
-            layerID = None
-            layerID = list(wmts.contents)[0]
+        return uri
 
-            # TODO: determine more URI parameters programmatically
-            uri.uri = f"crs=EPSG:3857&styles=default&tilePixelRatio=0&format=image/png&layers={layerID}&tileMatrixSet={tileMatrixSet}&url={link['href']}"
-            return uri
-        elif mapType.lower() == "wms":
-            # TODO
-            return None
+    def createXYZ(self, link):
+        uri = self.createBaseUri(link)
+        uri.supportedCrs = ["EPSG:3857"]
+        uri.uri = f"type=xyz&url={link['url']}"
+        return uri
+
+    def createWMTS(self, link):
+        # todo: Currently only supports KVP encoding, not REST
+        # todo: does not support wmts:dimensions
+        wmtsUrl = link["url"] + "?service=wmts&request=getCapabilities"
+        wmts = WebMapTileService(wmtsUrl)
+
+        layers = link.get("wmts:layer")
+        if layers:
+            if isinstance(layers, str):
+                layers = [layers]
+            else:
+                layers = list(layers)
         else:
-            return None
+            layers = list(wmts.contents)
+
+        mediaType = link.get("type", "")
+        style = None
+        tileMatrixSet = None
+        crs = None
+
+        uris = []
+        for layer in layers:
+            uri = self.createBaseUri(link)
+
+            # Get layer info from WMTS capabilities
+            lyr = wmts.contents.get(layer)
+            if lyr:
+                if not mediaType and hasattr(lyr, "formats") and lyr.formats:
+                    mediaType = lyr.formats[0]
+
+                if hasattr(lyr, "styles") and lyr.styles:
+                    style = (
+                        list(lyr.styles.keys())[0]
+                        if isinstance(lyr.styles, dict)
+                        else lyr.styles[0]
+                    )
+
+                if hasattr(lyr, "tilematrixsets") and lyr.tilematrixsets:
+                    tileMatrixSet = list(lyr.tilematrixsets)[0]
+                    tms = wmts.tilematrixsets.get(tileMatrixSet)
+                    if tms and hasattr(tms, "crs"):
+                        crs = tms.crs
+
+            # Fallback if no tileMatrixSet found
+            if not tileMatrixSet:
+                tileMatrixSet = "EPSG:3857"
+            if not crs:
+                crs = "EPSG:3857"
+            if not mediaType:
+                mediaType = "image/png"
+            if not style:
+                style = "default"
+
+            uri.uri = f"crs={crs}&styles={style}&tilePixelRatio=0&format={mediaType}&layers={layer}&tileMatrixSet={tileMatrixSet}&url={link['href']}"
+            uris.append(uri)
+
+        return uris
+
+    def createUri(self, link):
+        type = link.get("type") or ""
+        if type == "xyz":
+            return self.createXYZ(link)
+        elif type == "wmts":
+            return self.createWMTS(link)
+        return None
 
     def mimeUris(self):
         # see if uri has already been created
@@ -158,11 +205,14 @@ class OpenEOServiceItem(QgsDataItem):
 
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
 
-        # TODO: what if operation takes way too long?
         try:
             mimeUri = self.createUri(service)
             if mimeUri:
                 mimeUris.append(mimeUri)
+            else:
+                self.plugin.logging.error(
+                    f"Can't visualize the service {service['url']}. Not a valid service type"
+                )
         except Exception as e:
             self.plugin.logging.error(
                 f"Can't visualize the service {service['url']}.", error=e

@@ -25,8 +25,39 @@ The openEO QGIS Plugin "OpenEO" allows connecting to openEO backends, list the u
     * Batch Jobs
     * Collections
     * Web Services
+* View logs of batch jobs and web services
 * Open the official openEO Web Editor in the systems system browser
+
+#### File format and web service support
+
+This plugin supports visualizing the following file formats and web services within QGIS:
+
+**Collections**:
+| Service type | Support |
+| -- | -- |
+| [WMTS](https://www.ogc.org/standards/wmts/)| Full |
+| [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map) | Full |
+
+**Web Services**:
+| Service type | Support |
+| -- | -- |
+| [WMTS](https://www.ogc.org/standards/wmts/)| Full |
+| [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map) | Full |
    
+**Batch-Job results**:
+| File type | Data Type | Support |
+| -- | -- | -- |
+| [GeoTIFF](https://www.ogc.org/standards/geotiff/) | Raster | Full |
+| [GeoJSON](https://geojson.org/) | Vector | Full |
+| [NetCDF](https://docs.unidata.ucar.edu/netcdf-c) | Vector & Raster | Raster Only |
+| [Geoparquet](https://geoparquet.org) | Vector | Not yet supported |
+| [ZARR](https://zarr.readthedocs.io/en/stable/) | Raster | Not yet supported |
+| GIF/JPEG/PNG | Raster | Not yet supported |
+| CSV | Tabular | Not yet supported |
+| JSON | Tabular | Not supported by QGIS |
+
+See <https://github.com/Open-EO/openeo-qgis-plugin/issues/167> for more details.
+
 Need some additional features? Leave an issue at this repository!
 
 ## Install

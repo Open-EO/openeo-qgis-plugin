@@ -34,27 +34,29 @@ The Plugin supports the following file types of geodata for use within qgis
 **Collections**:
 | Service type | Support |
 | -- | -- |
-| [wmts](https://www.ogc.org/standards/wmts/)| Full |
-| [xyz-tiles](https://xyzservices.readthedocs.io/en/stable/) | Full |
+| [WMTS](https://www.ogc.org/standards/wmts/)| Full |
+| [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map) | Full |
 
 **Web Services**:
 | Service type | Support |
 | -- | -- |
-| [wmts](https://www.ogc.org/standards/wmts/)| Full |
-| [xyz-tiles](https://xyzservices.readthedocs.io/en/stable/) | Full |
+| [WMTS](https://www.ogc.org/standards/wmts/)| Full |
+| [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map) | Full |
    
 **Batch-Job results**:
 | File type | Data Type | Support |
 | -- | -- | -- |
-| [Geotiff](https://www.ogc.org/standards/geotiff/) | Raster | Full |
+| [GeoTIFF](https://www.ogc.org/standards/geotiff/) | Raster | Full |
 | [GeoJSON](https://geojson.org/) | Vector | Full |
-| [Netcdf](https://docs.unidata.ucar.edu/netcdf-c) | Vector & Raster | Raster Only |
-| [Geoparquet](https://geoparquet.org/releases/v1.1.0/) | Vector & Raster | Not yet supported |
-| [ZARR](https://zarr.readthedocs.io/en/stable/) | Vector & Raster | Not yet supported |
-| GIF/JPEG/PNG | Vector & Raster | Not yet supported |
-| CSV | Vector | Not yet supported |
-| JSON | Vector | Not supported by QGIS |
-   
+| [NetCDF](https://docs.unidata.ucar.edu/netcdf-c) | Vector & Raster | Raster Only |
+| [Geoparquet](https://geoparquet.org) | Vector | Not yet supported |
+| [ZARR](https://zarr.readthedocs.io/en/stable/) | Raster | Not yet supported |
+| GIF/JPEG/PNG | Raster | Not yet supported |
+| CSV | Tabular | Not yet supported |
+| JSON | Tabular | Not supported by QGIS |
+
+See <https://github.com/Open-EO/openeo-qgis-plugin/issues/167> for more details.
+
 Need some additional features? Leave an issue at this repository!
 
 ## Install

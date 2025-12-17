@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import sip
 import openeo
+from urllib.parse import urlparse
+from urllib.parse import parse_qs
 
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtCore import pyqtSignal
@@ -37,8 +39,8 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         self.plugin = plugin
         self.sortChildrenBy = "default"
         self.childJobs = None
-
         self.paginator = None
+
         self.limit = 5
         self.nextPage = 0
 
@@ -73,12 +75,12 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             sip.transferto(item, self)
             items.append(item)
         # create item to load more jobs
-        if self.limit:
-            self.paginatgor = OpenEOPaginationItem(
-                self.plugin, self, loadedItems=len(self.childJobs)
-            )
-            sip.transferto(self.paginatgor, self)
-            items.append(self.paginatgor)
+        if (not self.paginator) and (self.nextPage is not None):
+            self.paginator = OpenEOPaginationItem(self.plugin, self)
+            sip.transferto(self.paginator, self)
+        if self.paginator:
+            self.paginator.setLoadedItems(len(jobs))
+            items.append(self.paginator)
         return items
 
     def addChildren(self, children):
@@ -86,6 +88,24 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             self.addChildItem(child)
             sip.transferto(child, self)
         self.refresh()
+
+    def getLink(self, links, rel):
+        link = next(
+            (
+                link
+                for link in links
+                if link.get("rel") == rel and link.get("href")
+            ),
+            None,
+        )
+        return link.get("href") if link else None
+
+    def getNextPageParameters(self, url):
+        parsed_url = urlparse(url)
+        query = parse_qs(parsed_url.query)
+        limit = query.get("limit", [None])[0]
+        page = query.get("page", [None])[0]
+        return limit, page
 
     def loadNextItems(self):
         conn = self.getConnection()
@@ -99,7 +119,8 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         )
         currentAmount = len(self.childJobs)
         self.childJobs = self.childJobs + newJobs
-        self.nextPage += 1
+        nextLink = self.getLink(res["links"], "next")
+        self.limit, self.nextPage = self.getNextPageParameters(nextLink)
 
         jobItems = []
         for i, job in enumerate(newJobs):
@@ -110,7 +131,10 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
                 index=currentAmount + i,
             )
             jobItems.append(item)
-        self.paginatgor.setLoadedItems(len(self.childJobs))
+
+        if self.nextPage is None:
+            self.paginator = None
+
         self.addChildren(jobItems)
         return
 

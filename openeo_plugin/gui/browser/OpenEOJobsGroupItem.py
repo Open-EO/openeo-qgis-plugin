@@ -9,6 +9,7 @@ from qgis.core import QgsDataCollectionItem, QgsApplication
 
 from .OpenEOJobItem import OpenEOJobItem
 from .util import getSortAction, getSeparator
+from .OpenEOPaginationItem import OpenEOPaginationItem
 
 
 class OpenEOJobsGroupItem(QgsDataCollectionItem):
@@ -35,6 +36,9 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         )
         self.plugin = plugin
         self.sortChildrenBy = "default"
+        self.nextPageDataItem = None
+        self.nextLink = None
+        self.count = -1
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
@@ -55,19 +59,70 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             return []
 
         items = []
+
         jobs = self.getJobs()
-        for i, job in enumerate(jobs):
+        self.nextLink = self.getLink(jobs.links, "next")
+
+        for job in jobs:
+            self.count += 1
             item = OpenEOJobItem(
-                parent=self, job=job, plugin=self.plugin, index=i
+                parent=self, job=job, plugin=self.plugin, index=self.count
             )
             sip.transferto(item, self)
             items.append(item)
+
+        # create item to load more jobs
+        if self.nextLink is not None:
+            self.nextPageDataItem = OpenEOPaginationItem(self.plugin, self)
+            sip.transferto(self.nextPageDataItem, self)
+            items.append(self.nextPageDataItem)
+
         return items
 
-    def addChildren(self, children):
-        for child in children:
-            self.addChildItem(child)
-        self.refresh()
+    def getLink(self, links, rel):
+        link = next(
+            (link for link in links if link.rel == rel and link.href),
+            None,
+        )
+        return link.href if link else None
+
+    def loadNextItems(self):
+        # todo: this should be done via the Python client, but it's not supported yet
+        # https://github.com/Open-EO/openeo-python-client/issues/677
+        conn = self.getConnection()
+        res = conn.get(
+            self.nextLink,
+            expected_status=200,
+        ).json()
+        newJobs = openeo.rest.models.general.JobListingResponse(
+            response_data=res, connection=conn
+        )
+
+        # JobListingResponse doesn't otherwise join properly
+        self.nextLink = self.getLink(newJobs.links, "next")
+
+        # remove next page button
+        sip.transferback(self.nextPageDataItem)
+        self.deleteChildItem(self.nextPageDataItem)
+        self.nextPageDataItem = None
+
+        # add new job items
+        for job in newJobs:
+            self.count += 1
+            item = OpenEOJobItem(
+                parent=self,
+                job=job,
+                plugin=self.plugin,
+                index=self.count,
+            )
+            sip.transferto(item, self)
+            self.addChildItem(item, refresh=True)
+
+        # re-add next page button if needed
+        if self.nextLink is not None:
+            self.nextPageDataItem = OpenEOPaginationItem(self.plugin, self)
+            sip.transferto(self.nextPageDataItem, self)
+            self.addChildItem(self.nextPageDataItem, refresh=True)
 
     def getConnection(self):
         return self.parent().getConnection()
@@ -85,13 +140,15 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
     def getJobs(self):
         try:
             return self.getConnection().list_jobs()
+
         except openeo.rest.OpenEoApiError:
-            return []  # this happens when authentication is missing
+            # when authentication is missing
+            pass
         except Exception as e:
             self.plugin.logging.error(
                 "Can't load list of batch jobs.", error=e
             )
-        return []
+        return openeo.rest.models.general.JobListingResponse([])
 
     def getSortAction(self, title, key):
         return getSortAction(self, title, key, lambda: self.sortBy(key))

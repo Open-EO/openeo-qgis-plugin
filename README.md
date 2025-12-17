@@ -25,12 +25,11 @@ The openEO QGIS Plugin "OpenEO" allows connecting to openEO backends, list the u
     * Batch Jobs
     * Collections
     * Web Services
-* View logs of batch jobs and web services
+* View Batch Job logs
 * Open the official openEO Web Editor in the systems system browser
 
-#### File format and web service support
-
-This plugin supports visualizing the following file formats and web services within QGIS:
+#### File-/Service-type support
+The Plugin supports the following file types of geodata for use within qgis
 
 **Collections**:
 | Service type | Support |

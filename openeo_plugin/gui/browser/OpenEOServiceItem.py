@@ -1,23 +1,19 @@
 # -*- coding: utf-8 -*-
 from collections.abc import Iterable
 import dateutil.parser
-import webbrowser
-import os
-import tempfile
-import json
-import pathlib
 
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import QApplication
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QApplication, QAction
 
-from qgis.core import Qgis
-from qgis.core import QgsDataItem
-from qgis.core import QgsMimeDataUtils
-from qgis.core import QgsMapLayerFactory
-from qgis.core import QgsApplication
+from qgis.core import (
+    Qgis,
+    QgsDataItem,
+    QgsMimeDataUtils,
+    QgsMapLayerFactory,
+    QgsApplication,
+)
 
-from .util import getSeparator
+from .util import getSeparator, showLogs, showInBrowser
 from ...utils.wmts import WebMapTileService
 
 
@@ -188,29 +184,34 @@ class OpenEOServiceItem(QgsDataItem):
         uri = uris[0]
         self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
 
+    def viewLogs(self):
+        QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
+        try:
+            logs = self.getServiceClass().logs()
+            showLogs(logs, self.getTitle())
+        except Exception as e:
+            self.plugin.logging.error(
+                f"Can't show logs for service {self.getTitle()}.", error=e
+            )
+        finally:
+            QApplication.restoreOverrideCursor()
+
     def viewProperties(self):
         self.getService()
-        service_json = json.dumps(self.service)
-
-        filePath = pathlib.Path(__file__).parent.resolve()
-        with open(
-            os.path.join(filePath, "..", "serviceProperties.html")
-        ) as file:
-            serviceInfoHTML = file.read()
-        serviceInfoHTML = serviceInfoHTML.replace("{{ json }}", service_json)
-
-        fh, path = tempfile.mkstemp(suffix=".html")
-        url = "file://" + path
-        with open(path, "w") as fp:
-            fp.write(serviceInfoHTML)
-        webbrowser.open_new(url)
+        showInBrowser(
+            "serviceProperties",
+            {
+                "service": self.service,
+            },
+        )
 
     def getService(self):
-        self.service = (
-            self.getConnection().service(self.service["id"]).describe_service()
-        )
+        self.service = self.getServiceClass().describe_service()
         self.updateFromData()
         return self.service
+
+    def getServiceClass(self):
+        return self.getConnection().service(self.service["id"])
 
     def isEnabled(self):
         return self.service.get("enabled", False)
@@ -235,6 +236,14 @@ class OpenEOServiceItem(QgsDataItem):
         )
         action_properties.triggered.connect(self.viewProperties)
         actions.append(action_properties)
+
+        action_logs = QAction(
+            QgsApplication.getThemeIcon("mIconDataDefine.svg"),
+            "View Logs",
+            parent,
+        )
+        action_logs.triggered.connect(self.viewLogs)
+        actions.append(action_logs)
 
         action_refresh = QAction(
             QgsApplication.getThemeIcon("mActionRefresh.svg"),

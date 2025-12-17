@@ -2,10 +2,6 @@
 import sip
 import openeo
 import webbrowser
-import json
-import pathlib
-import os
-import tempfile
 import datetime
 
 from qgis.PyQt.QtCore import Qt
@@ -14,7 +10,7 @@ from qgis.PyQt.QtWidgets import QAction, QApplication
 
 from qgis.core import QgsApplication, QgsDataCollectionItem
 
-from .util import getSeparator
+from .util import getSeparator, showInBrowser
 from .OpenEOJobsGroupItem import OpenEOJobsGroupItem
 from .OpenEOServicesGroupItem import OpenEOServicesGroupItem
 from .OpenEOCollectionsGroupItem import OpenEOCollectionsGroupItem
@@ -231,28 +227,14 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         self.refresh()
 
     def viewProperties(self):
-        connection = self.getConnection()
-        connection_description = connection.capabilities().capabilities
-        connection_url = connection.capabilities().url
-        connection_json = json.dumps(connection_description)
-
-        filePath = pathlib.Path(__file__).parent.resolve()
-        with open(
-            os.path.join(filePath, "..", "connectionProperties.html")
-        ) as file:
-            connectionInfoHTML = file.read()
-        connectionInfoHTML = connectionInfoHTML.replace(
-            "{{ json }}", connection_json
+        capabilities = self.getConnection().capabilities()
+        showInBrowser(
+            "connectionProperties",
+            {
+                "capabilities": capabilities.capabilities,
+                "url": capabilities.url,
+            },
         )
-        connectionInfoHTML = connectionInfoHTML.replace(
-            "{{ url }}", connection_url
-        )
-
-        fh, path = tempfile.mkstemp(suffix=".html")
-        url = "file://" + path
-        with open(path, "w") as fp:
-            fp.write(connectionInfoHTML)
-        webbrowser.open_new(url)
 
     def openInWebEditor(self):
         webEditorUrl = self.getConnection().web_editor()

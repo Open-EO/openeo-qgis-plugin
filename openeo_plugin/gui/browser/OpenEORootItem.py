@@ -88,6 +88,9 @@ class OpenEORootItem(QgsDataCollectionItem):
             item = self.createConnectionItem(model, connection=connection)
             self.addChildItem(item, refresh=True)
 
+            # start authentication flow
+            item.authenticate()
+
     def removeConnection(self, data_item):
         self.saved_connections.remove(data_item.model)
 

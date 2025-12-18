@@ -101,7 +101,6 @@ class OpenEOStacAssetItem(QgsDataItem):
 
         if self.fileType.get("download", False):
             url = self.downloadAsset().as_uri()
-            print(url)
         else:
             url = self.resolveUrl()
             scheme = urlparse(url).scheme

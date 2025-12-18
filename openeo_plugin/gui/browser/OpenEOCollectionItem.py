@@ -12,6 +12,7 @@ from qgis.core import QgsApplication
 from .util import getSeparator, showInBrowser
 from ...utils.TileMapServiceMimeUtils import (
     TileMapServiceMimeUtils as TMSMimeUtils,
+    WMTSLink,
 )
 
 
@@ -98,12 +99,12 @@ class OpenEOCollectionItem(QgsDataItem):
     def getConnection(self):
         return self.parent().getConnection()
 
-    def createUris(self, link):
+    def createUris(self, linkDict):
         uris = []
-        rel = link.get("rel") or ""
-        if rel == "xyz":
+        link = WMTSLink.from_dict(linkDict)
+        if link.rel == "xyz":
             uris.append(TMSMimeUtils.createXYZ(link, self.layerName()))
-        elif rel == "wmts":
+        elif link.rel == "wmts":
             uris.extend(TMSMimeUtils.createWMTS(link, self.layerName()))
 
         return uris

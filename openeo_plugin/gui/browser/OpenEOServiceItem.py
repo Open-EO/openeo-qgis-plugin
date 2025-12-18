@@ -14,6 +14,7 @@ from qgis.core import (
 from .util import getSeparator, showLogs, showInBrowser
 from ...utils.TileMapServiceMimeUtils import (
     TileMapServiceMimeUtils as TMSMimeUtils,
+    WMTSLink,
 )
 
 
@@ -102,10 +103,17 @@ class OpenEOServiceItem(QgsDataItem):
         return self.parent().getConnection()
 
     def createUri(self, link):
-        type = link.get("type") or ""
-        if type == "xyz":
+        link = WMTSLink.from_dict(
+            {
+                "rel": link.get("type"),
+                "href": link.get("url"),
+                "type": link.get("type"),
+                "titel": link.get("title"),
+            }
+        )
+        if link.type == "xyz":
             return TMSMimeUtils.createXYZ(link, self.layerName())
-        elif type == "wmts":
+        elif link.type == "wmts":
             return TMSMimeUtils.createWMTS(link)
         return None
 

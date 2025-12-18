@@ -1,8 +1,27 @@
+from openeo.rest.models.general import Link
+
 from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
 from qgis.core import Qgis
 
 from .wmts import WebMapTileService
+
+
+class WMTSLink(Link):
+    def __init__(self, rel, href, type=None, title=None, wmts_layer=None):
+        super().__init__(rel, href, type, title)
+        self.wmts_layer = wmts_layer
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Link:
+        """Build :py:class:`Link` from dictionary (e.g. parsed JSON representation)."""
+        return cls(
+            rel=data["rel"],
+            href=data["href"],
+            type=data.get("type"),
+            title=data.get("title"),
+            wmts_layer=data.get("wmts:layer"),
+        )
 
 
 class TileMapServiceMimeUtils:
@@ -16,7 +35,7 @@ class TileMapServiceMimeUtils:
         uri.supportedCrs = []
 
         uri.name = layerName
-        title = link.get("title") or ""
+        title = link.title or ""
         if len(title) > 0 and title != uri.name:
             uri.name += f" - {title}"
 
@@ -24,7 +43,7 @@ class TileMapServiceMimeUtils:
 
     @classmethod
     def createXYZ(cls, link, layerName):
-        href = link.get("href") or link.get("url")
+        href = link.href
         uri = cls.createBaseUri(link, layerName)
         uri.supportedCrs = ["EPSG:3857"]
         uri.uri = f"type=xyz&url={href}"
@@ -34,11 +53,11 @@ class TileMapServiceMimeUtils:
     def createWMTS(cls, link, layerName):
         # todo: Currently only supports KVP encoding, not REST
         # todo: does not support wmts:dimensions
-        wmtsUrl = link.get("href") or link.get("url")
+        wmtsUrl = link.href
         wmtsUrl = f"{wmtsUrl}?service=wmts&request=getCapabilities"
         wmts = WebMapTileService(wmtsUrl)
 
-        layers = link.get("wmts:layer")
+        layers = link.wmts_layer
         if layers:
             if isinstance(layers, str):
                 layers = [layers]
@@ -47,7 +66,7 @@ class TileMapServiceMimeUtils:
         else:
             layers = list(wmts.contents)
 
-        mediaType = link.get("type", "")
+        mediaType = link.type
         style = None
         tileMatrixSet = None
         crs = None
@@ -85,7 +104,7 @@ class TileMapServiceMimeUtils:
             if not style:
                 style = "default"
 
-            uri.uri = f"crs={crs}&styles={style}&tilePixelRatio=0&format={mediaType}&layers={layer}&tileMatrixSet={tileMatrixSet}&url={link['href']}"
+            uri.uri = f"crs={crs}&styles={style}&tilePixelRatio=0&format={mediaType}&layers={layer}&tileMatrixSet={tileMatrixSet}&url={link.href}"
             uris.append(uri)
 
         return uris

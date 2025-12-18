@@ -97,6 +97,17 @@ This is the recommended way if you want to get the **most recent** version of th
 
     ![alt text](images/browser_view.png)
 
+### Install from GitHub releases
+
+The github release version is accessible on the 
+[GitHub releases page](https://github.com/Open-EO/openeo-qgis-plugin/releases). 
+
+1. Download the zip `"openeo_plugin.zip"` archive. 
+2. Open the plugin manager of QGIS 
+3. `"Plugins"` -> `"Manage and Install Plugins"` 
+4. Select `"Install from ZIP"`. 
+5. Browse to the downloaded ZIP archive, install and activate it.
+
 #### Installation Troubleshooting
 If the installation of qpip or openeo does not happen automatically, try installing qpip beforehand using the plugin manager.
 

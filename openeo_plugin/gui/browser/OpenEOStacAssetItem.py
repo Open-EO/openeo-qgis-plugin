@@ -22,7 +22,7 @@ from ...utils.downloadTask import DownloadAssetTask
 
 
 class OpenEOStacAssetItem(QgsDataItem):
-    def __init__(self, assetDict, key, parent, plugin, stac_url=None):
+    def __init__(self, assetDict, key, parent, stac_url=None):
         """Constructor.
         :param assetDict: a dict representing a STAC asset according to stac specifications
         :type assetDict: dict
@@ -43,13 +43,13 @@ class OpenEOStacAssetItem(QgsDataItem):
             parent=parent,
             name=assetDict.get("title", key),
             path=None,
-            providerKey=plugin.PLUGIN_ENTRY_NAME,
+            providerKey=parent.plugin.PLUGIN_ENTRY_NAME,
         )
 
         self.asset = assetDict
         self.baseurl = stac_url
         self.key = key
-        self.plugin = plugin
+        self.plugin = parent.plugin
         self.uris = None
         self.fileType = None
         self.layerType = None

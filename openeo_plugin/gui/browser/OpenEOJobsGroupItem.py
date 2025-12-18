@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sip
 import openeo
 
 from qgis.PyQt.QtWidgets import QAction
@@ -21,7 +20,7 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
     authenticationRequired = pyqtSignal()
 
-    def __init__(self, plugin, parent):
+    def __init__(self, parent):
         """Constructor.
 
         :param plugin: Reference to the qgis plugin object. Passing this object
@@ -32,9 +31,9 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         :type parent: QgsDataItem
         """
         QgsDataCollectionItem.__init__(
-            self, parent, "Batch Jobs", plugin.PLUGIN_ENTRY_NAME
+            self, parent, "Batch Jobs", parent.plugin.PLUGIN_ENTRY_NAME
         )
-        self.plugin = plugin
+        self.plugin = parent.plugin
         self.sortChildrenBy = "default"
         self.nextPageDataItem = None
         self.nextLink = None
@@ -65,16 +64,12 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
 
         for job in jobs:
             self.count += 1
-            item = OpenEOJobItem(
-                parent=self, job=job, plugin=self.plugin, index=self.count
-            )
-            sip.transferto(item, self)
+            item = OpenEOJobItem(parent=self, job=job, index=self.count)
             items.append(item)
 
         # create item to load more jobs
         if self.nextLink is not None:
-            self.nextPageDataItem = OpenEOPaginationItem(self.plugin, self)
-            sip.transferto(self.nextPageDataItem, self)
+            self.nextPageDataItem = OpenEOPaginationItem(self)
             items.append(self.nextPageDataItem)
 
         return items
@@ -102,7 +97,6 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
         self.nextLink = self.getLink(newJobs.links, "next")
 
         # remove next page button
-        sip.transferback(self.nextPageDataItem)
         self.deleteChildItem(self.nextPageDataItem)
         self.nextPageDataItem = None
 
@@ -112,16 +106,13 @@ class OpenEOJobsGroupItem(QgsDataCollectionItem):
             item = OpenEOJobItem(
                 parent=self,
                 job=job,
-                plugin=self.plugin,
                 index=self.count,
             )
-            sip.transferto(item, self)
             self.addChildItem(item, refresh=True)
 
         # re-add next page button if needed
         if self.nextLink is not None:
-            self.nextPageDataItem = OpenEOPaginationItem(self.plugin, self)
-            sip.transferto(self.nextPageDataItem, self)
+            self.nextPageDataItem = OpenEOPaginationItem(self)
             self.addChildItem(self.nextPageDataItem, refresh=True)
 
     def getConnection(self):

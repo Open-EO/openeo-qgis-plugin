@@ -18,7 +18,7 @@ from ...utils.wmts import WebMapTileService
 
 
 class OpenEOServiceItem(QgsDataItem):
-    def __init__(self, parent, service, plugin, index):
+    def __init__(self, parent, service, index):
         """Constructor.
 
         :param parent: the parent DataItem. expected to be an OpenEOCollectionsGroupItem.
@@ -39,14 +39,14 @@ class OpenEOServiceItem(QgsDataItem):
             parent=parent,
             name=name,
             path=None,
-            providerKey=plugin.PLUGIN_ENTRY_NAME,
+            providerKey=parent.plugin.PLUGIN_ENTRY_NAME,
         )
 
         self.setIcon(QgsApplication.getThemeIcon("mIconTiledScene.svg"))
 
         self.service = service
         self.serviceID = self.service["id"]
-        self.plugin = plugin
+        self.plugin = parent.plugin
         self.index = index
 
         self.uris = []

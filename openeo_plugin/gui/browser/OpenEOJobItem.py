@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from collections.abc import Iterable
 import dateutil.parser
-import sip
 import json
 import pathlib
 
@@ -22,7 +21,7 @@ isActiveStates = ["queued", "running", "unknown"]
 
 
 class OpenEOJobItem(QgsDataItem):
-    def __init__(self, parent, job, plugin, index):
+    def __init__(self, parent, job, index):
         """Constructor.
 
         :param parent: the parent DataItem. expected to be an OpenEOCollectionsGroupItem.
@@ -43,12 +42,12 @@ class OpenEOJobItem(QgsDataItem):
             parent=parent,
             name=name,
             path=None,
-            providerKey=plugin.PLUGIN_ENTRY_NAME,
+            providerKey=parent.plugin.PLUGIN_ENTRY_NAME,
         )
 
         self.job = job
         self.results = None
-        self.plugin = plugin
+        self.plugin = parent.plugin
         self.index = index
 
         self.assetItems = []
@@ -140,15 +139,14 @@ class OpenEOJobItem(QgsDataItem):
             )
             # create stac-asset items
             for key in assets:
-                assetItem = OpenEOStacAssetItem(
-                    assetDict=assets[key],
-                    key=key,
-                    parent=self,
-                    plugin=self.plugin,
-                    stac_url=jobResultLink,
+                self.assetItems.append(
+                    OpenEOStacAssetItem(
+                        assetDict=assets[key],
+                        key=key,
+                        parent=self,
+                        stac_url=jobResultLink,
+                    )
                 )
-                self.assetItems.append(assetItem)
-                sip.transferto(assetItem, self)
 
     def viewProperties(self):
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)

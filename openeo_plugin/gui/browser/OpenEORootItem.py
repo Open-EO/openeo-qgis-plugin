@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sip
 import os
 
 from qgis.PyQt.QtGui import QIcon
@@ -53,17 +52,15 @@ class OpenEORootItem(QgsDataCollectionItem):
 
     def createChildren(self):
         items = []
-        for connection in self.saved_connections:
-            item = self.createConnectionItem(connection)
+        for model in self.saved_connections:
+            item = self.createConnectionItem(model)
             items.append(item)
         return items
 
     def createConnectionItem(self, model, connection=None):
-        item = OpenEOConnectionItem(
-            plugin=self.plugin, model=model, parent=self, connection=connection
+        return OpenEOConnectionItem(
+            model=model, parent=self, connection=connection
         )
-        sip.transferto(item, self)
-        return item
 
     def getImagePath(self, name):
         dirname = os.path.join(os.path.dirname(__file__), "../../images")

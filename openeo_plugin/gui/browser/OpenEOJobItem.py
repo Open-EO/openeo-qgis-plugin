@@ -200,7 +200,6 @@ class OpenEOJobItem(QgsDataItem):
 
     def addResultsToProject(self):
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-        allValid = True
         try:
             self.populateAssetItems()
             # create group
@@ -210,13 +209,12 @@ class OpenEOJobItem(QgsDataItem):
 
             # create layers and add them to group
             for asset in self.assetItems:
-                layer = asset.createLayer(addToProject=False)
-                if not layer.isValid():
-                    allValid = False
-                project.addMapLayer(
-                    layer, False
-                )  # add to project without showing
-                group.addLayer(layer)  # add to the group
+                layers, errored = asset.createLayers(addToProject=False)
+                for layer in layers:
+                    # add to project without showing
+                    project.addMapLayer(layer, False)
+                    # add to the group
+                    group.addLayer(layer)
         except Exception as e:
             self.plugin.logging.error(
                 f"Can't add results to project for job {self.getTitle()}.",
@@ -224,9 +222,9 @@ class OpenEOJobItem(QgsDataItem):
             )
         finally:
             QApplication.restoreOverrideCursor()
-            if not allValid:
+            if errored:
                 self.plugin.logging.warning(
-                    f"One or more result assets for job {self.getTitle()} can't be visualized"
+                    f"{errored} assets for job {self.getTitle()} can't be visualized"
                 )
 
     def saveResultsTo(self):

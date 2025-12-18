@@ -184,10 +184,22 @@ class OpenEOServiceItem(QgsDataItem):
         uri = uris[0]
         self.plugin.iface.addRasterLayer(uri.uri, uri.name, uri.providerKey)
 
+    # todo: remove once we update the Python client to 0.48.0
+    # see https://github.com/Open-EO/openeo-python-client/pull/841
+    def getLogs(self):
+        response_data = (
+            self.getConnection()
+            .get(f"/services/{self.service['id']}/logs", expected_status=200)
+            .json()
+        )
+        return response_data.get("logs", [])
+
     def viewLogs(self):
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
         try:
-            logs = self.getServiceClass().logs()
+            # see https://github.com/Open-EO/openeo-python-client/pull/841
+            logs = self.getLogs()
+            # logs = self.getServiceClass().logs()
             showLogs(logs, self.getTitle())
         except Exception as e:
             self.plugin.logging.error(

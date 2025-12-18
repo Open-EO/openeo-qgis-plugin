@@ -174,6 +174,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         return self.authenticated
 
     # todo: remove this when the openEO Python client has been updated to support this method
+    # see https://github.com/Open-EO/openeo-python-client/pull/826
     def list_auth_providers(self) -> list[dict]:
         providers = []
         cap = self.connection.capabilities()

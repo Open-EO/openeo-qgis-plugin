@@ -17,7 +17,7 @@ from ...utils.wmts import WebMapTileService
 
 
 class OpenEOCollectionItem(QgsDataItem):
-    def __init__(self, parent, collection, plugin):
+    def __init__(self, parent, collection):
         """Constructor.
 
         :param parent: the parent DataItem. expected to be an OpenEOCollectionsGroupItem.
@@ -36,11 +36,11 @@ class OpenEOCollectionItem(QgsDataItem):
             name=None,
             parent=parent,
             path=None,
-            providerKey=plugin.PLUGIN_ENTRY_NAME,
+            providerKey=parent.plugin.PLUGIN_ENTRY_NAME,
         )
 
         self.collection = collection
-        self.plugin = plugin
+        self.plugin = parent.plugin
         self.uris = []
 
         # Has no children, set as populated to avoid the expand arrow

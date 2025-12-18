@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sip
 
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtGui import QIcon
@@ -19,7 +18,7 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
      - OpenEOCollectionLayerItem
     """
 
-    def __init__(self, plugin, parent):
+    def __init__(self, parent):
         """Constructor.
 
         :param plugin: Reference to the qgis plugin object. Passing this object
@@ -30,9 +29,9 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
         :type parent: QgsDataItem
         """
         QgsDataCollectionItem.__init__(
-            self, parent, "Collections", plugin.PLUGIN_ENTRY_NAME
+            self, parent, "Collections", parent.plugin.PLUGIN_ENTRY_NAME
         )
-        self.plugin = plugin
+        self.plugin = parent.plugin
         self.showTitles = True
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
 
@@ -54,14 +53,12 @@ class OpenEOCollectionsGroupItem(QgsDataCollectionItem):
         items = []
         collections = self.getCollections()
         for collection in collections:
-            # determine whether collectionItem or LayerItem
-            item = OpenEOCollectionItem(
-                parent=self,
-                collection=collection,
-                plugin=self.plugin,
+            items.append(
+                OpenEOCollectionItem(
+                    parent=self,
+                    collection=collection,
+                )
             )
-            sip.transferto(item, self)
-            items.append(item)
         return items
 
     def getConnection(self):

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sip
 
 from qgis.core import QgsDataProvider
 from qgis.core import QgsDataItemProvider
@@ -32,9 +31,7 @@ class OpenEOItemProvider(QgsDataItemProvider):
 
     def createDataItem(self, path, parentItem):
         if not parentItem:
-            ri = OpenEORootItem(plugin=self.plugin)
-            sip.transferto(ri, None)
-            self.root_item = ri
-            return ri
+            self.root_item = OpenEORootItem(plugin=self.plugin)
+            return self.root_item
         else:
             return None

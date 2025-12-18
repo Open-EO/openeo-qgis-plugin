@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sip
 import openeo
 
 from qgis.PyQt.QtWidgets import QAction
@@ -21,7 +20,7 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
 
     authenticationRequired = pyqtSignal()
 
-    def __init__(self, plugin, parent):
+    def __init__(self, parent):
         """Constructor.
 
         :param plugin: Reference to the qgis plugin object. Passing this object
@@ -32,9 +31,9 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         :type parent: QgsDataItem
         """
         QgsDataCollectionItem.__init__(
-            self, parent, "Web Services", plugin.PLUGIN_ENTRY_NAME
+            self, parent, "Web Services", parent.plugin.PLUGIN_ENTRY_NAME
         )
-        self.plugin = plugin
+        self.plugin = parent.plugin
         self.sortChildrenBy = "default"
 
         self.setIcon(QgsApplication.getThemeIcon("mIconFolder.svg"))
@@ -58,11 +57,9 @@ class OpenEOServicesGroupItem(QgsDataCollectionItem):
         items = []
         services = self.getServices()
         for i, service in enumerate(services):
-            item = OpenEOServiceItem(
-                parent=self, service=service, plugin=self.plugin, index=i
+            items.append(
+                OpenEOServiceItem(parent=self, service=service, index=i)
             )
-            sip.transferto(item, self)
-            items.append(item)
         return items
 
     def getConnection(self):

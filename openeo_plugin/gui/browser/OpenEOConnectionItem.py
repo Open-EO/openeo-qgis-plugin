@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sip
 import openeo
 import webbrowser
 import datetime
@@ -27,7 +26,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
      - OpenEo_services_group_item
     """
 
-    def __init__(self, plugin, model, parent, connection=None):
+    def __init__(self, model, parent, connection=None):
         """Constructor.
 
         :param plugin: Reference to the qgis plugin object. Passing this object
@@ -42,11 +41,11 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         :type parent: QgsDataItem
         """
         QgsDataCollectionItem.__init__(
-            self, parent, model.name, plugin.PLUGIN_ENTRY_NAME
+            self, parent, model.name, parent.plugin.PLUGIN_ENTRY_NAME
         )
         self.setIcon(QgsApplication.getThemeIcon("mIconCloud.svg"))
         self.connection = connection
-        self.plugin = plugin
+        self.plugin = parent.plugin
         self.model = model
         self.lastAuthCheck = datetime.datetime.min
         self.authenticated = False
@@ -59,18 +58,15 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
         capabilities = self.getConnection().capabilities()
         items = []
 
-        self.collectionsGroup = OpenEOCollectionsGroupItem(self.plugin, self)
-        sip.transferto(self.collectionsGroup, self)
+        self.collectionsGroup = OpenEOCollectionsGroupItem(self)
         items.append(self.collectionsGroup)
 
         if capabilities.supports_endpoint("/services"):
-            self.servicesGroup = OpenEOServicesGroupItem(self.plugin, self)
-            sip.transferto(self.servicesGroup, self)
+            self.servicesGroup = OpenEOServicesGroupItem(self)
             items.append(self.servicesGroup)
 
         if capabilities.supports_endpoint("/jobs"):
-            self.jobsGroup = OpenEOJobsGroupItem(self.plugin, self)
-            sip.transferto(self.jobsGroup, self)
+            self.jobsGroup = OpenEOJobsGroupItem(self)
             items.append(self.jobsGroup)
 
         return items

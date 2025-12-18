@@ -62,7 +62,8 @@ class OpenEOStacAssetItem(QgsDataItem):
             self.layerType = self.fileType.get("layer")
 
         if self.layerType is not None:
-            icon = QgsIconUtils.iconForLayerType(self.layerType)
+            layertype = QgsMapLayerFactory.typeFromString(self.layerType)[0]
+            icon = QgsIconUtils.iconForLayerType(layertype)
             self.setIcon(icon)
         else:
             self.setIcon(QgsApplication.getThemeIcon("mIconFile.svg"))
@@ -90,14 +91,13 @@ class OpenEOStacAssetItem(QgsDataItem):
             return [None]
 
         uri = QgsMimeDataUtils.Uri()
-        layerType = self.fileType.get("layer")
         uri.providerKey = self.fileType["engine"]
+        layerType = self.fileType.get("layer")
         if layerType:
-            uri.layerType = QgsMapLayerFactory.typeToString(layerType)
+            uri.layerType = layerType
         uri.name = self.layerName()
         uri.supportedFormats = self.supportedFormats()
-        if self.fileType.get("crs", True):
-            uri.supportedCrs = self.supportedCrs()
+        uri.supportedCrs = self.supportedCrs()
 
         if self.fileType.get("download", False):
             url = self.downloadAsset().as_uri()
@@ -114,7 +114,8 @@ class OpenEOStacAssetItem(QgsDataItem):
 
         uri.uri = url
 
-        return [uri]
+        self.uris = [uri]
+        return self.uris
 
     def hasDragEnabled(self):
         return self.producesValidLayer()
@@ -154,41 +155,49 @@ class OpenEOStacAssetItem(QgsDataItem):
 
     def producesValidLayer(self):
         validLayerTypes = {
-            Qgis.LayerType.Raster,
-            Qgis.LayerType.Vector,
+            QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster),
+            QgsMapLayerFactory.typeToString(Qgis.LayerType.Vector),
         }
         return self.layerType in validLayerTypes
 
-    def createLayer(self, addToProject=True):
-        if addToProject is None:
-            addToProject = True  # when the method is passed as a callable
+    def createLayers(self, addToProject=True):
+        allLayers = []
+        errored = 0
         if self.producesValidLayer():
             uris = self.mimeUris()
-            uri = uris[0]
-            layerOptions = QgsMapLayerFactory.LayerOptions(
-                transformContext=QgsCoordinateTransformContext()
-            )
-            layer = QgsMapLayerFactory.createLayer(
-                uri.uri,
-                uri.name,
-                QgsMapLayerFactory.typeFromString(uri.layerType)[0],
-                layerOptions,
-                uri.providerKey,
-            )
-            if addToProject:
-                project = QgsProject.instance()
-                project.addMapLayer(layer)
-            return layer
+            for uri in uris:
+                if not uri:
+                    continue
+                layerOptions = QgsMapLayerFactory.LayerOptions(
+                    transformContext=QgsCoordinateTransformContext()
+                )
+                layertype = QgsMapLayerFactory.typeFromString(uri.layerType)[0]
+                layer = QgsMapLayerFactory.createLayer(
+                    uri.uri,
+                    uri.name,
+                    layertype,
+                    layerOptions,
+                    uri.providerKey,
+                )
+                if not layer or not layer.isValid():
+                    errored += 1
+                else:
+                    allLayers.append(layer)
+                    if addToProject:
+                        project = QgsProject.instance()
+                        project.addMapLayer(layer)
+
         else:
             self.plugin.logging.warning(
                 "The file format is not supported by the plugin."
             )
-        return None
+
+        return allLayers, errored
 
     def resolveUrl(self):
         href = self.asset.get("href")
         if (
-            self.baseurl and href and bool(urlparse(href).netloc)
+            self.baseurl and href and not bool(urlparse(href).netloc)
         ):  # if relative URL
             return urljoin(self.baseurl, href)
         return href
@@ -293,7 +302,9 @@ class OpenEOStacAssetItem(QgsDataItem):
                 "Add Layer to Project",
                 parent,
             )
-            action_add_to_project.triggered.connect(self.createLayer)
+            action_add_to_project.triggered.connect(
+                lambda: self.createLayers()
+            )
             actions.append(action_add_to_project)
 
         action_download = QAction(

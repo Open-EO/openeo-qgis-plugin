@@ -1,10 +1,24 @@
-from qgis.core import Qgis
+from qgis.core import QgsMapLayerFactory, Qgis
 
+raster = QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster)
+vector = QgsMapLayerFactory.typeToString(Qgis.LayerType.Vector)
+
+# layer: The QGIS layer type (see above)
+# format: The driver name as used by the GDAL/OGR engine
+# engine: The data provider engine in QGIS
+#         (usually "gdal" for raster or "ogr" for vector)
+# crs: (optional) The CRS to use when loading the data
+# mediaTypes: List of supported media types types for file format detection
+# fileExtensions: List of supported file extensions to use for file format
+#                 detection when media type is not present. Avoid duplicates.
+# vsi: (optional, experimental) A VSI prefix to use when loading the data
+# download: (optional, experimental) Whether the file format must be downloaded
+#           so that QGIS can read it (e.g. zipped formats and CSV)
 FILETYPES = {
     # SPATIAL FORMATS
     "geotiff": {
-        "layer": Qgis.LayerType.Raster,
-        "format": "geotiff",
+        "layer": raster,
+        "format": "GTiff",
         "engine": "gdal",
         "mediaTypes": [
             "image/tiff; application=geotiff",
@@ -13,8 +27,8 @@ FILETYPES = {
         "fileExtensions": ["tif", "tiff"],
     },
     "geojson": {
-        "layer": Qgis.LayerType.Vector,
-        "format": "geojson",
+        "layer": vector,
+        "format": "GeoJSON",
         "engine": "ogr",
         "crs": "EPSG:4326",
         "mediaTypes": [
@@ -24,8 +38,8 @@ FILETYPES = {
         "fileExtensions": ["geojson"],
     },
     "netcdf": {
-        "layer": Qgis.LayerType.Raster,
-        "format": "netcdf",
+        "layer": raster,
+        "format": "netCDF",
         "engine": "gdal",
         "mediaTypes": [
             "application/netcdf",
@@ -34,8 +48,8 @@ FILETYPES = {
         "fileExtensions": ["nc"],
     },
     "geoparquet": {
-        "layer": Qgis.LayerType.Vector,
-        "format": "geoparquet",
+        "layer": vector,
+        "format": "Parquet",
         "engine": "ogr",
         "mediaTypes": [
             "application/vnd.apache.parquet",
@@ -45,8 +59,8 @@ FILETYPES = {
     },
     # todo: untested
     # "zipped_zarr": {
-    #     "layer": Qgis.LayerType.Raster,
-    #     "format": "zarr",
+    #     "layer": raster,
+    #     "format": "Zarr",
     #     "engine": "gdal",
     #     "mediaTypes": [
     #         "application/zip",
@@ -59,7 +73,7 @@ FILETYPES = {
     # },
     # NON-SPATIAL FORMATS just for property inspection
     # "csv": {
-    #     "format": "csv",
+    #     "format": "CSV",
     #     "engine": "delimitedtext",
     #     "mediaTypes": [
     #         "text/csv",

@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 import tempfile
 import webbrowser
 from pathlib import Path
@@ -49,9 +50,19 @@ def showInBrowser(file, vars):
             value = json.dumps(value)
         logHTML = logHTML.replace(f"<!-- {key} -->", value)
 
-    fh, path = tempfile.mkstemp(suffix=".html")
-    url = "file://" + path
-    with open(path, "w") as fp:
-        fp.write(logHTML)
+    try:
+        fh, path = tempfile.mkstemp(suffix=".html", text=True)
+    except IOError:
+        fh, path = tempfile.mkstemp(
+            suffix=".html", dir=downloadFolder(), text=True
+        )
 
-    webbrowser.open_new(url)
+    with os.fdopen(fh, "w", encoding="utf-8") as tmpfile:
+        tmpfile.write(logHTML)
+
+    path = Path(path).resolve().as_uri()
+    webbrowser.open_new(path)
+
+
+def downloadFolder():
+    return Path.home() / "Downloads"

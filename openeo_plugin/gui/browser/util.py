@@ -52,7 +52,7 @@ def showInBrowser(file, vars):
 
     try:
         fh, path = tempfile.mkstemp(suffix=".html", text=True)
-    except IOError:
+    except Exception:
         fh, path = tempfile.mkstemp(
             suffix=".html", dir=downloadFolder(), text=True
         )

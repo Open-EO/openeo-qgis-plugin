@@ -70,8 +70,8 @@ This is the recommended way if you want to get the most recent stable version of
 
 1. Start QGIS Desktop application
 2. Go to "Plugins" and then "Manage and Install Plugins"
-3. Go to "Not Installed" and search for "OpenEO"
-4. Click on "OpenEO" and click "Install"
+3. Go to "Not Installed" and search for "openEO"
+4. Click on "openEO" and click "Install"
 5. The openEO logo should be visible in the toolbar
 
 

@@ -54,7 +54,9 @@ class Ui_DynamicLoginDialog(Ui_LoginDialog):
                 tab["passwordLabel"].setObjectName("passwordLabel")
                 tab["verticalLayout"].addWidget(tab["passwordLabel"])
                 tab["passwordEdit"] = QtWidgets.QLineEdit(self.internal)
-                tab["passwordEdit"].setEchoMode(QtWidgets.QLineEdit.Password)
+                tab["passwordEdit"].setEchoMode(
+                    QtWidgets.QLineEdit.EchoMode.Password
+                )
                 tab["passwordEdit"].setObjectName("passwordEdit")
                 tab["verticalLayout"].addWidget(tab["passwordEdit"])
                 tab["usernameEdit"].returnPressed.connect(self.login)

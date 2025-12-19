@@ -65,4 +65,6 @@ def showInBrowser(file, vars):
 
 
 def downloadFolder():
-    return Path.home() / "Downloads"
+    p = Path.home() / "Downloads"
+    p.mkdir(parents=True, exist_ok=True)
+    return p

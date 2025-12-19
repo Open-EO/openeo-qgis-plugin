@@ -3,7 +3,7 @@ QGIS Plugin to connect and use openEO compliant backends.
 
 Compatible with backends compliant with openEO API version 1.0.0 and above.
 
-Tested on Qgis 3.42
+Compatible with QGIS >= 3.40 (tested on 3.40.4, 3.40.13, and 3.44.5)
 
 ## About
 
@@ -70,10 +70,9 @@ This is the recommended way if you want to get the most recent stable version of
 
 1. Start QGIS Desktop application
 2. Go to "Plugins" and then "Manage and Install Plugins"
-3. Go to "Settings" and make sure that "Show also experimental plugins" is activated
-4. Go to "Not Installed" and search for "OpenEO"
-5. Click on "OpenEO" and click "Install"
-6. The openEO logo should be visible in the toolbar
+3. Go to "Not Installed" and search for "openEO"
+4. Click on "openEO" and click "Install"
+5. The openEO logo should be visible in the toolbar
 
 
 ### Install from GitHub repository

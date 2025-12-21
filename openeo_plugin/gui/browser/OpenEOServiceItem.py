@@ -8,13 +8,14 @@ from qgis.PyQt.QtWidgets import QApplication, QAction
 from qgis.core import (
     Qgis,
     QgsDataItem,
-    QgsMimeDataUtils,
-    QgsMapLayerFactory,
     QgsApplication,
 )
 
 from .util import getSeparator, showLogs, showInBrowser
-from ...utils.wmts import WebMapTileService
+from ...utils.TileMapServiceMimeUtils import (
+    TileMapServiceMimeUtils as TMSMimeUtils,
+    WMTSLink,
+)
 
 
 class OpenEOServiceItem(QgsDataItem):
@@ -102,44 +103,19 @@ class OpenEOServiceItem(QgsDataItem):
         return self.parent().getConnection()
 
     def createUri(self, link):
-        mapType = link.get("type") or ""
-
-        uri = QgsMimeDataUtils.Uri()
-        uri.layerType = QgsMapLayerFactory.typeToString(Qgis.LayerType.Raster)
-        uri.providerKey = "wms"
-        uri.name = self.getTitle()
-        uri.supportedFormats = (
-            self.supportedFormats()
-        )  # todo: do we need to set this more specifically?
-        uri.supportedCrs = (
-            self.supportedCrs()
-        )  # todo: set more specific supportedCrs below
-
-        # different map service formats
-        if mapType.lower() == "xyz":
-            uri.uri = f"type=xyz&url={link['url']}"
-            return uri
-        elif mapType.lower() == "wmts":
-            wmtsUrl = link["url"] + "?service=wmts&request=getCapabilities"
-            wmts = WebMapTileService(wmtsUrl)
-            targetCRS = "EPSG::3857"
-
-            tileMatrixSet = None
-            for tms_id, tms in list(wmts.tilematrixsets.items()):
-                if targetCRS in tms.crs:
-                    tileMatrixSet = tms_id
-                    break
-            layerID = None
-            layerID = list(wmts.contents)[0]
-
-            # TODO: determine more URI parameters programmatically
-            uri.uri = f"crs=EPSG:3857&styles=default&tilePixelRatio=0&format=image/png&layers={layerID}&tileMatrixSet={tileMatrixSet}&url={link['href']}"
-            return uri
-        elif mapType.lower() == "wms":
-            # TODO
-            return None
-        else:
-            return None
+        link = WMTSLink.from_dict(
+            {
+                "rel": link.get("type"),
+                "href": link.get("url"),
+                "type": link.get("type"),
+                "titel": link.get("title"),
+            }
+        )
+        if link.type == "xyz":
+            return TMSMimeUtils.createXYZ(link, self.layerName())
+        elif link.type == "wmts":
+            return TMSMimeUtils.createWMTS(link)
+        return None
 
     def mimeUris(self):
         # see if uri has already been created
@@ -158,11 +134,14 @@ class OpenEOServiceItem(QgsDataItem):
 
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
 
-        # TODO: what if operation takes way too long?
         try:
             mimeUri = self.createUri(service)
             if mimeUri:
                 mimeUris.append(mimeUri)
+            else:
+                self.plugin.logging.error(
+                    f"Can't visualize the service {service['url']}. Not a valid service type"
+                )
         except Exception as e:
             self.plugin.logging.error(
                 f"Can't visualize the service {service['url']}.", error=e

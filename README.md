@@ -37,27 +37,27 @@ This plugin supports visualizing the following file formats and web services wit
 
 | Service type | Support |
 | -- | -- |
-| [WMTS](https://www.ogc.org/standards/wmts/)| Full |
-| [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map) | Full |
+| [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map) | Yes |
+| [WMTS](https://www.ogc.org/standards/wmts/)| Yes, KVP encoding only |
 
 ##### Web Services
 
 | Service type | Support |
 | -- | -- |
-| [WMTS](https://www.ogc.org/standards/wmts/)| Full |
-| [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map) | Full |
+| [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map) | Yes |
+| [WMTS](https://www.ogc.org/standards/wmts/)| Yes, KVP encoding only |
    
 ##### Batch-Job results
 
 | File type | Data Type | Support |
 | -- | -- | -- |
-| [GeoTIFF](https://www.ogc.org/standards/geotiff/) | Raster | Full |
-| [GeoJSON](https://geojson.org/) | Vector | Full |
-| [NetCDF](https://docs.unidata.ucar.edu/netcdf-c) | Vector & Raster | Raster Only |
-| [Geoparquet](https://geoparquet.org) | Vector | Not yet supported |
-| [ZARR](https://zarr.readthedocs.io/en/stable/) | Raster | Not yet supported |
-| GIF/JPEG/PNG | Raster | Not yet supported |
-| CSV | Tabular | Not yet supported |
+| [GeoTIFF](https://www.ogc.org/standards/geotiff/) | Raster | Yes |
+| [GeoJSON](https://geojson.org/) | Vector | Yes |
+| [NetCDF](https://docs.unidata.ucar.edu/netcdf-c) | Vector & Raster | Yes, raster only |
+| [Geoparquet](https://geoparquet.org) | Vector | Yes |
+| [ZARR](https://zarr.readthedocs.io/en/stable/) | Raster | Not supported |
+| GIF/JPEG/PNG | Raster | Not supported |
+| CSV | Tabular | Not supported |
 | JSON | Tabular | Not supported by QGIS |
 
 See <https://github.com/Open-EO/openeo-qgis-plugin/issues/167> for more details.
@@ -130,7 +130,8 @@ For setting up your development environment it is highly recommended to install 
 Once you have cloned the repository in your working directory, create a Symlink of the `openeo_plugin` folder into the `./python/plugins` directory that is located within your qgis profile directory. This will ensure that changes you make to the plugin will appear within qgis upon use of the plugin reloader.
 
 example: (linux)
-```sh
+
+```bash
 cd openeo-qgis-plugin
 ln -s openeo_plugin /home/{USER}/.local/share/QGIS/QGIS3/profiles/default
 ```
@@ -140,7 +141,7 @@ To build the plugin GUI files you will need the [pb_tool](http://g-sherman.githu
 To compile the ui of the plugin, run the `compile_ui.sh`-script in the root directory of this repository:
 (note, this requires `pyqt6-tools` to be installed `pip install pyqt6-tools`)
 
-```
+```bash
 ./compile_ui.sh
 ```
      

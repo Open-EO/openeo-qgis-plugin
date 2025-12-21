@@ -1,4 +1,5 @@
 # openeo-qgis-plugin
+
 QGIS Plugin to connect and use openEO compliant backends.
 
 Compatible with backends compliant with openEO API version 1.0.0 and above.
@@ -7,7 +8,7 @@ Compatible with QGIS >= 3.40 (tested on 3.40.4, 3.40.13, and 3.44.5)
 
 ## About
 
-The openEO QGIS Plugin "OpenEO" allows connecting to openEO backends, list the user ([batch](https://openeo.org/documentation/1.0/glossary.html#data-processing-modes)) jobs and load the resulting images into a new QGIS Layer. For creating process graphs, it is recommended to use the [openEO web editor](https://editor.openeo.org/).  
+The openEO QGIS Plugin "OpenEO" allows connecting to openEO backends, list the user ([batch](https://openeo.org/documentation/1.0/glossary.html#data-processing-modes)) jobs and load the resulting images into a new QGIS Layer. For creating process graphs, it is recommended to use the [openEO Web Editor](https://editor.openeo.org/) or one of the other clients.
 
 ### Features
 
@@ -32,19 +33,22 @@ The openEO QGIS Plugin "OpenEO" allows connecting to openEO backends, list the u
 
 This plugin supports visualizing the following file formats and web services within QGIS:
 
-**Collections**:
+##### Collections
+
 | Service type | Support |
 | -- | -- |
 | [WMTS](https://www.ogc.org/standards/wmts/)| Full |
 | [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map) | Full |
 
-**Web Services**:
+##### Web Services
+
 | Service type | Support |
 | -- | -- |
 | [WMTS](https://www.ogc.org/standards/wmts/)| Full |
 | [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map) | Full |
    
-**Batch-Job results**:
+##### Batch-Job results
+
 | File type | Data Type | Support |
 | -- | -- | -- |
 | [GeoTIFF](https://www.ogc.org/standards/geotiff/) | Raster | Full |
@@ -73,7 +77,6 @@ This is the recommended way if you want to get the most recent stable version of
 3. Go to "Not Installed" and search for "openEO"
 4. Click on "openEO" and click "Install"
 5. The openEO logo should be visible in the toolbar
-
 
 ### Install from GitHub repository
 
@@ -108,6 +111,7 @@ The github release version is accessible on the
 5. Browse to the downloaded ZIP archive, install and activate it.
 
 #### Installation Troubleshooting
+
 If the installation of qpip or openeo does not happen automatically, try installing qpip beforehand using the plugin manager.
 
 If use of qpip is not possible, `pip install openeo` may be used to install the necessary python dependency.

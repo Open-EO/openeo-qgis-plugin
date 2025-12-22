@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 import tempfile
 import webbrowser
 from pathlib import Path
@@ -29,14 +30,28 @@ def getSeparator(parent):
 
 
 def showLogs(logs, title):
-    showInBrowser(
-        "logFileView",
-        {
-            "logs": logs,
-            "title": title,
-            "logTimestamp": str(datetime.datetime.now()),
-        },
-    )
+    try:
+        showInBrowser(
+            "logFileView",
+            {
+                "logs": logs,
+                "title": title,
+                "logTimestamp": str(datetime.datetime.now()),
+            },
+        )
+    except Exception as e:
+        print(e)
+
+
+def getTempDir():
+    if "FLATPAK_SANDBOX_DIR" in os.environ:
+        flatpak_id = os.environ.get("FLATPAK_ID")
+        uid = os.getuid()
+        # The usual path pattern where Flatpak stores persistent data
+        path = f"/run/user/{uid}/.flatpak/{flatpak_id}/tmp"
+        return path
+    else:
+        return tempfile.gettempdir()
 
 
 def showInBrowser(file, vars):
@@ -49,9 +64,17 @@ def showInBrowser(file, vars):
             value = json.dumps(value)
         logHTML = logHTML.replace(f"<!-- {key} -->", value)
 
-    fh, path = tempfile.mkstemp(suffix=".html")
-    url = "file://" + path
-    with open(path, "w") as fp:
-        fp.write(logHTML)
+    fh, path = tempfile.mkstemp(suffix=".html", text=True)
+    with open(path, "w") as tmpfile:
+        tmpfile.write(logHTML)
 
-    webbrowser.open_new(url)
+    rel_to_tmp = os.path.relpath(path, "/tmp")
+    path = os.path.join(getTempDir(), rel_to_tmp)
+    path = Path(path).as_uri()
+    webbrowser.open_new(path)
+
+
+def downloadFolder():
+    p = Path.home() / "Downloads"
+    p.mkdir(parents=True, exist_ok=True)
+    return p

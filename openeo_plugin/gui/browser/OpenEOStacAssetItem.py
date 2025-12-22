@@ -15,7 +15,7 @@ from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsCoordinateTransformContext
 from qgis.core import QgsApplication
 
-from .util import getSeparator
+from .util import getSeparator, downloadFolder
 from ...utils.filetypes import MEDIATYPES, EXTENSIONS
 from ..directory_dialog import DirectoryDialog
 from ...utils.downloadTask import DownloadAssetTask
@@ -203,8 +203,7 @@ class OpenEOStacAssetItem(QgsDataItem):
         return href
 
     def download(self):
-        path = self.downloadFolder()
-        self.queueDownloadTask(path)
+        self.queueDownloadTask(downloadFolder())
 
     def downloadAsset(self, dir=None):
         href = self.resolveUrl()
@@ -214,7 +213,7 @@ class OpenEOStacAssetItem(QgsDataItem):
                 "Asset is missing 'href' and cannot be downloaded."
             )
 
-        dir = Path(dir) if dir else self.downloadFolder()
+        dir = Path(dir) if dir else downloadFolder()
 
         local = self.asset.get("file:local_path")
         if local:
@@ -243,11 +242,8 @@ class OpenEOStacAssetItem(QgsDataItem):
 
         return path
 
-    def downloadFolder(self):
-        return Path.home() / "Downloads"
-
     def downloadTo(self):
-        downloadPath = self.downloadFolder()
+        downloadPath = downloadFolder()
 
         # prepare file dialog
         dlg = DirectoryDialog()

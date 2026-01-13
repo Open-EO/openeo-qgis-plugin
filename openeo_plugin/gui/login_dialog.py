@@ -178,6 +178,9 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
     def getCredentials(self):
         return self.credentials
 
+    def getActiveAuthProvider(self):
+        return self.activeAuthProvider
+
     def _run_auth(self, capture_buffer, auth_provider):
         # Redirect stdout for this thread only
         old_stdout = sys.stdout

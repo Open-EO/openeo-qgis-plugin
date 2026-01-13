@@ -27,5 +27,6 @@ class PluginRefreshTokenStore(RefreshTokenStore):
             "issuer": issuer,
             "client_id": client_id,
             "refresh_token": refresh_token,
+            "auth_provider_id": None,
         }
         self.manager.add(CredentialsModel.fromOIDC(self.id, credentials))

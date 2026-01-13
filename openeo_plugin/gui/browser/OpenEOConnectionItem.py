@@ -122,6 +122,11 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
             if result:
                 credentials = self.dlg.getCredentials()
                 if credentials is not None:
+                    # add auth provider id to be saved in settings
+                    activeAuthProvider = self.dlg.getActiveAuthProvider()
+                    credentials.credentials["auth_provider_id"] = (
+                        activeAuthProvider["id"]
+                    )
                     Credentials().add(credentials)
                 self.refresh()
         except Exception as e:
@@ -141,8 +146,14 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                 )
                 return True
             elif login.loginType == "oidc":
+                creds = login.credentials
                 try:
-                    self.getConnection().authenticate_oidc_refresh_token()  # try logging in with refresh token
+                    provider_id = None
+                    if "auth_provider_id" in creds:
+                        provider_id = creds["auth_provider_id"]
+                    self.getConnection().authenticate_oidc_refresh_token(
+                        provider_id=provider_id
+                    )  # try logging in with refresh token
                     return True
                 except openeo.rest.OpenEoClientException as e:
                     self.plugin.logging.debug(

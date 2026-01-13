@@ -125,7 +125,11 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                 self.authenticationException.connect(onAuthFinished)
                 # open a browser window when prompted
                 auth_thread = threading.Thread(
-                    target=self._run_auth, args=(capture_buffer,)
+                    target=self._run_auth,
+                    args=(
+                        capture_buffer,
+                        self.activeAuthProvider,
+                    ),
                 )
                 auth_thread.start()
 
@@ -174,12 +178,12 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
     def getCredentials(self):
         return self.credentials
 
-    def _run_auth(self, capture_buffer):
+    def _run_auth(self, capture_buffer, auth_provider):
         # Redirect stdout for this thread only
         old_stdout = sys.stdout
         sys.stdout = capture_buffer
         try:
-            self.connection.authenticate_oidc()
+            self.connection.authenticate_oidc(provider_id=auth_provider["id"])
             self.authenticationFinished.emit(1)
         except Exception as e:
             self.authenticationException.emit(e)

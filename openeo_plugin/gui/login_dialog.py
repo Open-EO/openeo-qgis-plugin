@@ -13,7 +13,7 @@ from qgis.PyQt.QtWidgets import QApplication
 from qgis.PyQt.QtWidgets import QMessageBox
 
 from .ui.login_dialog_tab import Ui_DynamicLoginDialog
-from ..models.CredentialsModel import CredentialsModel
+from ..models.CredentialsModel import CredentialsModel, Credentials
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 # use this if the pb_tool compiled version of the dialog doesn't work
@@ -32,6 +32,7 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
         super(LoginDialog, self).__init__()
         QApplication.setStyle("cleanlooks")
 
+        self.credentialsManager = Credentials()
         self.plugin = plugin
         self.connection = connection
         self.activeAuthProvider = None
@@ -91,6 +92,10 @@ class LoginDialog(QtWidgets.QDialog, Ui_DynamicLoginDialog):
                 tab["authButton"].setText(btn_text)
                 self.plugin.logging.success("Login Successful")
                 if arg == 1:  # 1 means successful authentication
+                    if auth_provider["type"] == "oidc":
+                        self.credentials = self.credentialsManager.get(
+                            self.model.id
+                        )
                     self.accept()
 
         if auth_provider["type"] == "basic":

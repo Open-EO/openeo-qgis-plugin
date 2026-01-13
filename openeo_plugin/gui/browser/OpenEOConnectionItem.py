@@ -124,7 +124,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                 if credentials is not None:
                     # add auth provider id to be saved in settings
                     activeAuthProvider = self.dlg.getActiveAuthProvider()
-                    credentials.credential["auth_provider_id"] = (
+                    credentials.credentials["auth_provider_id"] = (
                         activeAuthProvider["id"]
                     )
                     Credentials().add(credentials)

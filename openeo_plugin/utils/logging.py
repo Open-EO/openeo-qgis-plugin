@@ -1,6 +1,6 @@
 import pathlib
 
-from qgis.core import QgsApplication, QgsMessageLog, Qgis
+from qgis.core import Qgis, QgsApplication, QgsMessageLog
 from datetime import datetime
 
 
@@ -11,7 +11,10 @@ class Logging:
         self.tag = "openEO"
         self.logPath = pathlib.Path.home() / "openeo_qgis_log.txt"
         self.messageLog = logger if logger else QgsApplication.messageLog()
-        self.messageLog.messageReceived.connect(self.on_message)
+        if Qgis.versionInt() >= 40000:
+            self.messageLog.messageReceivedWithFormat.connect(self.on_message)
+        else:
+            self.messageLog.messageReceived.connect(self.on_message)
 
     def on_message(self, message, tag, level):
         if tag != self.tag:

@@ -44,7 +44,7 @@ class OpenEOCollectionItem(QgsDataItem):
         self.uris = []
 
         # Has no children, set as populated to avoid the expand arrow
-        self.setState(QgsDataItem.Populated)
+        self.setState(QgsDataItem.State.Populated)
 
         self._init()
 

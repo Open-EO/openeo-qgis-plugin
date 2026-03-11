@@ -12,7 +12,7 @@ class DownloadAssetTask(QgsTask):
     )  # assetName, dir, exception
 
     def __init__(self, description, download_func, dir):
-        super().__init__(description, QgsTask.CanCancel)
+        super().__init__(description, QgsTask.Flag.CanCancel)
         self.download_func = download_func
         self.dir = dir
         self.exception = None
@@ -35,7 +35,7 @@ class DownloadJobAssetsTask(QgsTask):
     """Custom task for downloading job assets with GUI-safe signals"""
 
     def __init__(self, description, job_item, dir):
-        super().__init__(description, QgsTask.CanCancel)
+        super().__init__(description, QgsTask.Flag.CanCancel)
         self.job_item = job_item
         self.dir = dir
         self.errors = 0

@@ -27,7 +27,7 @@ class OpenEOItemProvider(QgsDataItemProvider):
         return "OpenEO"
 
     def capabilities(self):
-        return QgsDataProvider.Net  # dont understand that yet
+        return QgsDataProvider.DataCapability.Net  # dont understand that yet
 
     def createDataItem(self, path, parentItem):
         if not parentItem:

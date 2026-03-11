@@ -69,7 +69,7 @@ class OpenEOStacAssetItem(QgsDataItem):
             self.setIcon(QgsApplication.getThemeIcon("mIconFile.svg"))
 
         # Has no children, set as populated to avoid the expand arrow
-        self.setState(QgsDataItem.Populated)
+        self.setState(QgsDataItem.State.Populated)
 
     def detectFileType(self):
         mediaType = self.asset.get("type", "").lower()

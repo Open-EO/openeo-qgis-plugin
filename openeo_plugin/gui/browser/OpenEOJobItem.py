@@ -10,7 +10,7 @@ from qgis.PyQt.QtGui import QDesktopServices
 
 from qgis.core import Qgis, QgsDataItem, QgsApplication, QgsProject
 
-from .util import getSeparator, showLogs, showInBrowser
+from .util import getSeparator
 from .OpenEOStacAssetItem import OpenEOStacAssetItem
 from ..directory_dialog import DirectoryDialog
 from ...utils.downloadTask import DownloadJobAssetsTask
@@ -162,7 +162,7 @@ class OpenEOJobItem(QgsDataItem):
             else:
                 resultHtml = ""
 
-            showInBrowser(
+            self.plugin.showTempFileInWebBrowser(
                 "jobProperties",
                 {
                     "job": self.job,
@@ -180,7 +180,7 @@ class OpenEOJobItem(QgsDataItem):
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
         try:
             logs = self.getJobClass().logs()
-            showLogs(logs, self.getTitle())
+            self.plugin.showLogsInWebBrowser(logs, self.getTitle())
         except Exception as e:
             self.plugin.logging.error(
                 f"Can't show logs for job {self.getTitle()}.", error=e

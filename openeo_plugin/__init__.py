@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 import os
 import pathlib
+import webbrowser
+import tempfile
+import datetime
+import json
 
 from qgis.core import QgsApplication, QgsSettings
 
@@ -56,6 +60,11 @@ class OpenEO:
             self.translator = QTranslator()
             self.translator.load(locale_path)
             QCoreApplication.installTranslator(self.translator)
+
+        # initialize cache
+        cacheDir = self._getCacheDir()
+        print(type(cacheDir))
+        os.makedirs(os.path.dirname(cacheDir), exist_ok=True)
 
         # Declare instance attributes
         self.actions = []
@@ -207,4 +216,35 @@ class OpenEO:
         Credentials().update(old_version)
         settings.setValue(
             SettingsPath.PLUGIN_VERSION.value, self.getPluginVersion()
+        )
+
+    def _getCacheDir(self):
+        profileFolder = self.iface.userProfileManager().getProfile().folder()
+        return os.path.join(profileFolder, "openeo-cache/")
+
+    def showTempFileInWebBrowser(self, file, vars):
+        filePath = pathlib.Path(__file__).parent.resolve()
+        with open(filePath / f"gui/{file}.html") as file:
+            html = file.read()
+
+        for key, value in vars.items():
+            if isinstance(value, (dict, list)):
+                value = json.dumps(value)
+            html = html.replace(f"<!-- {key} -->", value)
+
+        fh, path = tempfile.mkstemp(suffix=".html", dir=self._getCacheDir())
+        url = "file://" + path
+        with open(path, "w") as fp:
+            fp.write(html)
+
+        webbrowser.open_new(url)
+
+    def showLogsInWebBrowser(self, logs, title):
+        self.showTempFileInWebBrowser(
+            "logFileView",
+            {
+                "logs": logs,
+                "title": title,
+                "logTimestamp": str(datetime.datetime.now()),
+            },
         )

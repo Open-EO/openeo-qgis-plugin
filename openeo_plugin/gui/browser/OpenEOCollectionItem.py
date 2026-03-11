@@ -12,7 +12,7 @@ from qgis.core import QgsMimeDataUtils
 from qgis.core import QgsMapLayerFactory
 from qgis.core import QgsApplication
 
-from .util import getSeparator, showInBrowser
+from .util import getSeparator
 from ...utils.wmts import WebMapTileService
 
 
@@ -237,7 +237,9 @@ class OpenEOCollectionItem(QgsDataItem):
     def viewProperties(self):
         collection_link = self.get_url("self")
         collection = requests.get(collection_link).json()
-        showInBrowser("collectionProperties", {"collection": collection})
+        self.plugin.showTempFileInWebBrowser(
+            "collectionProperties", {"collection": collection}
+        )
 
     def actions(self, parent):
         actions = []

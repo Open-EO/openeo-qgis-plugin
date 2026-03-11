@@ -13,7 +13,7 @@ from qgis.core import (
     QgsApplication,
 )
 
-from .util import getSeparator, showLogs, showInBrowser
+from .util import getSeparator
 from ...utils.wmts import WebMapTileService
 
 
@@ -200,7 +200,7 @@ class OpenEOServiceItem(QgsDataItem):
             # see https://github.com/Open-EO/openeo-python-client/pull/841
             logs = self.getLogs()
             # logs = self.getServiceClass().logs()
-            showLogs(logs, self.getTitle())
+            self.plugin.showLogsInWebBrowser(logs, self.getTitle())
         except Exception as e:
             self.plugin.logging.error(
                 f"Can't show logs for service {self.getTitle()}.", error=e
@@ -210,7 +210,7 @@ class OpenEOServiceItem(QgsDataItem):
 
     def viewProperties(self):
         self.getService()
-        showInBrowser(
+        self.plugin.showTempFileInWebBrowser(
             "serviceProperties",
             {
                 "service": self.service,

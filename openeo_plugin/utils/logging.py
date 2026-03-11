@@ -10,7 +10,9 @@ class Logging:
         self.iface = iface
         self.tag = "openEO"
         self.logPath = pathlib.Path.home() / "openeo_qgis_log.txt"
-        self.messageLog = logger if logger else QgsApplication.messageLog()
+        self.messageLog = (
+            logger if logger else QgsApplication.instance().messageLog()
+        )
         if Qgis.versionInt() >= 40000:
             self.messageLog.messageReceivedWithFormat.connect(self.on_message)
         else:

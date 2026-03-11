@@ -46,7 +46,7 @@ class OpenEO:
         )
 
         # Set up logging and messaging
-        logger = QgsApplication.messageLog()
+        logger = QgsApplication.instance().messageLog()
         self.logging = Logging(self.iface, logger)
 
         # initialize settings

@@ -1,1 +1,1 @@
-openeo
+openeo>=0.48

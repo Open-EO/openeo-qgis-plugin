@@ -9,7 +9,7 @@ from qgis.PyQt.QtWidgets import QAction, QApplication
 
 from qgis.core import QgsApplication, QgsDataCollectionItem
 
-from .util import getSeparator, showInBrowser
+from .util import getSeparator
 from .OpenEOJobsGroupItem import OpenEOJobsGroupItem
 from .OpenEOServicesGroupItem import OpenEOServicesGroupItem
 from .OpenEOCollectionsGroupItem import OpenEOCollectionsGroupItem
@@ -236,7 +236,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
 
     def viewProperties(self):
         capabilities = self.getConnection().capabilities()
-        showInBrowser(
+        self.plugin.showTempFileInWebBrowser(
             "connectionProperties",
             {
                 "capabilities": capabilities.capabilities,

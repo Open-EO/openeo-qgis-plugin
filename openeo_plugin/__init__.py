@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 import os
 import pathlib
+import webbrowser
+import datetime
+import json
 
 from qgis.core import QgsApplication, QgsSettings
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
 from .gui.browser.OpenEOItemProvider import OpenEOItemProvider
-from .utils.settings import SettingsPath
+from .utils.settings import SettingsPath, getOs
 from .utils.logging import Logging
 from .models.CredentialsModel import Credentials
 
@@ -56,6 +59,13 @@ class OpenEO:
             self.translator = QTranslator()
             self.translator.load(locale_path)
             QCoreApplication.installTranslator(self.translator)
+
+        # initialize cache
+        cacheDir = self._getCacheDir()
+        os.makedirs(os.path.dirname(cacheDir), exist_ok=True)
+        browserViewFile = self._getBrowserViewFilePath()
+        with open(browserViewFile, "w") as fp:
+            fp.write(" ")
 
         # Declare instance attributes
         self.actions = []
@@ -207,4 +217,46 @@ class OpenEO:
         Credentials().update(old_version)
         settings.setValue(
             SettingsPath.PLUGIN_VERSION.value, self.getPluginVersion()
+        )
+
+    def _getCacheDir(self):
+        osID = getOs()
+        if osID == "ubuntu" or osID == "neon":
+            # ubuntu's default browser does have very limited file access. hence the cache being created in the home directory to allow access to temporary html files
+            cacheParentDirectory = os.path.expanduser("~")
+        else:
+            # profile folder
+            cacheParentDirectory = (
+                self.iface.userProfileManager().getProfile().folder()
+            )
+        return os.path.join(cacheParentDirectory, "openeo-cache/")
+
+    def _getBrowserViewFilePath(self):
+        return os.path.join(self._getCacheDir(), "resourceInfo.html")
+
+    def showTempFileInWebBrowser(self, file, vars):
+        filePath = pathlib.Path(__file__).parent.resolve()
+        with open(filePath / f"gui/{file}.html") as file:
+            html = file.read()
+
+        for key, value in vars.items():
+            if isinstance(value, (dict, list)):
+                value = json.dumps(value)
+            html = html.replace(f"<!-- {key} -->", value)
+
+        path = self._getBrowserViewFilePath()
+        url = "file://" + path
+        with open(path, "w") as fp:
+            fp.write(html)
+
+        webbrowser.open_new(url)
+
+    def showLogsInWebBrowser(self, logs, title):
+        self.showTempFileInWebBrowser(
+            "logFileView",
+            {
+                "logs": logs,
+                "title": title,
+                "logTimestamp": str(datetime.datetime.now()),
+            },
         )

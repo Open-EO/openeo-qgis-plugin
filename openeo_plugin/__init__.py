@@ -4,10 +4,12 @@ import pathlib
 import webbrowser
 import datetime
 import json
+from openeo.utils.version import ComparableVersion
+from openeo import __version__ as OPENEO_VERSION
 
 from qgis.core import QgsApplication, QgsSettings
-
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
+from qgis.PyQt.QtWidgets import QMessageBox
 
 from .gui.browser.OpenEOItemProvider import OpenEOItemProvider
 from .utils.settings import SettingsPath, getOs
@@ -42,6 +44,7 @@ class OpenEO:
         self.iface = iface
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
+
         # initialize locale
         locale = QSettings().value("locale/userLocale")[0:2]
         locale_path = os.path.join(
@@ -77,6 +80,21 @@ class OpenEO:
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
+
+        # check openeo-python version
+        openeo_version = self.getPythonClientVersion()
+        self.validVersion = True
+        MINIMUM_VERSION = "0.48.0"
+        if openeo_version < ComparableVersion(MINIMUM_VERSION):
+            self.validVersion = False
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Icon.Critical)
+            msg.setText("Unmet Requirement")
+            msg.setInformativeText(
+                f"Your openEO python-client is below v{MINIMUM_VERSION}. Update your python-client. QGIS restart may be required."
+            )
+            msg.setWindowTitle("Unmet Requirement")
+            msg.exec()
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -148,6 +166,9 @@ class OpenEO:
     def initGui(self):
         """Create the browser entries inside the QGIS GUI."""
 
+        if not self.validVersion:
+            return
+
         self.list_items_provider = OpenEOItemProvider(self)
         QgsApplication.instance().dataItemProviderRegistry().addProvider(
             self.list_items_provider
@@ -192,6 +213,9 @@ class OpenEO:
                 if line.startswith("version="):
                     return line[len("version=") :]
         return None  # In case no version line is found
+
+    def getPythonClientVersion(self):
+        return ComparableVersion(OPENEO_VERSION)
 
     def clearLogins(self):
         Credentials().clear()

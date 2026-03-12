@@ -2,7 +2,6 @@
 import os
 import pathlib
 import webbrowser
-import tempfile
 import datetime
 import json
 
@@ -239,7 +238,7 @@ class OpenEO:
                 value = json.dumps(value)
             html = html.replace(f"<!-- {key} -->", value)
 
-        fh, path = tempfile.mkstemp(suffix=".html", dir=self._getCacheDir())
+        path = os.path.join(self._getCacheDir(), "resourceInfo.html")
         url = "file://" + path
         with open(path, "w") as fp:
             fp.write(html)

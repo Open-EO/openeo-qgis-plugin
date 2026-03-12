@@ -63,6 +63,9 @@ class OpenEO:
         # initialize cache
         cacheDir = self._getCacheDir()
         os.makedirs(os.path.dirname(cacheDir), exist_ok=True)
+        browserViewFile = self._getBrowserViewFilePath()
+        with open(browserViewFile, "w") as fp:
+            fp.write(" ")
 
         # Declare instance attributes
         self.actions = []
@@ -228,6 +231,9 @@ class OpenEO:
             )
         return os.path.join(cacheParentDirectory, "openeo-cache/")
 
+    def _getBrowserViewFilePath(self):
+        return os.path.join(self._getCacheDir(), "resourceInfo.html")
+
     def showTempFileInWebBrowser(self, file, vars):
         filePath = pathlib.Path(__file__).parent.resolve()
         with open(filePath / f"gui/{file}.html") as file:
@@ -238,7 +244,7 @@ class OpenEO:
                 value = json.dumps(value)
             html = html.replace(f"<!-- {key} -->", value)
 
-        path = os.path.join(self._getCacheDir(), "resourceInfo.html")
+        path = self._getBrowserViewFilePath()
         url = "file://" + path
         with open(path, "w") as fp:
             fp.write(html)

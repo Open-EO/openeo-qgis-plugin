@@ -5,6 +5,7 @@ import webbrowser
 import tempfile
 import datetime
 import json
+import distro
 
 from qgis.core import QgsApplication, QgsSettings
 
@@ -219,8 +220,15 @@ class OpenEO:
         )
 
     def _getCacheDir(self):
-        profileFolder = self.iface.userProfileManager().getProfile().folder()
-        return os.path.join(profileFolder, "openeo-cache/")
+        if distro.id() == "ubuntu":
+            # ubuntu's default browser does have very limited file access. hence the cache being created in the home directory to allow access to temporary html files
+            cacheParentDirectory = os.path.expanduser("~")
+        else:
+            # profile folder
+            cacheParentDirectory = (
+                self.iface.userProfileManager().getProfile().folder()
+            )
+        return os.path.join(cacheParentDirectory, "openeo-cache/")
 
     def showTempFileInWebBrowser(self, file, vars):
         filePath = pathlib.Path(__file__).parent.resolve()

@@ -5,14 +5,13 @@ import webbrowser
 import tempfile
 import datetime
 import json
-import distro
 
 from qgis.core import QgsApplication, QgsSettings
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
 from .gui.browser.OpenEOItemProvider import OpenEOItemProvider
-from .utils.settings import SettingsPath
+from .utils.settings import SettingsPath, getOs
 from .utils.logging import Logging
 from .models.CredentialsModel import Credentials
 
@@ -64,7 +63,6 @@ class OpenEO:
 
         # initialize cache
         cacheDir = self._getCacheDir()
-        print(type(cacheDir))
         os.makedirs(os.path.dirname(cacheDir), exist_ok=True)
 
         # Declare instance attributes
@@ -220,7 +218,8 @@ class OpenEO:
         )
 
     def _getCacheDir(self):
-        if distro.id() == "ubuntu":
+        osID = getOs()
+        if osID == "ubuntu" or osID == "neon":
             # ubuntu's default browser does have very limited file access. hence the cache being created in the home directory to allow access to temporary html files
             cacheParentDirectory = os.path.expanduser("~")
         else:

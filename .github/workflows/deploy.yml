@@ -30,6 +30,7 @@ jobs:
     - name: Run deploy script
       run: |
         cp LICENSE openeo_plugin/LICENSE
+        rm -rf openeo_plugin/scripts
         zip -r openeo_plugin.zip openeo_plugin
 
     # Upload ZIP file as an artifact. to inspect the ZIP in the workflow UI

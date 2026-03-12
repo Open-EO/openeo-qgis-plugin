@@ -1,5 +1,4 @@
 from urllib.parse import quote
-import requests
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication
@@ -235,8 +234,9 @@ class OpenEOCollectionItem(QgsDataItem):
         )
 
     def viewProperties(self):
-        collection_link = self.get_url("self")
-        collection = requests.get(collection_link).json()
+        collection = self.getConnection().describe_collection(
+            self.collection.get("id")
+        )
         self.plugin.showTempFileInWebBrowser(
             "collectionProperties", {"collection": collection}
         )

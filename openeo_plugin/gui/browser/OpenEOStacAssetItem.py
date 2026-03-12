@@ -233,7 +233,7 @@ class OpenEOStacAssetItem(QgsDataItem):
             i += 1
 
         # stream data to file
-        with requests.get(href, stream=True) as r:
+        with requests.get(href, stream=True, timeout=20) as r:
             r.raise_for_status()
             with open(path, "wb") as f:
                 for chunk in r.iter_content(

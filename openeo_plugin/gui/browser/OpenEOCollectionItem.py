@@ -236,7 +236,7 @@ class OpenEOCollectionItem(QgsDataItem):
 
     def viewProperties(self):
         collection_link = self.get_url("self")
-        collection = requests.get(collection_link).json()
+        collection = requests.get(collection_link, timeout=20).json()
         self.plugin.showTempFileInWebBrowser(
             "collectionProperties", {"collection": collection}
         )

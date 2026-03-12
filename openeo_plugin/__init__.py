@@ -4,9 +4,10 @@ import pathlib
 import webbrowser
 import datetime
 import json
+from openeo.utils.version import ComparableVersion
+from openeo import __version__ as OPENEO_VERSION
 
 from qgis.core import QgsApplication, QgsSettings
-
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
 from .gui.browser.OpenEOItemProvider import OpenEOItemProvider
@@ -42,6 +43,7 @@ class OpenEO:
         self.iface = iface
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
+
         # initialize locale
         locale = QSettings().value("locale/userLocale")[0:2]
         locale_path = os.path.join(
@@ -51,6 +53,16 @@ class OpenEO:
         # Set up logging and messaging
         logger = QgsApplication.instance().messageLog()
         self.logging = Logging(self.iface, logger)
+
+        # check openeo-python version
+        openeo_version = self.getPythonClientVersion()
+        self.validVersion = True
+        MINIMUM_VERSION = "0.48.0"
+        if openeo_version < ComparableVersion(MINIMUM_VERSION):
+            self.validVersion = False
+            self.logging.error(
+                f"Your openEO python-client is below v{MINIMUM_VERSION}. Update your python-client. QGIS restart may be required."
+            )
 
         # initialize settings
         self.initSettings()
@@ -147,6 +159,8 @@ class OpenEO:
 
     def initGui(self):
         """Create the browser entries inside the QGIS GUI."""
+        if not self.validVersion:
+            return
 
         self.list_items_provider = OpenEOItemProvider(self)
         QgsApplication.instance().dataItemProviderRegistry().addProvider(
@@ -161,9 +175,10 @@ class OpenEO:
 
     def unload(self):
         """Removes the plugin item from the QGIS browser."""
-        QgsApplication.instance().dataItemProviderRegistry().removeProvider(
-            self.list_items_provider
-        )
+        if hasattr(self, "list_items_provider"):
+            QgsApplication.instance().dataItemProviderRegistry().removeProvider(
+                self.list_items_provider
+            )
 
     def run(self):
         """Run method that performs all the real work"""
@@ -192,6 +207,9 @@ class OpenEO:
                 if line.startswith("version="):
                     return line[len("version=") :]
         return None  # In case no version line is found
+
+    def getPythonClientVersion(self):
+        return ComparableVersion(OPENEO_VERSION)
 
     def clearLogins(self):
         Credentials().clear()

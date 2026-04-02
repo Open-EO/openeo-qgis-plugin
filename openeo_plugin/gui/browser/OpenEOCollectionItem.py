@@ -219,7 +219,6 @@ class OpenEOCollectionItem(QgsDataItem):
                 uris = self.createUris(link)
                 self.uris.extend(uris)
             except Exception as e:
-                print(e)
                 self.plugin.logging.error(
                     f"Can't visualize the mapping service {link['href']} for collection {self.collection['id']}.",
                     error=e,
@@ -238,10 +237,6 @@ class OpenEOCollectionItem(QgsDataItem):
             uri = uris[0]
             self.plugin.iface.addRasterLayer(
                 uri.uri, uri.name, uri.providerKey
-            )
-        else:
-            self.plugin.logging.error(
-                "Can't add resource to project. No URI found",
             )
 
     def get_url(self, key):

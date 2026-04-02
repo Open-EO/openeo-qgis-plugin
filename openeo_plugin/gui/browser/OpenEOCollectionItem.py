@@ -41,6 +41,7 @@ class OpenEOCollectionItem(QgsDataItem):
         self.collection = collection
         self.plugin = parent.plugin
         self.uris = []
+        self.uriInaccessible = False  # assume URL works until proven otherwise
 
         # Has no children, set as populated to avoid the expand arrow
         self.setState(QgsDataItem.State.Populated)
@@ -83,6 +84,8 @@ class OpenEOCollectionItem(QgsDataItem):
         return webMapLinks
 
     def hasPreview(self):
+        if self.uriInaccessible:
+            return False
         return len(self.links) > 0
 
     def hasDragEnabled(self):
@@ -130,8 +133,18 @@ class OpenEOCollectionItem(QgsDataItem):
     def createWMTS(self, link):
         # todo: Currently only supports KVP encoding, not REST
         # todo: does not support wmts:dimensions
-        wmtsUrl = link["href"] + "?service=wmts&request=getCapabilities"
-        wmts = WebMapTileService(wmtsUrl)
+        try:
+            wmtsUrl = link["href"] + "?service=wmts&request=getCapabilities"
+            wmts = WebMapTileService(wmtsUrl)
+        except Exception as e:
+            self.plugin.logging.error(
+                f"WMTS service {link['href']} can't be accessed.",
+                error=e,
+            )
+            # would be good to test for a 403 here but the returned ows exception doesnt appear to hold that info.
+            self.uriInaccessible = True
+            self._init()
+            return []
 
         layers = link.get("wmts:layer")
         if layers:

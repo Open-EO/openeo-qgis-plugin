@@ -154,7 +154,9 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                     self.getConnection().authenticate_oidc_refresh_token(
                         provider_id=provider_id
                     )  # try logging in with refresh token
-                    return True
+                    if self.getConnection().describe_account():
+                        # check that refresh token auth was successful
+                        return True
                 except openeo.rest.OpenEoClientException as e:
                     self.plugin.logging.debug(
                         f"No valid OpenID Connect refresh token found for connection {self.model.name}",

@@ -9,7 +9,7 @@ qgisMaximumVersion=4.99
 description=Simplified access to openEO services.
 # Follows PEP440 for version numbers, not semantic versioning
 # Use e.g. 2.0b1 instead of 2.0-beta.1
-version=2.0.1
+version=2.0.2
 author=moreGeo GmbH
 email=mail@moregeo.it
 

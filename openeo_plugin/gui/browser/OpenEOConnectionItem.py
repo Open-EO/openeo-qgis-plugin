@@ -95,11 +95,7 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
 
         try:
             QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-            if hasattr(self.connection, "list_auth_providers"):
-                auth_provider_list = self.connection.list_auth_providers()
-            else:
-                # todo: remove this when the openEO Python client has been updated to support this method
-                auth_provider_list = self.list_auth_providers()
+            auth_provider_list = self.connection.list_auth_providers()
         except Exception as e:
             self.plugin.logging.error(
                 "Can't get the identity providers from the server. Please try again later.",
@@ -185,43 +181,6 @@ class OpenEOConnectionItem(QgsDataCollectionItem):
                     "Can't check authentication status.", error=e
                 )
         return self.authenticated
-
-    # todo: remove this when the openEO Python client has been updated to support this method
-    # see https://github.com/Open-EO/openeo-python-client/pull/826
-    def list_auth_providers(self) -> list[dict]:
-        providers = []
-        cap = self.connection.capabilities()
-
-        # Add OIDC providers
-        oidc_path = "/credentials/oidc"
-        if cap.supports_endpoint(oidc_path, method="GET"):
-            try:
-                data = self.connection.get(
-                    oidc_path, expected_status=200
-                ).json()
-                if isinstance(data, dict):
-                    for provider in data.get("providers", []):
-                        provider["type"] = "oidc"
-                        providers.append(provider)
-            except openeo.rest.OpenEoApiError as e:
-                self.plugin.logging.error(
-                    "Can't load the OpenID Connect provider list.", error=e
-                )
-
-        # Add Basic provider
-        basic_path = "/credentials/basic"
-        if cap.supports_endpoint(basic_path, method="GET"):
-            providers.append(
-                {
-                    "id": basic_path,
-                    "issuer": self.connection.build_url(basic_path),
-                    "type": "basic",
-                    "title": "Internal",
-                    "description": "The HTTP Basic authentication method is mostly used for development and testing purposes.",
-                }
-            )
-
-        return providers
 
     def getConnection(self):
         if not self.connection:

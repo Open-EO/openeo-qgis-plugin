@@ -148,3 +148,5 @@ To compile the ui of the plugin, run the `compile_ui.sh`-script in the root dire
 Compiling is needed any time the resources.py file needs to be rebuilt and the .ui files are modified.
 
 Upon changes to `.pre-commit-config.yaml`, run `pre-commit install`
+
+For further reference, refer to the [contribution cheat sheet](docs/cheat_sheet.md)

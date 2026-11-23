@@ -23,13 +23,10 @@ class Logging:
             return
 
         title = self.getTitle(level)
-        match level:
-            case Qgis.MessageLevel.Warning:
-                duration = 20
-            case Qgis.MessageLevel.Critical:
-                duration = 20
-            case _:  # Info & Success
-                duration = 10
+        if level in (Qgis.MessageLevel.Warning, Qgis.MessageLevel.Critical):
+            duration = 20
+        else:  # Info & Success
+            duration = 10
 
         self.iface.messageBar().pushMessage(
             title, message, level=level, duration=duration
@@ -57,15 +54,14 @@ class Logging:
         )
 
     def getTitle(self, level: Qgis.MessageLevel, show=True) -> str:
-        match level:
-            case Qgis.MessageLevel.Success:
-                return "Success"
-            case Qgis.MessageLevel.Warning:
-                return "Warning"
-            case Qgis.MessageLevel.Critical:
-                return "Error"
-            case _:
-                return "Info" if show else "Debug"
+        if level == Qgis.MessageLevel.Success:
+            return "Success"
+        elif level == Qgis.MessageLevel.Warning:
+            return "Warning"
+        elif level == Qgis.MessageLevel.Critical:
+            return "Error"
+        else:
+            return "Info" if show else "Debug"
 
     def _handleMessage(
         self,

@@ -43,9 +43,10 @@ class MissingDependency:
                 "OpenEO",
                 "The Python package 'openeo' is missing. Install it via "
                 "Plugins > QPIP > Run dependencies check now, or run "
-                "'pip install openeo' in the Python environment of QGIS "
-                "(on Windows/OSGeo4W, this requires the 'python3-pip' "
-                "package). Restart QGIS afterwards.",
+                "'pip install openeo' in the Python environment of QGIS. "
+                "If pip is missing, install the 'python3-pip' package "
+                "(OSGeo4W or Linux distribution) or run "
+                "'python3 -m ensurepip'. Restart QGIS afterwards.",
             )
         else:
             message = QCoreApplication.translate(

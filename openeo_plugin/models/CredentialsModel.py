@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import base64
 import json
 import time
@@ -29,14 +31,13 @@ class CredentialsModel:
         loginType = data.get("loginType")
         id = data.get("id")
         if version == "2.0-beta.2":
-            match loginType:
-                case "basic":
-                    return cls.fromBasic(
-                        id, data.get("username"), data.get("password")
-                    )
-                case _:
-                    # Nothing stored, potentially came from openeo-python-client
-                    return None
+            if loginType == "basic":
+                return cls.fromBasic(
+                    id, data.get("username"), data.get("password")
+                )
+            else:
+                # Nothing stored, potentially came from openeo-python-client
+                return None
         else:
             return cls(id, loginType, data.get("credentials"))
 

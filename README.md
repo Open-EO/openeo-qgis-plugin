@@ -116,7 +116,13 @@ If the installation of qpip or openeo does not happen automatically, try install
 
 If use of qpip is not possible, `pip install openeo` may be used to install the necessary python dependency.
 
-If qpip fails with "No module named pip" (e.g. QGIS installed via OSGeo4W), pip is missing in the Python environment of QGIS. Add the `python3-pip` package via the OSGeo4W installer, or run `python -m ensurepip` in the OSGeo4W Shell, and try again.
+If qpip fails with "No module named pip", pip is missing in the Python environment of QGIS. Install pip and try again:
+
+- OSGeo4W (Windows): Add the `python3-pip` package via the OSGeo4W installer, or run `python -m ensurepip` in the OSGeo4W Shell.
+- Linux packages: Install the `python3-pip` package of your distribution (e.g. `dnf install python3-pip`), or run `python3 -m ensurepip --user`.
+- Flatpak: Run `flatpak run --command=python3 org.qgis.qgis -m ensurepip --upgrade`.
+
+The plugin requires Python 3.9 or later.
 
 ## Usage
 

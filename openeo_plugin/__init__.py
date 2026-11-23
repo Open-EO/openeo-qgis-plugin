@@ -5,11 +5,10 @@ import webbrowser
 import datetime
 import json
 
-from qgis.core import QgsApplication, QgsSettings
+from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsSettings
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
-from .gui.browser.OpenEOItemProvider import OpenEOItemProvider
 from .utils.settings import SettingsPath, getOs
 from .utils.logging import Logging
 from .models.CredentialsModel import Credentials
@@ -22,9 +21,48 @@ def classFactory(iface):  # pylint: disable=invalid-name
     :param iface: A QGIS interface instance.
     :type iface: QgsInterface
     """
-    #
+    try:
+        import openeo  # noqa: F401
+    except ImportError as e:
+        return MissingDependency(iface, e)
 
     return OpenEO(iface)
+
+
+# Keeps the plugin loadable without the openeo package, so that qpip's
+# dependency check (which only covers active plugins) can still install it.
+class MissingDependency:
+    def __init__(self, iface, error):
+        self.iface = iface
+        self.error = error
+
+    def initGui(self):
+        title = QCoreApplication.translate("OpenEO", "openEO")
+        if self.error.name == "openeo":
+            message = QCoreApplication.translate(
+                "OpenEO",
+                "The Python package 'openeo' is missing. Install it via "
+                "Plugins > QPIP > Run dependencies check now, or run "
+                "'pip install openeo' in the Python environment of QGIS "
+                "(on Windows/OSGeo4W, this requires the 'python3-pip' "
+                "package). Restart QGIS afterwards.",
+            )
+        else:
+            message = QCoreApplication.translate(
+                "OpenEO",
+                "The Python package 'openeo' could not be loaded: {}. "
+                "Reinstall 'openeo' and its dependencies in the Python "
+                "environment of QGIS and restart QGIS afterwards.",
+            ).format(self.error)
+        QgsMessageLog.logMessage(
+            f"{message}\n{self.error}", "openEO", Qgis.MessageLevel.Critical
+        )
+        self.iface.messageBar().pushMessage(
+            title, message, level=Qgis.MessageLevel.Critical, duration=0
+        )
+
+    def unload(self):
+        pass
 
 
 class OpenEO:
@@ -147,6 +185,7 @@ class OpenEO:
 
     def initGui(self):
         """Create the browser entries inside the QGIS GUI."""
+        from .gui.browser.OpenEOItemProvider import OpenEOItemProvider
 
         self.list_items_provider = OpenEOItemProvider(self)
         QgsApplication.instance().dataItemProviderRegistry().addProvider(

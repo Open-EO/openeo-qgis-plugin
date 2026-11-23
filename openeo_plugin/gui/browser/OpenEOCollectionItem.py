@@ -67,19 +67,9 @@ class OpenEOCollectionItem(QgsDataItem):
         webMapLinks = []
         links = self.collection["links"]
         for link in links:
-            match link["rel"]:
-                case "wmts":
-                    webMapLinks.append(link)
-                case "xyz":
-                    webMapLinks.append(link)
-                # case "3d-tiles":
-                #     webMapLinks.append(link)
-                # case "wms":
-                #     webMapLinks.append(link)
-                # case "pmtiles":
-                #     webMapLinks.append(link)
-                # case "tilejson":
-                #     webMapLinks.append(link)
+            # Not supported yet: 3d-tiles, wms, pmtiles, tilejson
+            if link["rel"] in ("wmts", "xyz"):
+                webMapLinks.append(link)
 
         return webMapLinks
 

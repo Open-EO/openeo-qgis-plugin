@@ -38,14 +38,22 @@ class MissingDependency:
 
     def initGui(self):
         title = QCoreApplication.translate("OpenEO", "openEO")
-        message = QCoreApplication.translate(
-            "OpenEO",
-            "The Python package 'openeo' is missing. Install it via "
-            "Plugins > QPIP > Run dependencies check now, or run "
-            "'pip install openeo' in the Python environment of QGIS "
-            "(on Windows/OSGeo4W, this requires the 'python3-pip' package). "
-            "Restart QGIS afterwards.",
-        )
+        if self.error.name == "openeo":
+            message = QCoreApplication.translate(
+                "OpenEO",
+                "The Python package 'openeo' is missing. Install it via "
+                "Plugins > QPIP > Run dependencies check now, or run "
+                "'pip install openeo' in the Python environment of QGIS "
+                "(on Windows/OSGeo4W, this requires the 'python3-pip' "
+                "package). Restart QGIS afterwards.",
+            )
+        else:
+            message = QCoreApplication.translate(
+                "OpenEO",
+                "The Python package 'openeo' could not be loaded: {}. "
+                "Reinstall 'openeo' and its dependencies in the Python "
+                "environment of QGIS and restart QGIS afterwards.",
+            ).format(self.error)
         QgsMessageLog.logMessage(
             f"{message}\n{self.error}", "openEO", Qgis.MessageLevel.Critical
         )
